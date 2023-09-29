@@ -65,7 +65,7 @@ jobs:
           ls -al
           make -j$(nproc) all \
             TARGET=cygwin \
-            USE_LUA=1 LUA_INC=/opt/opt/lua-5.4.6/include LUA_LIB=/opt/lua-5.4.6/lib \
+            USE_LUA=1 LUA_LIB_NAME=lua5.4 LUA_INC=/opt/opt/lua-5.4.6/include LUA_LIB=/opt/lua-5.4.6/lib \
             USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
           echo "END"
       
