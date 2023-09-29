@@ -7,9 +7,9 @@ jobs:
   push:
     runs-on: windows-latest
 
-    # defaults:
-    #   run:
-    #     shell: msys2 {0}
+    defaults:
+      run:
+        shell: msys2 {0}
 
     steps:
       - run: git config --global core.autocrlf input
