@@ -7,14 +7,14 @@ jobs:
   push:
     runs-on: windows-latest
 
-    defaults:
-      run:
-        shell: msys2 {0}
+    # defaults:
+    #   run:
+    #     shell: msys2 {0}
 
     steps:
-      # - run: git config --global core.autocrlf input
-      # - name: Checkout
-      #   uses: actions/checkout@v4
+      - run: git config --global core.autocrlf input
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -27,20 +27,21 @@ jobs:
         run: |
           echo 'Running in MSYS2!'
           git clone https://github.com/haproxy/haproxy.git
-          cd haproxy || exit 2
           ls -al
 
       - name: Compile HAProxy with 
-        # shell: msys2 {0}
+        shell: msys2 {0}
         run: |
           echo "RUN"
+          cd haproxy || exit 2
           ls -al
-          # make -j$(nproc) \
-          #   TARGET=cygwin \
-          #   USE_GETADDRINFO=1 USE_OPENSSL=1 USE_LUA=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
-          # echo "END"
+          make -j$(nproc) all \
+            TARGET=cygwin \
+            USE_GETADDRINFO=1 USE_OPENSSL=1 USE_LUA=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
+          echo "END"
       
-      # - name: Show HAProxy version
-      #   shell: msys2 {0}
-      #   run: |
-      #     ./haproxy -vv
+      - name: Show HAProxy version
+        shell: msys2 {0}
+        run: |
+          ls -al
+          ./haproxy -vv
