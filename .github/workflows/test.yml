@@ -56,6 +56,7 @@ jobs:
           ls -al
           make INSTALL_TOP=/opt/lua-5.4.6 mingw install
           ls -al /opt/lua-5.4.6
+          ls -al /home/runneradmin/lua-5.4.6
           ls -al /home/runneradmin/lua-5.4.6/src
 
       # - name: Compile HAProxy with 
