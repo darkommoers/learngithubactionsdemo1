@@ -55,6 +55,8 @@ jobs:
           cd lua-5.4.6
           ls -al
           make mingw install
+          ls -al /usr/local/include
+          ls -al/usr/local/lib
 
       - name: Compile HAProxy with 
         shell: msys2 {0}
@@ -64,7 +66,7 @@ jobs:
           ls -al
           make -j$(nproc) all \
             TARGET=cygwin \
-            USE_LUA=1 LUA_INC=~/lua-5.4.6/src LUA_LIB=~/lua-5.4.6/src \
+            USE_LUA=1 LUA_INC=/home/runneradmin/lua-5.4.6/src LUA_LIB=/home/runneradmin/lua-5.4.6/src \
             USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
           echo "END"
       
