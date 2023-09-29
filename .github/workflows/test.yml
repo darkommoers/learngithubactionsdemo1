@@ -57,7 +57,7 @@ jobs:
           make mingw install
           ls -al /usr/local/bin
           ls -al /usr/local/include
-          ls -al/usr/local/lib
+          ls -al /usr/local/lib
 
       - name: Compile HAProxy with 
         shell: msys2 {0}
