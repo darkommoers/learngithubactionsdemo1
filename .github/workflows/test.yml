@@ -12,9 +12,9 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - run: git config --global core.autocrlf input
-      - name: Checkout
-        uses: actions/checkout@v4
+      # - run: git config --global core.autocrlf input
+      # - name: Checkout
+      #   uses: actions/checkout@v4
 
       - uses: msys2/setup-msys2@v2
         with:
