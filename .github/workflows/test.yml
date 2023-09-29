@@ -63,6 +63,7 @@ jobs:
       - name: Show HAProxy version
         shell: msys2 {0}
         run: |
+          cd haproxy || exit 2
           ls -al
           ./haproxy -vv
 
