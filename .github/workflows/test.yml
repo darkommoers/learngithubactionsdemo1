@@ -31,7 +31,7 @@ jobs:
           ls -al
 
       - name: Compile HAProxy with 
-        shell: msys2 {0}
+        # shell: msys2 {0}
         run: |
           echo "RUN"
           ls -al
