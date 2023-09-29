@@ -55,7 +55,7 @@ jobs:
           cd lua-5.4.6
           ls -al
           make INSTALL_TOP=/opt/lua-5.4.6 mingw install
-          ls -al /usr/local/bin
+          ls -al /opt/lua-5.4.6
 
       - name: Compile HAProxy with 
         shell: msys2 {0}
