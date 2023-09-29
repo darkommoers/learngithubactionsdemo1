@@ -55,8 +55,8 @@ jobs:
           cd lua-5.4.6
           ls -al
           make INSTALL_TOP=/opt/lua-5.4.6 mingw install
-          ./lua -v
-          ./lua -h
+          ./home/runneradmin/lua-5.4.6/src/lua -v
+          ./home/runneradmin/lua-5.4.6/src/lua -h
           ls -al /opt/lua-5.4.6
           ls -al /home/runneradmin/lua-5.4.6
           ls -al /home/runneradmin/lua-5.4.6/src
