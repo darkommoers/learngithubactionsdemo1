@@ -55,6 +55,7 @@ jobs:
           cd lua-5.4.6
           ls -al
           make mingw install
+          ls -al lua-5.4.6/src
           ls -al /usr/local/bin
           ls -al /usr/local/include
           ls -al /usr/local/lib
