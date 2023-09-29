@@ -52,7 +52,7 @@ jobs:
         shell: msys2 {0}
         run: |
           echo "RUN"
-          make -j$(nproc) all \
+          make -j$(nproc) \
             TARGET=cygwin \
             USE_GETADDRINFO=1 USE_OPENSSL=1 USE_LUA=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
           echo "END"
