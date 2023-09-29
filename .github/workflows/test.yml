@@ -56,25 +56,26 @@ jobs:
           ls -al
           make INSTALL_TOP=/opt/lua-5.4.6 mingw install
           ls -al /opt/lua-5.4.6
+          ls -al /home/runneradmin/lua-5.4.6/src
 
-      - name: Compile HAProxy with 
-        shell: msys2 {0}
-        run: |
-          echo "RUN"
-          cd haproxy || exit 2
-          ls -al
-          make -j$(nproc) all \
-            TARGET=cygwin \
-            USE_LUA=1 LUA_LIB_NAME=lua5.4 LUA_INC=/opt/opt/lua-5.4.6/include LUA_LIB=/opt/lua-5.4.6/lib \
-            USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
-          echo "END"
+      # - name: Compile HAProxy with 
+      #   shell: msys2 {0}
+      #   run: |
+      #     echo "RUN"
+      #     cd haproxy || exit 2
+      #     ls -al
+      #     make -j$(nproc) all \
+      #       TARGET=cygwin \
+      #       USE_LUA=1 LUA_LIB_NAME=lua5.4 LUA_INC=/opt/opt/lua-5.4.6/include LUA_LIB=/opt/lua-5.4.6/lib \
+      #       USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
+      #     echo "END"
       
-      - name: Show HAProxy version
-        shell: msys2 {0}
-        run: |
-          cd haproxy || exit 2
-          ls -al
-          ./haproxy -vv
+      # - name: Show HAProxy version
+      #   shell: msys2 {0}
+      #   run: |
+      #     cd haproxy || exit 2
+      #     ls -al
+      #     ./haproxy -vv
 
       # - name: Delete old release
       #   env:
