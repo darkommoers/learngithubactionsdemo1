@@ -44,19 +44,23 @@ jobs:
           gcc --version
           g++ --version
           gdb --version
+          make --version
+          git clone https://github.com/haproxy/haproxy.git
+          cd haproxy || exit 2
 
-      # - name: Compile HAProxy with 
-      #   shell: msys2 {0}
-      #   run: |
-      #     echo "RUN"
-      #     make -j$(nproc) all \
-      #       TARGET=cygwin \
-      #       USE_GETADDRINFO=1 USE_OPENSSL=1 USE_LUA=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
-      #     echo "END"
-      # - name: Show HAProxy version
-      #   shell: msys2 {0}
-      #   run: |
-      #     ./haproxy -vv
+      - name: Compile HAProxy with 
+        shell: msys2 {0}
+        run: |
+          echo "RUN"
+          make -j$(nproc) all \
+            TARGET=cygwin \
+            USE_GETADDRINFO=1 USE_OPENSSL=1 USE_LUA=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
+          echo "END"
+      
+      - name: Show HAProxy version
+        shell: msys2 {0}
+        run: |
+          ./haproxy -vv
 
       # - name: Delete old release
       #   env:
