@@ -32,7 +32,7 @@ jobs:
             make
             tar
             zip
-            mingw-w64-lua
+            mingw-w64-x86_64-lua
             openssl
             openssl-devel
             pcre-devel
