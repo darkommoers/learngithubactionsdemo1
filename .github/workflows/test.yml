@@ -32,7 +32,6 @@ jobs:
             make
             tar
             zip
-            mingw-w64-x86_64-lua
             openssl
             openssl-devel
             pcre-devel
@@ -49,6 +48,13 @@ jobs:
           git clone https://github.com/haproxy/haproxy.git
           cd haproxy || exit 2
           ls -al
+          cd ~
+          curl -R -O http://www.lua.org/ftp/lua-5.4.6.tar.gz
+          tar zxvf lua-5.4.6.tar.gz
+          ls -al
+          cd lua-5.4.6
+          ls -al
+          make mingw install
 
       - name: Compile HAProxy with 
         shell: msys2 {0}
@@ -58,8 +64,8 @@ jobs:
           ls -al
           make -j$(nproc) all \
             TARGET=cygwin \
-            USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1 USE_LUA=1
-            # USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
+            USE_LUA=1 \
+            USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
           echo "END"
       
       - name: Show HAProxy version
