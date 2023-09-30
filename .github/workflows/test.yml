@@ -37,5 +37,5 @@ jobs:
         run: |
           # perl --version
           # sed --version
-          winget upgrade --disable-interactivity --accept-source-agreements --accept-package-agreements
-          winget upgrade --disable-interactivity --accept-source-agreements --accept-package-agreements | Select-String "Microsoft"
+          winget install --id StrawberryPerl.StrawberryPerl --disable-interactivity --accept-source-agreements --accept-package-agreements
+
