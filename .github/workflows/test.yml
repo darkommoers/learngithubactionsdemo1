@@ -27,15 +27,9 @@ jobs:
           choco install sed -y
           echo end
 
-      - name: Install winget
-        uses: Cyberboss/install-winget@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Run a multi-line script
         shell: powershell
         run: |
-          # perl --version
-          # sed --version
-          winget install --id StrawberryPerl.StrawberryPerl --disable-interactivity --accept-source-agreements --accept-package-agreements
-
+          perl --version
+          sed --version
+          .\hg version
