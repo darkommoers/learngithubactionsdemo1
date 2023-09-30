@@ -29,4 +29,5 @@ jobs:
         shell: powershell
         run: |
           winget
-          winget upgrade --accept-source-agreements --accept-package-agreements
+          winget upgrade -u --id Microsoft.DesktopAppInstaller_8wekyb3d8bbwe --accept-source-agreements --accept-package-agreements
+          winget
