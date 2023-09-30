@@ -22,18 +22,20 @@ jobs:
         run: |
           Get-ChildItem -Force "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
           $clfileto="$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\$((Get-ChildItem -Path "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\" -Recurse -Name cl.exe)[0])"
-          $clfileto
-          $clfileto | foreach-object { "{0}`t{1}" -f $_.Name, [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_).FileVersion }
+          $clfileto | foreach-object { "{0}`t{1}" -f $_.Name, [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_).FileVersion } |% {$_ -match '\d{2}.\d{2}'};$clfilever=$Matches[0];$clfilever
           $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
           choco install sed -y
-          choco install winget-cli -y
           echo end
+
+      - name: Install winget
+        uses: Cyberboss/install-winget@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run a multi-line script
         shell: powershell
         run: |
-          perl --version
-          sed --version
-          winget upgrade -u --id Microsoft.DesktopAppInstaller_8wekyb3d8bbwe --source msstore
-          winget upgrade -u --id Microsoft.Winget.Source_8wekyb3d8bbwe --source msstore
-          winget upgrade --accept-source-agreements --accept-package-agreements | Select-String "Microsoft"
+          # perl --version
+          # sed --version
+          winget upgrade --disable-interactivity --accept-source-agreements --accept-package-agreements
+          winget upgrade --disable-interactivity --accept-source-agreements --accept-package-agreements | Select-String "Microsoft"
