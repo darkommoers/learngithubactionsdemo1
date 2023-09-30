@@ -22,12 +22,11 @@ jobs:
         run: |
           Get-ChildItem -Force "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
           $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
-          choco install winget-cli
+          choco install sed -y
           echo end
 
       - name: Run a multi-line script
         shell: powershell
         run: |
-          winget
-          winget upgrade -u --id Microsoft.DesktopAppInstaller_8wekyb3d8bbwe --accept-source-agreements --accept-package-agreements
-          winget
+          perl --version
+          sed --version
