@@ -34,5 +34,6 @@ jobs:
         run: |
           perl --version
           sed --version
-          winget upgrade --accept-source-agreements --accept-package-agreements
+          winget upgrade -u --id Microsoft.DesktopAppInstaller_8wekyb3d8bbwe --source msstore
+          winget upgrade -u --id Microsoft.Winget.Source_8wekyb3d8bbwe --source msstore
           winget upgrade --accept-source-agreements --accept-package-agreements | Select-String "Microsoft"
