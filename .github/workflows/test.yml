@@ -20,4 +20,5 @@ jobs:
       - name: Run a multi-line script
         run: |
           Get-ChildItem -Force "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
-          winget
+          $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
+          # winget
