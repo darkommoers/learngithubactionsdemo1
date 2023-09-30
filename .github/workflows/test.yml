@@ -30,7 +30,9 @@ jobs:
           Add-AppxPackage Microsoft.VCLibs.x64.14.00.Desktop.appx
           Add-AppxPackage Microsoft.UI.Xaml.2.7.x64.appx
           Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+          echo end
 
       - name: Run a multi-line script
+        shell: powershell
         run: |
           winget
