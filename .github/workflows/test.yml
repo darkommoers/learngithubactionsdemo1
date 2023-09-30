@@ -19,5 +19,5 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
-          where.exe nmake.exe
-          # nmake /HELP
+          Get-ChildItem -Force "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
+          winget
