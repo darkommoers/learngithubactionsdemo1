@@ -16,26 +16,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Make
-        # shell: powershell
-        shell: pwsh
-        run: |
-          function Invoke-CmdScript {
-            param(
-              [String] $scriptName
-            )
-            $cmdLine = """$scriptName"" $args & set"
-            & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
-            select-string '^([^=]*)=(.*)$' | foreach-object {
-              $varName = $_.Matches[0].Groups[1].Value
-              $varValue = $_.Matches[0].Groups[2].Value
-              set-item -force Env:$varName $varValue
-            }
-          }
-          Invoke-CmdScript "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
-          cl
-          Get-Location
-          Get-ChildItem -Force
+      # - name: Make
+      #   # shell: powershell
+      #   shell: pwsh
+      #   run: |
+      #     function Invoke-CmdScript {
+      #       param(
+      #         [String] $scriptName
+      #       )
+      #       $cmdLine = """$scriptName"" $args & set"
+      #       & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
+      #       select-string '^([^=]*)=(.*)$' | foreach-object {
+      #         $varName = $_.Matches[0].Groups[1].Value
+      #         $varValue = $_.Matches[0].Groups[2].Value
+      #         set-item -force Env:$varName $varValue
+      #       }
+      #     }
+      #     Invoke-CmdScript "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
+      #     cl
+      #     Get-Location
+      #     Get-ChildItem -Force
       
       - name: get source
         # shell: powershell
@@ -107,7 +107,7 @@ jobs:
           cd ..
           pwd
           # cd ~/nginx
-          ./auto/configure \
+          auto/configure \
               --with-cc=cl \
               --with-debug \
               --prefix= \
