@@ -64,6 +64,7 @@ jobs:
           # cd nginx
           pwd
           ls -al
+          ls -al ${{runner.workspace}}/nginx
 
       # - name: Make
       #   shell: powershell
