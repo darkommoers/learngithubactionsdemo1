@@ -73,9 +73,12 @@ jobs:
           mkdir -p objs/lib
           install -d objs/lib
           cd objs/lib
-          tar -zxvf ../../pcre2-10.42.tar.gz
-          tar -zxvf ../../zlib-1.3.tar.gz
-          tar -zxvf ../../openssl-3.0.11.tar.gz
+          tar -zxf ../../pcre2-10.42.tar.gz
+          tar -zxf ../../zlib-1.3.tar.gz
+          tar -zxf ../../openssl-3.0.11.tar.gz
+          # tar -zxvf ../../pcre2-10.42.tar.gz
+          # tar -zxvf ../../zlib-1.3.tar.gz
+          # tar -zxvf ../../openssl-3.0.11.tar.gz
           # cd ..
           # cd ..
           cd ~/nginx
