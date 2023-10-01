@@ -58,14 +58,19 @@ jobs:
       - uses: msys2/setup-msys2@v2
       - name: Configure Makefile
         shell: msys2 {0}
+        run: |
+          uname -a
+          pwd
+
+      - name: Configure Makefile1
+        shell: msys2 {0}
         working-directory: ${{runner.workspace}}
         run: |
           uname -a
-          # cd nginx
           pwd
           ls -al
-          ls -al ${{runner.workspace}}/nginx
-          ls -al nginx
+          cd learngithubactionsdemo1
+          ls -al
 
       # - name: Make
       #   shell: powershell
