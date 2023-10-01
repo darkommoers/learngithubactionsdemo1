@@ -56,10 +56,9 @@ jobs:
       - name: Configure Makefile
         shell: cmd
         run: |
-          # $Env:Path += ";$env:SystemDrive\msys64\usr\bin"
-          # bash --login
-          set path=%path%;C:\msys64\usr\bin
-          bash --login
+          rem set path=%path%;C:\msys64\usr\bin
+          rem bash --login
+          %comspec% /k "C:\msys64\msys2_shell.cmd" -defterm -here -no-start -msys
           uname -a
           pwd
           ls -al
