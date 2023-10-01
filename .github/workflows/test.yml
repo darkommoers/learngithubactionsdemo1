@@ -56,20 +56,8 @@ jobs:
       - name: Configure Makefile
         shell: pwsh
         run: |
-          $Env:Path += ";$env:SystemDrive\msys64"
-          function Invoke-CmdScript {
-            param(
-              [String] $scriptName
-            )
-            $cmdLine = """$scriptName"" $args & set"
-            & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
-            select-string '^([^=]*)=(.*)$' | foreach-object {
-              $varName = $_.Matches[0].Groups[1].Value
-              $varValue = $_.Matches[0].Groups[2].Value
-              set-item -force Env:$varName $varValue
-            }
-          }
-          Invoke-CmdScript "$env:SystemDrive\msys64\msys2_shell.cmd" -defterm -here -no-start -msys
+          $Env:Path += ";$env:SystemDrive\msys64\usr\bin"
+          bash --login
           uname -a
           pwd
           ls -al
