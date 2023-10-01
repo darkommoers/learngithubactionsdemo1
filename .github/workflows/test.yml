@@ -89,7 +89,7 @@ jobs:
           cd $CUR
           pwd
           ls -al
-           auto/configure \
+          ./configure \
               --with-cc=cl \
               --with-debug \
               --prefix= \
@@ -130,6 +130,7 @@ jobs:
               --with-mail_ssl_module \
               --with-stream_ssl_module \
               --with-compat
+
       # - name: Make
       #   # shell: powershell
       #   shell: pwsh
