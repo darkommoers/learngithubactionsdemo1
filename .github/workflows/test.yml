@@ -24,8 +24,8 @@ jobs:
           # choco install sed -y
           perl --version
           sed --version
-          cd $env:ProgramFiles\Mercurial
-          .\hg version
+          # cd $env:ProgramFiles\Mercurial
+          # .\hg version
           $metadataNginx = Invoke-RestMethod http://nginx.org/en/download.html
           $metadataNginx -match 'nginx/Windows-(.*?)<';$releaseNginx = $matches[1]
           Start-BitsTransfer -Source "http://nginx.org/download/nginx-${releaseNginx}.tar.gz" -Destination "nginx-${releaseNginx}.tar.gz" -Dynamic
@@ -47,15 +47,14 @@ jobs:
           Get-Location
           echo end
 
-      - uses: msys2/setup-msys2@v2
-      - name: Configure Makefile
-        shell: msys2 {0}
-        run: |
-          uname -a
-          # cd nginx
-          pwd
-          env
-          ls -al
+      # - uses: msys2/setup-msys2@v2
+      # - name: Configure Makefile
+      #   shell: msys2 {0}
+      #   run: |
+      #     uname -a
+      #     # cd nginx
+      #     pwd
+      #     ls -al
 
       # - name: Make
       #   shell: pwsh
