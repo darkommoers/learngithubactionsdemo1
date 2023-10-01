@@ -76,8 +76,9 @@ jobs:
           tar -zxvf ../../pcre2-10.42.tar.gz
           tar -zxvf ../../zlib-1.3.tar.gz
           tar -zxvf ../../openssl-3.0.11.tar.gz
-          # cd ~/nginx
-          cd ..
+          # cd ..
+          # cd ..
+          cd ~/nginx
           ./auto/configure \
               --with-cc=cl \
               --with-debug \
