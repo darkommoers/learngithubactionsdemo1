@@ -53,3 +53,16 @@ jobs:
           Get-ChildItem -Force
           echo end
 
+
+      - name: Configure Makefile
+        shell: cmd
+        run: |
+          C:/msys64/msys2_shell.cmd -defterm -here -no-start -msys
+          uname -a
+          pwd
+          ls -al
+          cd nginx
+          CUR=$PWD
+          pwd
+          ls -al
+          echo $CUR
