@@ -70,7 +70,7 @@ jobs:
           echo $CUR
 
       - name: Configure Makefile
-        shell: cmd
+        shell: pwsh
         run: |
           $Env:Path += ";$env:SystemDrive\msys64\usr\bin"
           bash --login
