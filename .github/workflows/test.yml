@@ -53,7 +53,8 @@ jobs:
         run: |
           uname -a
           # cd nginx
-          $PWD
+          pwd
+          env
           ls -al
 
       # - name: Make
