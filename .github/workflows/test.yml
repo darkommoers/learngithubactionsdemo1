@@ -16,27 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Make
-      #   # shell: powershell
-      #   shell: pwsh
-      #   run: |
-      #     function Invoke-CmdScript {
-      #       param(
-      #         [String] $scriptName
-      #       )
-      #       $cmdLine = """$scriptName"" $args & set"
-      #       & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
-      #       select-string '^([^=]*)=(.*)$' | foreach-object {
-      #         $varName = $_.Matches[0].Groups[1].Value
-      #         $varValue = $_.Matches[0].Groups[2].Value
-      #         set-item -force Env:$varName $varValue
-      #       }
-      #     }
-      #     Invoke-CmdScript "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
-      #     cl
-      #     Get-Location
-      #     Get-ChildItem -Force
-      
       - name: get source
         # shell: powershell
         shell: pwsh
@@ -87,7 +66,7 @@ jobs:
           pwd
           ls -al
           cd nginx
-          cur_dir="$(pwd)"
+          CUR=$PWD
           pwd
           ls -al
           wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
@@ -107,7 +86,7 @@ jobs:
           # pwd
           # cd ..
           # pwd
-          cd ${cur_dir}
+          cd $CUR
           auto/configure \
               --with-cc=cl \
               --with-debug \
@@ -149,12 +128,29 @@ jobs:
               --with-mail_ssl_module \
               --with-stream_ssl_module \
               --with-compat
-              
+  
       # - name: Make
-      #   shell: powershell
+      #   # shell: powershell
       #   shell: pwsh
       #   run: |
-      #     perl --version
-      #     sed --version
-      #     cd $env:ProgramFiles\Mercurial
-      #     .\hg version
+      #     function Invoke-CmdScript {
+      #       param(
+      #         [String] $scriptName
+      #       )
+      #       $cmdLine = """$scriptName"" $args & set"
+      #       & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
+      #       select-string '^([^=]*)=(.*)$' | foreach-object {
+      #         $varName = $_.Matches[0].Groups[1].Value
+      #         $varValue = $_.Matches[0].Groups[2].Value
+      #         set-item -force Env:$varName $varValue
+      #       }
+      #     }
+      #     Invoke-CmdScript "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
+      #     cl
+      #     Get-Location
+      #     Get-ChildItem -Force
+      #     cd nginx
+      #     Get-ChildItem -Force
+      #     nmake
+      #     nmake -f objs/Makefile
+      #     .\objs\nginx.exe -V
