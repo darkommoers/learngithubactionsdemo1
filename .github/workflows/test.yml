@@ -87,6 +87,7 @@ jobs:
           pwd
           ls -al
           cd nginx
+          cur_dir="$(pwd)"
           pwd
           ls -al
           wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
@@ -102,11 +103,11 @@ jobs:
           # tar -zxvf ../../zlib-1.3.tar.gz
           # tar -zxvf ../../openssl-3.0.11.tar.gz
           pwd
-          cd ..
-          pwd
-          cd ..
-          pwd
-          # cd ~/nginx
+          # cd ..
+          # pwd
+          # cd ..
+          # pwd
+          cd ${cur_dir}
           auto/configure \
               --with-cc=cl \
               --with-debug \
