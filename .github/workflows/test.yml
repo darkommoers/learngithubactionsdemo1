@@ -45,23 +45,25 @@ jobs:
           }
           $newContent | Set-Content .\nginx\auto\cc\msvc
           Get-Content .\nginx\auto\cc\msvc
+          Get-ChildItem -Force
           Get-Location
           echo end
 
+      # - name: Configure Makefile
+      #   working-directory: ${{runner.workspace}}
+      #   run: |
+      #     Get-Location
+      #     Get-ChildItem -Force
+
+      - uses: msys2/setup-msys2@v2
       - name: Configure Makefile
+        shell: msys2 {0}
         working-directory: ${{runner.workspace}}
         run: |
-          Get-Location
-          Get-ChildItem -Force
-
-      # - uses: msys2/setup-msys2@v2
-      # - name: Configure Makefile
-      #   shell: msys2 {0}
-      #   run: |
-      #     uname -a
-      #     # cd nginx
-      #     pwd
-      #     ls -al
+          uname -a
+          # cd nginx
+          pwd
+          ls -al
 
       # - name: Make
       #   shell: powershell
