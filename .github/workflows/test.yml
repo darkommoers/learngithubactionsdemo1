@@ -29,7 +29,7 @@ jobs:
           $metadataNginx = Invoke-RestMethod http://nginx.org/en/download.html
           $metadataNginx -match 'nginx/Windows-(.*?)<';$releaseNginx = $matches[1]
           Start-BitsTransfer -Source "http://nginx.org/download/nginx-${releaseNginx}.tar.gz" -Destination "nginx-${releaseNginx}.tar.gz" -Dynamic
-          tar -zxvf "nginx-${releaseNginx}.tar.gz"
+          tar -zxf "nginx-${releaseNginx}.tar.gz"
           Remove-Item "nginx-${releaseNginx}.tar.gz" -Force -Recurse *>$null
           Move-Item ".\nginx-${releaseNginx}*" -Destination ".\nginx" -Force
           
@@ -44,6 +44,7 @@ jobs:
           }
           $newContent | Set-Content .\nginx\auto\cc\msvc
           Get-Content .\nginx\auto\cc\msvc
+          Get-Location
           echo end
 
       - uses: msys2/setup-msys2@v2
@@ -51,11 +52,12 @@ jobs:
         shell: msys2 {0}
         run: |
           uname -a
-          cd nginx
+          # cd nginx
+          $PWD
           ls -al
 
       # - name: Make
-      #   shell: powershell
+      #   shell: pwsh
       #   run: |
       #     perl --version
       #     sed --version
