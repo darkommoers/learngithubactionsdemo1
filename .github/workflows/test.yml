@@ -54,9 +54,11 @@ jobs:
           echo end
 
       - name: Configure Makefile
-        shell: pwsh
+        shell: cmd
         run: |
-          $Env:Path += ";$env:SystemDrive\msys64\usr\bin"
+          # $Env:Path += ";$env:SystemDrive\msys64\usr\bin"
+          # bash --login
+          set path=%path%;C:\msys64\usr\bin
           bash --login
           uname -a
           pwd
