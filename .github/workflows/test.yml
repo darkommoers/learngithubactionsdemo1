@@ -16,42 +16,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: get source
-        # shell: powershell
-        shell: pwsh
-        run: |
-          echo run
-          $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
-          # choco install sed -y
-          perl --version
-          sed --version
-          hg version
-          $Env:Path += ";$env:ProgramFiles\Mercurial"
-          hg clone http://hg.nginx.org/nginx
+      # - name: get source
+      #   # shell: powershell
+      #   shell: pwsh
+      #   run: |
+      #     echo run
+      #     $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
+      #     # choco install sed -y
+      #     perl --version
+      #     sed --version
+      #     hg version
+      #     $Env:Path += ";$env:ProgramFiles\Mercurial"
+      #     hg clone http://hg.nginx.org/nginx
           
-          # $metadataNginx = Invoke-RestMethod http://nginx.org/en/download.html
-          # $metadataNginx -match 'nginx/Windows-(.*?)<';$releaseNginx = $matches[1]
-          # Start-BitsTransfer -Source "http://nginx.org/download/nginx-${releaseNginx}.tar.gz" -Destination "nginx-${releaseNginx}.tar.gz" -Dynamic
-          # tar -zxf "nginx-${releaseNginx}.tar.gz"
-          # Remove-Item "nginx-${releaseNginx}.tar.gz" -Force -Recurse *>$null
-          # Move-Item ".\nginx-${releaseNginx}*" -Destination ".\nginx" -Force
+      #     # $metadataNginx = Invoke-RestMethod http://nginx.org/en/download.html
+      #     # $metadataNginx -match 'nginx/Windows-(.*?)<';$releaseNginx = $matches[1]
+      #     # Start-BitsTransfer -Source "http://nginx.org/download/nginx-${releaseNginx}.tar.gz" -Destination "nginx-${releaseNginx}.tar.gz" -Dynamic
+      #     # tar -zxf "nginx-${releaseNginx}.tar.gz"
+      #     # Remove-Item "nginx-${releaseNginx}.tar.gz" -Force -Recurse *>$null
+      #     # Move-Item ".\nginx-${releaseNginx}*" -Destination ".\nginx" -Force
           
-          $clfileto="$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\$((Get-ChildItem -Path "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\" -Recurse -Name cl.exe)[0])"
-          $clfileto | foreach-object { "{0}`t{1}" -f $_.Name, [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_).FileVersion } |% {$_ -match '\d{2}.\d{2}'};$clfilever=$Matches[0];$clfilever
-          $newContent = switch -Wildcard -Regex -File .\nginx\auto\cc\msvc {
-              'version:.*$' {
-                  "NGX_MSVC_VER=${clfilever}"
-                  $_
-              }
-              default { $_ }
-          }
-          $newContent | Set-Content .\nginx\auto\cc\msvc
-          Get-Content .\nginx\auto\cc\msvc
-          Get-ChildItem -Force
-          Get-Location
-          cd nginx
-          Get-ChildItem -Force
-          echo end
+      #     $clfileto="$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\$((Get-ChildItem -Path "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\" -Recurse -Name cl.exe)[0])"
+      #     $clfileto | foreach-object { "{0}`t{1}" -f $_.Name, [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_).FileVersion } |% {$_ -match '\d{2}.\d{2}'};$clfilever=$Matches[0];$clfilever
+      #     $newContent = switch -Wildcard -Regex -File .\nginx\auto\cc\msvc {
+      #         'version:.*$' {
+      #             "NGX_MSVC_VER=${clfilever}"
+      #             $_
+      #         }
+      #         default { $_ }
+      #     }
+      #     $newContent | Set-Content .\nginx\auto\cc\msvc
+      #     Get-Content .\nginx\auto\cc\msvc
+      #     Get-ChildItem -Force
+      #     Get-Location
+      #     cd nginx
+      #     Get-ChildItem -Force
+      #     echo end
 
       - name: Configure Makefile
         shell: cmd
@@ -59,6 +59,22 @@ jobs:
           rem set path=%path%;C:\msys64\usr\bin
           rem bash --login
           %comspec% /k "C:\msys64\msys2_shell.cmd" -defterm -here -no-start -msys
+          pacman -Q
+          uname -a
+          pwd
+          ls -al
+          cd nginx
+          CUR=$PWD
+          pwd
+          ls -al
+          echo $CUR
+
+      - name: Configure Makefile
+        shell: cmd
+        run: |
+          $Env:Path += ";$env:SystemDrive\msys64\usr\bin"
+          bash --login
+          pacman -Q
           uname -a
           pwd
           ls -al
