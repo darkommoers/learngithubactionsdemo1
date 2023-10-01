@@ -16,65 +16,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: get source
-      #   # shell: powershell
-      #   shell: pwsh
-      #   run: |
-      #     echo run
-      #     $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
-      #     # choco install sed -y
-      #     perl --version
-      #     sed --version
-      #     hg version
-      #     $Env:Path += ";$env:ProgramFiles\Mercurial"
-      #     hg clone http://hg.nginx.org/nginx
-          
-      #     # $metadataNginx = Invoke-RestMethod http://nginx.org/en/download.html
-      #     # $metadataNginx -match 'nginx/Windows-(.*?)<';$releaseNginx = $matches[1]
-      #     # Start-BitsTransfer -Source "http://nginx.org/download/nginx-${releaseNginx}.tar.gz" -Destination "nginx-${releaseNginx}.tar.gz" -Dynamic
-      #     # tar -zxf "nginx-${releaseNginx}.tar.gz"
-      #     # Remove-Item "nginx-${releaseNginx}.tar.gz" -Force -Recurse *>$null
-      #     # Move-Item ".\nginx-${releaseNginx}*" -Destination ".\nginx" -Force
-          
-      #     $clfileto="$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\$((Get-ChildItem -Path "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\" -Recurse -Name cl.exe)[0])"
-      #     $clfileto | foreach-object { "{0}`t{1}" -f $_.Name, [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_).FileVersion } |% {$_ -match '\d{2}.\d{2}'};$clfilever=$Matches[0];$clfilever
-      #     $newContent = switch -Wildcard -Regex -File .\nginx\auto\cc\msvc {
-      #         'version:.*$' {
-      #             "NGX_MSVC_VER=${clfilever}"
-      #             $_
-      #         }
-      #         default { $_ }
-      #     }
-      #     $newContent | Set-Content .\nginx\auto\cc\msvc
-      #     Get-Content .\nginx\auto\cc\msvc
-      #     Get-ChildItem -Force
-      #     Get-Location
-      #     cd nginx
-      #     Get-ChildItem -Force
-      #     echo end
-
-      - name: Configure Makefile
-        shell: cmd
-        run: |
-          set path=%path%;C:\msys64\usr\bin
-          bash --login
-          # %comspec% /k "C:\msys64\msys2_shell.cmd" -defterm -here -no-start -msys
-          pacman -Q
-          uname -a
-          pwd
-          ls -al
-          cd nginx
-          CUR=$PWD
-          pwd
-          ls -al
-          echo $CUR
-
-      - name: Configure Makefile
+      - name: get source
+        # shell: powershell
         shell: pwsh
         run: |
-          $Env:Path += ";$env:SystemDrive\msys64\usr\bin"
-          bash --login
-          pacman -Q
+          echo run
+          $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
+          # choco install sed -y
+          perl --version
+          sed --version
+          hg version
+          $Env:Path += ";$env:ProgramFiles\Mercurial"
+          hg clone http://hg.nginx.org/nginx
+
+          # $metadataNginx = Invoke-RestMethod http://nginx.org/en/download.html
+          # $metadataNginx -match 'nginx/Windows-(.*?)<';$releaseNginx = $matches[1]
+          # Start-BitsTransfer -Source "http://nginx.org/download/nginx-${releaseNginx}.tar.gz" -Destination "nginx-${releaseNginx}.tar.gz" -Dynamic
+          # tar -zxf "nginx-${releaseNginx}.tar.gz"
+          # Remove-Item "nginx-${releaseNginx}.tar.gz" -Force -Recurse *>$null
+          # Move-Item ".\nginx-${releaseNginx}*" -Destination ".\nginx" -Force
+
+          $clfileto="$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\$((Get-ChildItem -Path "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\" -Recurse -Name cl.exe)[0])"
+          $clfileto | foreach-object { "{0}`t{1}" -f $_.Name, [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_).FileVersion } |% {$_ -match '\d{2}.\d{2}'};$clfilever=$Matches[0];$clfilever
+          $newContent = switch -Wildcard -Regex -File .\nginx\auto\cc\msvc {
+              'version:.*$' {
+                  "NGX_MSVC_VER=${clfilever}"
+                  $_
+              }
+              default { $_ }
+          }
+          $newContent | Set-Content .\nginx\auto\cc\msvc
+          Get-Content .\nginx\auto\cc\msvc
+          Get-ChildItem -Force
+          Get-Location
+          cd nginx
+          Get-ChildItem -Force
+          echo end
+
+      - uses: msys2/setup-msys2@v2
+
+      - name: Configure Makefile
+        shell: msys2 {0}
+        run: |
           uname -a
           pwd
           ls -al
@@ -82,4 +65,91 @@ jobs:
           CUR=$PWD
           pwd
           ls -al
-          echo $CUR
+          wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
+          wget http://zlib.net/zlib-1.3.tar.gz
+          wget https://www.openssl.org/source/openssl-3.0.11.tar.gz
+          mkdir -p objs/lib
+          install -d objs/lib
+          cd objs/lib
+          tar -zxf ../../pcre2-10.42.tar.gz
+          tar -zxf ../../zlib-1.3.tar.gz
+          tar -zxf ../../openssl-3.0.11.tar.gz
+          # tar -zxvf ../../pcre2-10.42.tar.gz
+          # tar -zxvf ../../zlib-1.3.tar.gz
+          # tar -zxvf ../../openssl-3.0.11.tar.gz
+          pwd
+          # cd ..
+          # pwd
+          # cd ..
+          # pwd
+          cd $CUR
+          pwd
+          ls -al
+          # ./configure \
+          auto/configure \
+              --with-cc=cl \
+              --with-debug \
+              --prefix= \
+              --conf-path=conf/nginx.conf \
+              --pid-path=logs/nginx.pid \
+              --http-log-path=logs/access.log \
+              --error-log-path=logs/error.log \
+              --sbin-path=nginx.exe \
+              --http-client-body-temp-path=temp/client_body_temp \
+              --http-proxy-temp-path=temp/proxy_temp \
+              --http-fastcgi-temp-path=temp/fastcgi_temp \
+              --http-scgi-temp-path=temp/scgi_temp \
+              --http-uwsgi-temp-path=temp/uwsgi_temp \
+              --with-cc-opt=-DFD_SETSIZE=1024 \
+              --with-pcre=objs/lib/pcre2-10.42 \
+              --with-zlib=objs/lib/zlib-1.3 \
+              --with-http_v2_module \
+              --with-http_realip_module \
+              --with-http_addition_module \
+              --with-http_sub_module \
+              --with-http_dav_module \
+              --with-http_stub_status_module \
+              --with-http_flv_module \
+              --with-http_mp4_module \
+              --with-http_gunzip_module \
+              --with-http_gzip_static_module \
+              --with-http_auth_request_module \
+              --with-http_random_index_module \
+              --with-http_secure_link_module \
+              --with-http_slice_module \
+              --with-mail \
+              --with-stream \
+              --with-stream_realip_module \
+              --with-stream_ssl_preread_module \
+              --with-openssl=objs/lib/openssl-3.0.11 \
+              --with-openssl-opt='no-asm no-tests -D_WIN32_WINNT=0x0501' \
+              --with-http_ssl_module \
+              --with-mail_ssl_module \
+              --with-stream_ssl_module \
+              --with-compat
+
+      - name: Make
+        # shell: powershell
+        shell: pwsh
+        run: |
+          function Invoke-CmdScript {
+            param(
+              [String] $scriptName
+            )
+            $cmdLine = """$scriptName"" $args & set"
+            & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
+            select-string '^([^=]*)=(.*)$' | foreach-object {
+              $varName = $_.Matches[0].Groups[1].Value
+              $varValue = $_.Matches[0].Groups[2].Value
+              set-item -force Env:$varName $varValue
+            }
+          }
+          Invoke-CmdScript "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
+          cl
+          Get-Location
+          Get-ChildItem -Force
+          cd nginx
+          Get-ChildItem -Force
+          nmake
+          # nmake -f objs/Makefile
+          .\objs\nginx.exe -V
