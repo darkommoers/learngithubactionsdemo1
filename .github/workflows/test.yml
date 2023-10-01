@@ -17,13 +17,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: get source
-        shell: powershell
+        # shell: powershell
+        shell: pwsh
         run: |
           echo run
           $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
           # choco install sed -y
-          perl --version
-          sed --version
+          # perl --version
+          # sed --version
           # cd $env:ProgramFiles\Mercurial
           # .\hg version
           $metadataNginx = Invoke-RestMethod http://nginx.org/en/download.html
@@ -47,6 +48,12 @@ jobs:
           Get-Location
           echo end
 
+      - name: Configure Makefile
+        working-directory: ${{runner.workspace}}
+        run: |
+          Get-Location
+          Get-ChildItem -Force
+
       # - uses: msys2/setup-msys2@v2
       # - name: Configure Makefile
       #   shell: msys2 {0}
@@ -57,6 +64,7 @@ jobs:
       #     ls -al
 
       # - name: Make
+      #   shell: powershell
       #   shell: pwsh
       #   run: |
       #     perl --version
