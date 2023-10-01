@@ -56,20 +56,14 @@ jobs:
       #     Get-ChildItem -Force
 
       - uses: msys2/setup-msys2@v2
+
       - name: Configure Makefile
         shell: msys2 {0}
         run: |
           uname -a
           pwd
-
-      - name: Configure Makefile1
-        shell: msys2 {0}
-        working-directory: ${{runner.workspace}}
-        run: |
-          uname -a
-          pwd
           ls -al
-          cd learngithubactionsdemo1
+          cd nginx
           ls -al
 
       # - name: Make
