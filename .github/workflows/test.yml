@@ -6,11 +6,6 @@ on:
 jobs:
   push:
     runs-on: windows-latest
-
-    # defaults:
-    #   run:
-    #     shell: msys2 {0}
-
     steps:
       - run: git config --global core.autocrlf input
       - name: Checkout
@@ -152,4 +147,9 @@ jobs:
           Get-ChildItem -Force
           nmake
           # nmake -f objs/Makefile
+          .\objs\nginx.exe -V
+
+      - name: Show nginx version
+        run: |
+          cd nginx
           .\objs\nginx.exe -V
