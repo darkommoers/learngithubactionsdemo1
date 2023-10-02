@@ -31,6 +31,7 @@ jobs:
           coreutils
           curl
           diffutils
+          git
           gawk
           gcc
           make
@@ -40,6 +41,8 @@ jobs:
           zlib-devel
     - name: Compile HAProxy with ${{ matrix.CC }}
       run: |
+        git clone https://github.com/haproxy/haproxy.git
+        cd haproxy || exit 2
         echo "::group::Show platform specific defines"
         echo | ${{ matrix.CC }} -dM -xc -E -
         echo "::endgroup::"
@@ -52,6 +55,7 @@ jobs:
     - name: Show HAProxy version
       id: show-version
       run: |
+        cd haproxy || exit 2
         ./haproxy -vv
         echo $(./haproxy -v |awk 'NR==1{print $3}')
         echo "version=$(./haproxy -v |awk 'NR==1{print $3}')" >> $GITHUB_OUTPUT
