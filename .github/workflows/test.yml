@@ -4,58 +4,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  msys2:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: msys2 {0}
-    strategy:
-      matrix:
-        include:
-        - name: "Windows, gcc, all features"
-          TARGET: cygwin
-          CC: gcc
-          os: windows-latest
-          FLAGS:
-          - USE_OPENSSL=1
-          - USE_PCRE=1
-          - USE_PCRE_JIT=1
-          - USE_THREAD=1
-          - USE_ZLIB=1
+  push:
+    runs-on: windows-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: msys2/setup-msys2@v2
-      with:
-        install: >-
-          coreutils
-          curl
-          diffutils
-          git
-          gawk
-          gcc
-          make
-          tar
-          openssl-devel
-          pcre-devel
-          zlib-devel
-    - name: Compile HAProxy with ${{ matrix.CC }}
-      run: |
-        git clone https://github.com/haproxy/haproxy.git
-        cd haproxy || exit 2
-        echo "::group::Show platform specific defines"
-        echo | ${{ matrix.CC }} -dM -xc -E -
-        echo "::endgroup::"
-        make -j$(nproc) all \
-          ERR=1 \
-          TARGET=${{ matrix.TARGET }} \
-          CC=${{ matrix.CC }} \
-          DEBUG="-DDEBUG_STRICT -DDEBUG_MEMORY_POOLS -DDEBUG_POOL_INTEGRITY" \
-          ${{ join(matrix.FLAGS, ' ') }}
-    - name: Show HAProxy version
-      id: show-version
-      run: |
-        cd haproxy || exit 2
-        ./haproxy -vv
-        echo $(./haproxy -v |awk 'NR==1{print $3}')
-        echo "version=$(./haproxy -v |awk 'NR==1{print $3}')" >> $GITHUB_OUTPUT
+      - run: git config --global core.autocrlf input
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Cygwin
+        uses: cygwin/cygwin-install-action@master
+        with:
+          platform: x86_64
+          packages: make gcc-core gcc-g++
