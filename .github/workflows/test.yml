@@ -16,4 +16,5 @@ jobs:
         uses: cygwin/cygwin-install-action@master
         with:
           platform: x86_64
-          packages: make gcc-core gcc-g++
+          # packages: make gcc-core gcc-g++
+          packages: coreutils openssl-devel
