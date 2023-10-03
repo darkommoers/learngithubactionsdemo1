@@ -24,17 +24,10 @@ jobs:
       - name: Configure Compile Lua
         shell: msys2 {0}
         run: |
-          latest_luaname=$(curl -sL https://www.lua.org/ftp/ | grep -oP 'lua-[0-9](.*?).tar.gz' | uniq | sed -n '1p')
-          curl -R -O https://www.lua.org/ftp/${latest_luaname}
-          tar zxvf ${latest_luaname}
-          current_luapathname=$(echo ${latest_luaname} | grep -oP '(.*?)(?=.tar.*$)')
-          # current_luapathname=$(find ${PWD} -name "lua*" -type d | awk -F "/" '{print $NF}')
-          echo "${latest_luaname} ${current_luapathname}"
-          cd ${current_luapathname} || exit 2
-          make -j$(nproc) mingw all
-          # make INSTALL_TOP=/opt/${current_luapathname} install
-          # make INSTALL_TOP=/opt/${current_luapathname} uninstall
-          # make -j$(nproc) INSTALL_TOP=/opt/${current_luapathname} mingw install
+          curl -R -O http://www.lua.org/ftp/lua-5.4.6.tar.gz
+          tar zxf lua-5.4.6.tar.gz
+          cd lua-5.4.6
+          make all test
           echo "Show lua version"
           src/lua -v
           src/luac -v
