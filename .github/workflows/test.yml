@@ -11,30 +11,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install MSYS2
-        uses: msys2/setup-msys2@v2
+      - uses: msys2/setup-msys2@v2
         with:
-          # msystem: MINGW64
-          # update: true
-          install: coreutils diffutils gcc gdb make openssl-devel pcre-devel pcre2-devel zlib-devel curl wget zip git
-          # install: >-
-          #   git
-          #   curl
-          #   wget
-          
+          msystem: MINGW64
+          update: true
+          install: >-
+            coreutils
+            curl
+            wget
+            diffutils
+            git
+            gawk
+            gcc
+            gdb
+            make
+            tar
+            zip
+            openssl
+            openssl-devel
+            pcre-devel
+            pcre2-devel
+            zlib-devel
       - name: Compile CI-Build
         shell: msys2 {0}
         run: |
           echo 'Running in MSYS2!'
+          ls -al
+          cd ~
           curl -R -O http://www.lua.org/ftp/lua-5.4.6.tar.gz
           tar zxvf lua-5.4.6.tar.gz
           ls -al
           cd lua-5.4.6
           ls -al
           make -j$(nproc) mingw all
-          echo "Show lua version"
+          # make INSTALL_TOP=/opt/lua-5.4.6 install
+          # make INSTALL_TOP=/opt/lua-5.4.6 uninstall
+          # make -j$(nproc) INSTALL_TOP=/opt/lua-5.4.6 mingw install
           ./src/lua -v
-          echo "Show lua version"
+          # rm -rf ~/lua-5.4.6
+          ls -al /opt/lua-5.4.6
 
       - name: Configure Compile Haproxy
         shell: msys2 {0}
