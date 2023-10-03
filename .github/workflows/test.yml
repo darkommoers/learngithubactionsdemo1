@@ -36,13 +36,13 @@ jobs:
           cd lua-5.4.6
           ls -al
           #make -j$(nproc) mingw all
-          #make all test
+          make all test
           # make INSTALL_TOP=/opt/${current_luapathname} install
           # make INSTALL_TOP=/opt/${current_luapathname} uninstall
           # make -j$(nproc) INSTALL_TOP=/opt/${current_luapathname} mingw install
           echo "Show lua version"
-          # ./src/lua -v
-          # ./src/luac -v
+          ./src/lua -v
+          ./src/luac -v
 
       - name: Configure Compile Haproxy
         shell: msys2 {0}
