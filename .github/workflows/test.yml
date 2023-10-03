@@ -4,8 +4,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  push:
     runs-on: windows-latest
+
+    # defaults:
+    #   run:
+    #     shell: msys2 {0}
+
     steps:
       - run: git config --global core.autocrlf input
       - name: Checkout
@@ -36,34 +41,15 @@ jobs:
         shell: msys2 {0}
         run: |
           echo 'Running in MSYS2!'
-          ls -al
-          cd ~
+          gcc --version
+          g++ --version
+          gdb --version
+          make --version
           curl -R -O http://www.lua.org/ftp/lua-5.4.6.tar.gz
           tar zxvf lua-5.4.6.tar.gz
           ls -al
           cd lua-5.4.6
           ls -al
-          make -j$(nproc) mingw all
-          # make INSTALL_TOP=/opt/lua-5.4.6 install
-          # make INSTALL_TOP=/opt/lua-5.4.6 uninstall
-          # make -j$(nproc) INSTALL_TOP=/opt/lua-5.4.6 mingw install
+          make mingw all
+          # make -j$(nproc) mingw all
           ./src/lua -v
-          # rm -rf ~/lua-5.4.6
-          ls -al /opt/lua-5.4.6
-
-      - name: Configure Compile Haproxy
-        shell: msys2 {0}
-        run: |
-          echo ${current_luapathname}
-          # git clone https://github.com/haproxy/haproxy.git
-          # cd haproxy || exit 2
-          # make -j$(nproc) all \
-          #   ERR=1 \
-          #   TARGET=cygwin \
-          #   CC=gcc \
-          #   DEBUG="-DDEBUG_STRICT -DDEBUG_MEMORY_POOLS -DDEBUG_POOL_INTEGRITY" \
-          #   USE_LUA=1 LUA_LIB_NAME=lua LUA_INC=~/${current_luapathname}/src LUA_LIB=~/${current_luapathname}/src \
-          #   USE_GETADDRINFO=1 USE_OPENSSL=1 USE_PROMEX=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1
-          # make clean
-          # make install
-          # make uninstall
