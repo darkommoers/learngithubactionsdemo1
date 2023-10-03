@@ -44,7 +44,7 @@ jobs:
       - name: Configure Compile Haproxy
         shell: msys2 {0}
         run: |
-          current_luapathname=$(find ${PWD} -name "lua-*" -type d | awk -F "/" '{print $NF}')
+          current_luapathname=$(find ${PWD} -name "lua-*" -type d | awk -F "/" '{print $NF}' | xargs)
           echo ${current_luapathname}
           git clone https://github.com/haproxy/haproxy.git
           cd haproxy || exit 2
