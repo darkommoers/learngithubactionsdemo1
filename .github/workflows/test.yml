@@ -27,7 +27,7 @@ jobs:
   
       - name: Multiline inline shell
         run: >-
-          echo "Running in $(pwd)"
-          echo "233"
+          echo "Running in $(pwd)" &&
+          echo "233" &&
           echo "255"
         shell: C:\cygwin\bin\bash.exe '{0}'
