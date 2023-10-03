@@ -33,8 +33,7 @@ jobs:
           # current_luapathname=$(find ${PWD} -name "lua*" -type d | awk -F "/" '{print $NF}')
           echo "${latest_luaname} ${current_luapathname}"
           cd ${current_luapathname} || exit 2
-          make -j$(nproc) PLAT=mingw
-          # make -j$(nproc) mingw all
+          make -j$(nproc) PLAT=mingw all
           # make INSTALL_TOP=/opt/${current_luapathname} install
           # make INSTALL_TOP=/opt/${current_luapathname} uninstall
           # make -j$(nproc) INSTALL_TOP=/opt/${current_luapathname} mingw install
