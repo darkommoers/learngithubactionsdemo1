@@ -17,7 +17,9 @@ jobs:
         with:
           platform: x86_64
           # packages: make gcc-core gcc-g++
-          packages: coreutils openssl-devel
+          packages: >-
+           coreutils
+           moreutils
           
       - name: Single-line inline shell
         run: echo "Running in $(pwd)"
@@ -25,6 +27,7 @@ jobs:
   
       - name: Multiline inline shell
         run: >-
-          echo "Running in $(pwd)" &&
-          true
+          echo "Running in $(pwd)"
+          echo "233"
+          echo "255"
         shell: C:\cygwin\bin\bash.exe '{0}'
