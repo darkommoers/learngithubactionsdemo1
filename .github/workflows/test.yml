@@ -26,26 +26,15 @@ jobs:
         shell: msys2 {0}
         run: |
           echo 'Running in MSYS2!'
-          gcc --version
-          g++ --version
-          gdb --version
-          make --version
-          ls -al
-          cd ~
-          latest_luaname=$(curl -sL https://www.lua.org/ftp/ | grep -oP 'lua-[0-9](.*?).tar.gz' | uniq | sed -n '1p')
-          curl -R -O https://www.lua.org/ftp/${latest_luaname}
-          tar zxvf ${latest_luaname}
+          curl -R -O http://www.lua.org/ftp/lua-5.4.6.tar.gz
+          tar zxvf lua-5.4.6.tar.gz
           ls -al
           cd lua-5.4.6
           ls -al
           make -j$(nproc) mingw all
-          # make INSTALL_TOP=/opt/lua-5.4.6 install
-          # make INSTALL_TOP=/opt/lua-5.4.6 uninstall
-          # make -j$(nproc) INSTALL_TOP=/opt/lua-5.4.6 mingw install
-          # rm -rf ~/lua-5.4.6
           echo "Show lua version"
           ./src/lua -v
-          ./src/luac -v
+          echo "Show lua version"
 
       - name: Configure Compile Haproxy
         shell: msys2 {0}
