@@ -24,14 +24,18 @@ jobs:
       - name: Configure Compile Lua
         shell: msys2 {0}
         run: |
+          ls -al
           latest_luaname=$(curl -sL https://www.lua.org/ftp/ | grep -oP 'lua-[0-9](.*?).tar.gz' | uniq | sed -n '1p')
           curl -R -O https://www.lua.org/ftp/${latest_luaname}
           tar zxvf ${latest_luaname}
+          ls -al
           # current_luapathname=$(echo ${latest_luaname} | grep -oP '(.*?)(?=.tar.*$)')
           current_luapathname=$(find ${PWD} -name "lua*" -type d | awk -F "/" '{print $NF}')
           echo "${latest_luaname} ${current_luapathname}"
           cd ${current_luapathname} || exit 2
+          ls -al
           make -j$(nproc) mingw all
+          
           # make INSTALL_TOP=/opt/${current_luapathname} install
           # make INSTALL_TOP=/opt/${current_luapathname} uninstall
           # make -j$(nproc) INSTALL_TOP=/opt/${current_luapathname} mingw install
