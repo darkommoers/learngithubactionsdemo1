@@ -21,25 +21,28 @@ jobs:
           #   git
           #   curl
           #   wget
-      - name: Configure Compile Lua
+          
+      - name: Compile CI-Build
         shell: msys2 {0}
         run: |
+          echo 'Running in MSYS2!'
+          gcc --version
+          g++ --version
+          gdb --version
+          make --version
           ls -al
+          cd ~
           latest_luaname=$(curl -sL https://www.lua.org/ftp/ | grep -oP 'lua-[0-9](.*?).tar.gz' | uniq | sed -n '1p')
           curl -R -O https://www.lua.org/ftp/${latest_luaname}
           tar zxvf ${latest_luaname}
           ls -al
-          # current_luapathname=$(echo ${latest_luaname} | grep -oP '(.*?)(?=.tar.*$)')
-          current_luapathname=$(find ${PWD} -name "lua*" -type d | awk -F "/" '{print $NF}')
-          echo "${latest_luaname} ${current_luapathname}"
-          # cd ${current_luapathname} || exit 2
           cd lua-5.4.6
           ls -al
-          #make -j$(nproc) mingw all
-          make all test
-          # make INSTALL_TOP=/opt/${current_luapathname} install
-          # make INSTALL_TOP=/opt/${current_luapathname} uninstall
-          # make -j$(nproc) INSTALL_TOP=/opt/${current_luapathname} mingw install
+          make -j$(nproc) mingw all
+          # make INSTALL_TOP=/opt/lua-5.4.6 install
+          # make INSTALL_TOP=/opt/lua-5.4.6 uninstall
+          # make -j$(nproc) INSTALL_TOP=/opt/lua-5.4.6 mingw install
+          # rm -rf ~/lua-5.4.6
           echo "Show lua version"
           ./src/lua -v
           ./src/luac -v
