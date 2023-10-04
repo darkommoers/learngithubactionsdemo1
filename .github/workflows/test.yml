@@ -11,16 +11,35 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
 
-      - name: Checkout haproxy repo
-        uses: actions/checkout@v4
-        with:
-          repository: haproxy/haproxy
-          path: haproxy
-
-      - name: test gh
+      - name: Delete old release
+        shell: pwsh
+        env:
+          # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          $EnumColors = [Enum]::GetValues([ConsoleColor])
-          Write-Host "$((Get-Date -UFormat "%F %T")) === Installing Hysteria Run" -ForegroundColor (Get-Random -InputObject $EnumColors)
-          gh --version
           try { Remove-Item alias:curl -Force -Recurse *>$null }
           catch { Write-Host $_ *>$null }
+          $TARGET_TAG="caddy"
+          # https://docs.github.com/en/rest/git/refs#get-a-reference
+          $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
+            -H "Authorization: Bearer ${GH_TOKEN}" `
+            https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+
+          # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
+          # $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
+          #   -H "Authorization: Bearer ${GH_TOKEN}" `
+          #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
+
+          if ( ${TARGET_HTTP_CODE} -ne 200 ){
+              # echo "Fail: ${TARGET_HTTP_CODE}"
+              # echo "No target tag or release found, skip delete."
+              "$((Get-Date -UFormat "%F %T")) === Fail: ${TARGET_HTTP_CODE}"
+              "$((Get-Date -UFormat "%F %T")) === No target tag or release found, skip delete."
+          }else{
+              # echo "Success: ${TARGET_HTTP_CODE}"
+              "$((Get-Date -UFormat "%F %T")) === Success: ${TARGET_HTTP_CODE}"
+              # gh release delete "${TARGET_TAG}" -y --cleanup-tag
+              # gh release delete "${TARGET_TAG}" --yes --cleanup-tag
+              # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
+              "$((Get-Date -UFormat "%F %T")) === Target tag or release ${TARGET_TAG} deleted Complete!"
+          }
