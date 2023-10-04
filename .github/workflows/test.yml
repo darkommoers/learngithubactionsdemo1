@@ -23,5 +23,5 @@ jobs:
           Write-Host "$((Get-Date -UFormat "%F %T")) === Installing Hysteria Run" -ForegroundColor (Get-Random -InputObject $EnumColors)
           gh --version
           try { Remove-Item alias:curl -Force -Recurse *>$null }
-          catch { $_ }
-          catch { $null }
+          # catch { $_ }
+          # catch { $null }
