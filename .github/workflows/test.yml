@@ -11,12 +11,6 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
 
-      - name: Checkout haproxy repo
-        uses: actions/checkout@v4
-        with:
-          repository: haproxy/haproxy
-          path: haproxy
-
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@main
         with:
