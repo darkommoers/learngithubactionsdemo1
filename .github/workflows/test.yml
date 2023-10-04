@@ -21,7 +21,7 @@ jobs:
       - run: |
           pwd
           ls -al
-      - name: Check the another repo
+      - name: Check the haproxy repo
         working-directory: haproxy
         run: |
           pwd
