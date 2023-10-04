@@ -11,6 +11,12 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
 
+      - name: Checkout haproxy repo
+        uses: actions/checkout@v4
+        with:
+          repository: haproxy/haproxy
+          path: haproxy
+
       - name: Install Cygwin
         uses: cygwin/cygwin-install-action@master
         with:
@@ -40,12 +46,6 @@ jobs:
           echo "Show lua version"
           src/lua -v
           src/luac -v
-
-      - name: Checkout haproxy repo
-        uses: actions/checkout@v4
-        with:
-          repository: haproxy/haproxy
-          path: haproxy
 
       - name: Configure Compile Haproxy
         shell: C:\cygwin\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
