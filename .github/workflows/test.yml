@@ -17,18 +17,19 @@ jobs:
           repository: haproxy/haproxy
           path: haproxy
 
-      - name: Install Cygwin
-        uses: cygwin/cygwin-install-action@master
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
         with:
-          # platform: x86_64
-          packages: coreutils diffutils gcc-core gcc-g++ gdb make libssl-devel libpcre-devel libpcre2-devel zlib-devel curl wget zip git
-          # packages: >-
+          # msystem: MINGW64
+          # update: true
+          install: coreutils diffutils gcc gdb make openssl-devel pcre-devel pcre2-devel zlib-devel curl wget zip git
+          # install: >-
           #   git
           #   curl
           #   wget
 
       - name: Configure Compile Lua
-        shell: C:\cygwin\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        shell: msys2 {0}
         run: |
           echo Add other actions to build,
           latest_luaname=$(curl -sL https://www.lua.org/ftp/ | grep -oP 'lua-[0-9](.*?).tar.gz' | uniq | sed -n '1p')
@@ -48,7 +49,7 @@ jobs:
           src/luac -v
 
       - name: Configure Compile Haproxy
-        shell: C:\cygwin\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        shell: msys2 {0}
         run: |
           luapath="../${{ env.CURRENT_LUAPATHNAME }}/src"
           echo $luapath
@@ -66,7 +67,7 @@ jobs:
           # make uninstall
 
       - name: Show Haproxy version
-        shell: C:\cygwin\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        shell: msys2 {0}
         run: |
           cd haproxy || exit 2
           ./haproxy -vv
