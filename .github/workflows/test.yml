@@ -17,7 +17,10 @@ jobs:
           repository: haproxy/haproxy
           path: haproxy
 
-      - name: Install dependencies
-        shell: C:\msys64\mingw64.exe '{0}'
+      - name: Add path
         run: |
-          pacman -S --needed --noconfirm --overwrite coreutils git
+          echo "C:\msys64\usr\bin" >> $GITHUB_PATH
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pacman -Q
