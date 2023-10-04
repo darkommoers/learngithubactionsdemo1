@@ -21,8 +21,10 @@ jobs:
         run: |
           echo "C:\msys64\usr\bin" >> $GITHUB_PATH
           echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
+          (ls env:Path).Value -split ";"
       - name: Install dependencies
         run: |
           # $Env:Path += ";C:\msys64\usr\bin"
-          pacman -Q
+          (ls env:Path).Value -split ";"
+          # pacman -Q
           # pacman -S --needed --noconfirm --overwrite coreutils curl wget zip git
