@@ -17,18 +17,9 @@ jobs:
           repository: haproxy/haproxy
           path: haproxy
 
-      - name: Add path
-        run: |
-          echo "C:\msys64\usr\bin" | Out-File -FilePath "$env:GITHUB_PATH" -Append
-          echo "C:\msys64\mingw64\bin" | Out-File -FilePath "$env:GITHUB_PATH" -Append
-          (ls env:Path).Value -split ";"
-          echo 233
-          (ls env:GITHUB_PATH).Value -split ";"
       - name: Install dependencies
         run: |
           # $Env:Path += ";C:\msys64\usr\bin"
           (ls env:Path).Value -split ";"
-          echo 255
-          (ls env:GITHUB_PATH).Value -split ";"
-          # pacman -Q
+          pacman -Q
           # pacman -S --needed --noconfirm --overwrite coreutils curl wget zip git
