@@ -5,63 +5,24 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - run: git config --global core.autocrlf input
-      - name: Checkout
+      - name: Checkout self
         uses: actions/checkout@v4
-
-      - name: Install MSYS2
-        uses: msys2/setup-msys2@v2
+      - run: |
+          pwd
+          ls -al
+      - name: Checkout haproxy
+        uses: actions/checkout@v4
         with:
-          # msystem: MINGW64
-          # update: true
-          install: coreutils diffutils gcc gdb make openssl-devel pcre-devel pcre2-devel zlib-devel curl wget zip git
-          # install: >-
-          #   git
-          #   curl
-          #   wget
-
-      - name: Configure Compile Lua
-        shell: msys2 {0}
+          repository: haproxy/haproxy
+          path: haproxy
+      - run: |
+          pwd
+          ls -al
+      - name: Check the another repo
+        working-directory: haproxy
         run: |
-          echo Add other actions to build,
-          latest_luaname=$(curl -sL https://www.lua.org/ftp/ | grep -oP 'lua-[0-9](.*?).tar.gz' | uniq | sed -n '1p')
-          curl -R -O https://www.lua.org/ftp/${latest_luaname}
-          tar zxvf ${latest_luaname}
-          current_luapathname=$(echo ${latest_luaname} | grep -oP '(.*?)(?=.tar.*$)')
-          # current_luapathname=$(find ${PWD} -name "lua-*" -type d | awk -F "/" '{print $NF}')
-          echo "CURRENT_LUAPATHNAME=${current_luapathname}" >> $GITHUB_ENV
-          echo "${latest_luaname} ${current_luapathname}"
-          cd ${current_luapathname} || exit 2
-          make -j$(nproc) PLAT=mingw all
-          # make INSTALL_TOP=/opt/${current_luapathname} install
-          # make INSTALL_TOP=/opt/${current_luapathname} uninstall
-          # make -j$(nproc) INSTALL_TOP=/opt/${current_luapathname} PLAT=mingw install
-          echo "Show lua version"
-          src/lua -v
-          src/luac -v
-
-      - name: Configure Compile Haproxy
-        shell: msys2 {0}
-        run: |
-          luapath="../${{ env.CURRENT_LUAPATHNAME }}/src"
-          echo $luapath
-          git clone https://github.com/haproxy/haproxy.git
-          cd haproxy || exit 2
-          make -j$(nproc) all \
-            ERR=1 \
-            TARGET=cygwin \
-            CC=gcc \
-            DEBUG="-DDEBUG_STRICT -DDEBUG_MEMORY_POOLS -DDEBUG_POOL_INTEGRITY" \
-            USE_LUA=1 LUA_LIB_NAME=lua LUA_INC=$luapath LUA_LIB=${luapath} \
-            USE_OPENSSL=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1 USE_GETADDRINFO=1 USE_PROMEX=1
-          # make clean
-          # make install
-          # make uninstall
-
-      - name: Show Haproxy version
-        shell: msys2 {0}
-        run: |
-          cd haproxy || exit 2
-          ./haproxy -vv
+          pwd
+          ls -la
