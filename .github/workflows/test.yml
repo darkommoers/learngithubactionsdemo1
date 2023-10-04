@@ -13,6 +13,7 @@ jobs:
 
       - name: test
         run: |
+          TARGET_TAG="release"
           TARGET_HTTP_CODE=404
           echo -e "\e[30;48;5;1m Hello\e[0m"
           echo -e "\e[30;48;5;2m Hello\e[0m"
