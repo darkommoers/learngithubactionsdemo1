@@ -73,7 +73,7 @@ jobs:
           ./haproxy -vv
 
       - name: Ready Upload files
-        shell: C:\cygwin\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        shell: msys2 {0}
         run: |
           mkdir -p path/to/ready; install -d path/to/ready
           mkdir -p path/to/release; install -d path/to/release
