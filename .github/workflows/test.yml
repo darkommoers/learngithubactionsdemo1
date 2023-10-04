@@ -22,7 +22,7 @@ jobs:
           $TARGET_TAG="caddy"
           # https://docs.github.com/en/rest/git/refs#get-a-reference
           $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
-            -H "Authorization: Bearer ${GH_TOKEN}" `
+            -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
             https://api.github.com/repos/darkommoers/learngithubactionsdemo/git/refs/tags/${TARGET_TAG} )
             # https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
 
