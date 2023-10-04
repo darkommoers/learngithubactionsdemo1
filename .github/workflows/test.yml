@@ -18,6 +18,7 @@ jobs:
           path: haproxy
 
       - name: Install dependencies
+        shell: C:\msys64\usr\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
         run: |
           pacman -S --needed --noconfirm --overwrite coreutils diffutils gcc gdb make openssl-devel pcre-devel pcre2-devel zlib-devel curl wget zip git
 
