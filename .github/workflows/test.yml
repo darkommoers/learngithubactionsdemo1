@@ -5,51 +5,40 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - run: git config --global core.autocrlf input
       - name: Checkout self
         uses: actions/checkout@v4
 
       - name: Delete old release
-        shell: pwsh
         env:
           # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          try { Remove-Item alias:curl -Force -Recurse *>$null }
-          catch { Write-Host $_ *>$null }
-          $TARGET_TAG="haproxy"
+          TARGET_TAG="caddy"
           # https://docs.github.com/en/rest/git/refs#get-a-reference
-          $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
-            -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
+          TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
             https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
 
           # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
-          # $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
-          #   -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
+          # TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul \
+          #   -H "Authorization: Bearer ${GH_TOKEN}" \
           #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
 
-          if ( ${TARGET_HTTP_CODE} -ne 200 ){
-              # echo "Fail: ${TARGET_HTTP_CODE}"
-              # echo "No target tag or release found, skip delete."
-              "$((Get-Date -UFormat "%F %T")) === Fail: ${TARGET_HTTP_CODE}"
-              "$((Get-Date -UFormat "%F %T")) === No target tag or release found, skip delete."
-          }else{
-              # echo "Success: ${TARGET_HTTP_CODE}"
-              "$((Get-Date -UFormat "%F %T")) === Success: ${TARGET_HTTP_CODE}"
-              # gh release delete "${TARGET_TAG}" -y --cleanup-tag
-              # gh release delete "${TARGET_TAG}" --yes --cleanup-tag
-              try { gh release delete "${TARGET_TAG}" --yes --cleanup-tag }
-              catch { Write-Host $_ *>$null }
-              # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
-              "$((Get-Date -UFormat "%F %T")) === Target tag or release ${TARGET_TAG} deleted Complete!"
-          }
+          if [[ ${TARGET_HTTP_CODE} != 200 ]]; then
+          # if [[ "$TARGET_HTTP_CODE" -ne 200 ]]; then
+            # echo "Fail: ${TARGET_HTTP_CODE}"
+            # echo "No target tag or release found, skip delete."
+            echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[7;47;94m${TARGET_HTTP_CODE}\e[0m"
+            echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
+          else
+            # echo "Success: ${TARGET_HTTP_CODE}"
+            echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[7;47;96m${TARGET_HTTP_CODE}\e[0m"
+            # gh release delete "${TARGET_TAG}" -y --cleanup-tag
+            gh release delete "${TARGET_TAG}" --yes --cleanup-tag
+            # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
+            echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[7;47;96m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
+          fi
 
-      - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@main
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 3
