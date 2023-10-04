@@ -22,4 +22,5 @@ jobs:
           $EnumColors = [Enum]::GetValues([ConsoleColor])
           Write-Host "$((Get-Date -UFormat "%F %T")) === Installing Hysteria Run" -ForegroundColor (Get-Random -InputObject $EnumColors)
           gh --version
-          # Remove-Item alias:curl -Force -Recurse | Out-Null
+          try { Remove-Item alias:curl -Force -Recurse *>$null }
+          catch { Write-Host $_ }
