@@ -32,6 +32,9 @@ jobs:
             # echo "Fail: ${TARGET_HTTP_CODE}"
             # echo "No target tag or release found, skip delete."
             echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[7;47;94m${TARGET_HTTP_CODE}\e[0m"
+            echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[7;47;96m${TARGET_HTTP_CODE}\e[0m"
+            
+            gh release delete "${TARGET_TAG}" --yes --cleanup-tag || echo "gg"
             echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
           else
             # echo "Success: ${TARGET_HTTP_CODE}"
