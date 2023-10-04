@@ -35,5 +35,5 @@ jobs:
           echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_HTTP_CODE}\e[0m"
           echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
           
-          echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[40;48;5;2m${TARGET_HTTP_CODE}\e[0m"
+          echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[30;48;5;2m${TARGET_HTTP_CODE}\e[0m"
           echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[7;47;96m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
