@@ -14,9 +14,9 @@ jobs:
       - name: test
         run: |
           TARGET_HTTP_CODE=404
+          echo -e "\e[30;38;5;9m Hello\e[0m"
           echo -e "\e[30;48;5;9m Hello\e[0m"
-          echo -e "\e[30;38;5;9m Hello \e[0m \e[30;48;5;13m World \e[0m \e[30;48;5;14m World \e[0m"
-          echo -e "\e[40;38;5;9m Hello \e[0m \e[40;48;5;13m World \e[0m \e[40;48;5;14m World \e[0m"
+          echo -e "\e[0;40;31m Hello \e[0m \e[1;40;31m Hello \e[0m \e[0;40;36m World \e[0m \e[1;40;36m World \e[0m"
           
           echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[7;47;91m${TARGET_HTTP_CODE}\e[0m"
           echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
