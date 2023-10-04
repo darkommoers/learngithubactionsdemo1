@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # $Env:Path += ";C:\msys64\usr\bin"
+          $Env:Path += ";C:\msys64\usr\bin"
           function Invoke-CmdScript {
             param(
               [String] $scriptName
