@@ -25,4 +25,5 @@ jobs:
         working-directory: haproxy
         run: |
           pwd
+          cat VERSION
           ls -la
