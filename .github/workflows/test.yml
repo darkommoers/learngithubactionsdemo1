@@ -19,16 +19,15 @@ jobs:
         run: |
           try { Remove-Item alias:curl -Force -Recurse *>$null }
           catch { Write-Host $_ *>$null }
-          $TARGET_TAG="caddy"
+          $TARGET_TAG="haproxy"
           # https://docs.github.com/en/rest/git/refs#get-a-reference
           $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
             -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
-            https://api.github.com/repos/darkommoers/learngithubactionsdemo/git/refs/tags/${TARGET_TAG} )
-            # https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+            https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
 
           # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
           # $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
-          #   -H "Authorization: Bearer ${GH_TOKEN}" `
+          #   -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
           #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
 
           if ( ${TARGET_HTTP_CODE} -ne 200 ){
@@ -44,3 +43,4 @@ jobs:
               # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
               "$((Get-Date -UFormat "%F %T")) === Target tag or release ${TARGET_TAG} deleted Complete!"
           }
+
