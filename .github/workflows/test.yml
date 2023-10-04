@@ -52,8 +52,9 @@ jobs:
         run: |
           luapath="../${{ env.CURRENT_LUAPATHNAME }}/src"
           echo $luapath
+          ls -al
           # git clone https://github.com/haproxy/haproxy.git
-          # cd haproxy || exit 2
+          cd haproxy || exit 2
           make -j$(nproc) all \
             ERR=1 \
             TARGET=cygwin \
