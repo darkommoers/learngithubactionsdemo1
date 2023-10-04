@@ -14,32 +14,29 @@ jobs:
       - name: test
         run: |
           TARGET_HTTP_CODE=404
-          echo -e "\e[31;48;5;9m Hello\e[0m"
+          echo -e "\e[30;48;5;9m Hello\e[0m"
           echo -e "\e[30;48;5;10m Hello\e[0m"
           echo -e "\e[30;48;5;11m Hello\e[0m"
           echo -e "\e[30;48;5;12m Hello\e[0m"
           echo -e "\e[30;48;5;13m Hello\e[0m"
           echo -e "\e[30;48;5;14m Hello\e[0m"
           echo -e "\e[30;48;5;15m Hello\e[0m"
+          echo -e "\e[30;48;5;16m Hello\e[0m"
+          echo -e "\e[30;48;5;17m Hello\e[0m"
+          echo -e "\e[30;48;5;18m Hello\e[0m"
+          echo -e "\e[30;48;5;19m Hello\e[0m"
+          echo -e "\e[30;48;5;20m Hello\e[0m"
+          echo -e "\e[30;48;5;21m Hello\e[0m"
+          echo -e "\e[30;48;5;22m Hello\e[0m"
+          echo -e "\e[30;48;5;23m Hello\e[0m"
+          echo -e "\e[30;48;5;24m Hello\e[0m"
+          echo -e "\e[30;48;5;25m Hello\e[0m"
+          echo -e "\e[30;48;5;26m Hello\e[0m"
+          echo -e "\e[30;48;5;27m Hello\e[0m"
+          echo -e "\e[30;48;5;28m Hello\e[0m"
+          echo -e "\e[30;48;5;29m Hello\e[0m"
 
-          echo -e "\e[35;48;5;1m 404\e[0m"
-          echo -e "\e[35;48;5;9m 404\e[0m"
-          echo -e "\e[35;48;5;10m 404\e[0m"
-          echo -e "\e[35;48;5;11m 404\e[0m"
-          echo -e "\e[35;48;5;12m 404\e[0m"
-          echo -e "\e[35;48;5;13m 404\e[0m"
-          echo -e "\e[35;48;5;14m 404\e[0m"
-          echo -e "\e[35;48;5;15m 404\e[0m"
-          
-          echo -e "\e[36;48;5;1m 404\e[0m"
-          echo -e "\e[36;48;5;9m 404\e[0m"
-          echo -e "\e[36;48;5;10m 404\e[0m"
-          echo -e "\e[36;48;5;11m 404\e[0m"
-          echo -e "\e[36;48;5;12m 404\e[0m"
-          echo -e "\e[36;48;5;13m 404\e[0m"
-          echo -e "\e[36;48;5;14m 404\e[0m"
-          echo -e "\e[36;48;5;15m 404\e[0m"
-          
+
           echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[7;47;91m${TARGET_HTTP_CODE}\e[0m"
           echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
           
