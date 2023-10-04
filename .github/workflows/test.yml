@@ -5,46 +5,136 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - run: git config --global core.autocrlf input
       - name: Checkout self
         uses: actions/checkout@v4
 
+      - name: Checkout haproxy repo
+        uses: actions/checkout@v4
+        with:
+          repository: haproxy/haproxy
+          path: haproxy
+
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          # msystem: MINGW64
+          # update: true
+          install: coreutils diffutils gcc gdb make openssl-devel pcre-devel pcre2-devel zlib-devel curl wget zip git
+          # install: >-
+          #   git
+          #   curl
+          #   wget
+
+      - name: Configure Compile Lua
+        shell: msys2 {0}
+        run: |
+          echo Add other actions to build,
+          latest_luaname=$(curl -sL https://www.lua.org/ftp/ | grep -oP 'lua-[0-9](.*?).tar.gz' | uniq | sed -n '1p')
+          curl -R -O https://www.lua.org/ftp/${latest_luaname}
+          tar zxvf ${latest_luaname}
+          current_luapathname=$(echo ${latest_luaname} | grep -oP '(.*?)(?=.tar.*$)')
+          # current_luapathname=$(find ${PWD} -name "lua-*" -type d | grep -vi "haproxy" | awk -F "/" '{print $NF}')
+          echo "CURRENT_LUAPATHNAME=${current_luapathname}" >> $GITHUB_ENV
+          echo "${latest_luaname} ${current_luapathname}"
+          cd ${current_luapathname} || exit 2
+          make -j$(nproc) PLAT=mingw all
+          # make INSTALL_TOP=/opt/${current_luapathname} install
+          # make INSTALL_TOP=/opt/${current_luapathname} uninstall
+          # make -j$(nproc) INSTALL_TOP=/opt/${current_luapathname} PLAT=mingw install
+          echo "Show lua version"
+          src/lua -v
+          src/luac -v
+
+      - name: Configure Compile Haproxy
+        shell: msys2 {0}
+        run: |
+          luapath="../${{ env.CURRENT_LUAPATHNAME }}/src"
+          echo $luapath
+          # git clone https://github.com/haproxy/haproxy.git
+          cd haproxy || exit 2
+          make -j$(nproc) all \
+            ERR=1 \
+            TARGET=cygwin \
+            CC=gcc \
+            DEBUG="-DDEBUG_STRICT -DDEBUG_MEMORY_POOLS -DDEBUG_POOL_INTEGRITY" \
+            USE_LUA=1 LUA_LIB_NAME=lua LUA_INC=$luapath LUA_LIB=${luapath} \
+            USE_OPENSSL=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_THREAD=1 USE_ZLIB=1 USE_GETADDRINFO=1 USE_PROMEX=1
+          # make clean
+          # make install
+          # make uninstall
+
+      - name: Show Haproxy version
+        shell: msys2 {0}
+        run: |
+          cd haproxy || exit 2
+          ./haproxy -vv
+
+      - name: Ready Upload files
+        shell: msys2 {0}
+        run: |
+          mkdir -p path/to/ready; install -d path/to/ready
+          mkdir -p path/to/release; install -d path/to/release
+          cp -fr haproxy/haproxy.exe path/to/ready
+          for i in $(objdump -p haproxy/haproxy.exe | grep -i "dll name" | grep -oP '(?<=:[\s?])(\S*)' | grep -viP "kernel32"); do echo "Copy ${i} to $(echo ~)/path/to/ready"; find /usr -name ${i} -type f -exec cp -fr {} path/to/ready \;; done
+          ls -lhR path/to/ready
+          cd path/to/ready
+          echo "Generate: haproxy-windows.zip"
+          zip -9vr ../../../path/to/release/haproxy-windows.zip *
+          ls -lhR ../../../path/to/release
+
       - name: Delete old release
+        shell: pwsh
         env:
           # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          TARGET_TAG="caddy"
+          try { Remove-Item alias:curl -Force -Recurse *>$null }
+          catch { Write-Host $_ *>$null }
+          $TARGET_TAG="haproxy"
           # https://docs.github.com/en/rest/git/refs#get-a-reference
-          TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
+          $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
+            -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
             https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
 
           # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
-          # TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul \
-          #   -H "Authorization: Bearer ${GH_TOKEN}" \
+          # $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o nul `
+          #   -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
           #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
 
-          if [[ ${TARGET_HTTP_CODE} != 200 ]]; then
-          # if [[ "$TARGET_HTTP_CODE" -ne 200 ]]; then
-            # echo "Fail: ${TARGET_HTTP_CODE}"
-            # echo "No target tag or release found, skip delete."
-            echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_HTTP_CODE}\e[0m"
-            echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
-          else
-            # echo "Success: ${TARGET_HTTP_CODE}"
-            echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[30;48;5;2m${TARGET_HTTP_CODE}\e[0m"
-            # gh release delete "${TARGET_TAG}" -y --cleanup-tag
-            gh release delete "${TARGET_TAG}" --yes --cleanup-tag
-            # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
-            echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[0m\e[30;48;5;4m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
-          fi
-      - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@main
+          if ( ${TARGET_HTTP_CODE} -ne 200 ){
+              # echo "Fail: ${TARGET_HTTP_CODE}"
+              # echo "No target tag or release found, skip delete."
+              "$((Get-Date -UFormat "%F %T")) === Fail: ${TARGET_HTTP_CODE}"
+              "$((Get-Date -UFormat "%F %T")) === No target tag or release found, skip delete."
+          }else{
+              # echo "Success: ${TARGET_HTTP_CODE}"
+              "$((Get-Date -UFormat "%F %T")) === Success: ${TARGET_HTTP_CODE}"
+              # gh release delete "${TARGET_TAG}" -y --cleanup-tag
+              # gh release delete "${TARGET_TAG}" --yes --cleanup-tag
+              try { gh release delete "${TARGET_TAG}" --yes --cleanup-tag }
+              catch { Write-Host $_ *>$null }
+              # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
+              "$((Get-Date -UFormat "%F %T")) === Target tag or release ${TARGET_TAG} deleted Complete!"
+          }
+
+      - name: Upload to GitHub Release for all platform
+        uses: ncipollo/release-action@v1
         with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 3
+          name: Haproxy Rolling Release
+          tag: haproxy
+          body: These are automatically updated builds of the latest commit.
+          artifacts: "path/to/release/*"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # token: ${{ secrets.MY_GITHUB_TOKEN }}
+
+      # - name: Delete workflow runs
+      #   uses: Mattraks/delete-workflow-runs@main
+      #   with:
+      #     token: ${{ github.token }}
+      #     repository: ${{ github.repository }}
+      #     retain_days: 0
+      #     keep_minimum_runs: 2
