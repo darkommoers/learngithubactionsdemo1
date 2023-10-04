@@ -17,30 +17,10 @@ jobs:
           repository: haproxy/haproxy
           path: haproxy
 
-      - name: Show default
-        run: |
-          $Env:Path += ";C:\msys64\usr\bin"
-          pacman -Q
-
-      - name: Install dependencies
-        run: |
-          $Env:Path += ";C:\msys64\usr\bin"
-          function Invoke-CmdScript {
-            param(
-              [String] $scriptName
-            )
-            $cmdLine = """$scriptName"" $args & set"
-            & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
-            select-string '^([^=]*)=(.*)$' | foreach-object {
-              $varName = $_.Matches[0].Groups[1].Value
-              $varValue = $_.Matches[0].Groups[2].Value
-              set-item -force Env:$varName $varValue
-            }
-          }
-          Invoke-CmdScript "$Env:SystemRoot\msys64\msys2_shell.cmd" -defterm -here -no-start -mingw64
-          pacman -S --needed --noconfirm --overwrite coreutils diffutils gcc gdb make openssl-devel pcre-devel pcre2-devel zlib-devel curl wget zip git
-
-      - name: Show next
-        run: |
-          $Env:Path += ";C:\msys64\usr\bin"
-          pacman -Q
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 3
+          keep_minimum_runs: 3
