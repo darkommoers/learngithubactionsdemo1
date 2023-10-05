@@ -25,4 +25,4 @@ jobs:
           pwd
           ls -al
           curl
-          wget
+          pacman -Q
