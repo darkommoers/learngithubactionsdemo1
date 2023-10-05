@@ -73,17 +73,23 @@ jobs:
 
             while true; do
             # until false; do
-
             echo -e "\e[30;48;5;12m$(date '+%F %T') === check release exist\e[0m"
-            TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
+
+            TARGET_HTTP_CODE_TAG=$(curl -sI -w "%{http_code}" -o "/dev/null" \
               -H "Authorization: Bearer ${GH_TOKEN}" \
               https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+  
+            TARGET_HTTP_CODE_RELEASE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
+            
+            echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE_TAG\e[0m"
+            echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE_RELEASE\e[0m"
 
-            echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE\e[0m"
-            # if [[ ${TARGET_HTTP_CODE} != 200 ]] &>/dev/null; then
-            if [[ ${TARGET_HTTP_CODE} == 404 ]] &>/dev/null; then
+            if [[ ${TARGET_HTTP_CODE_TAG} == 404 && ${TARGET_HTTP_CODE_RELEASE} == 404 ]] &>/dev/null; then
             echo -e "\e[30;48;5;14m$(date '+%F %T') === release is no exist ready to upload\e[0m"
-            echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE\e[0m"
+            echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE_TAG\e[0m"
+            echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE_RELEASE\e[0m"
             break 49
             else
             echo -e "\e[30;48;5;11m$(date '+%F %T') === release exist retrying\e[0m"
