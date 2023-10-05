@@ -33,7 +33,7 @@ jobs:
           echo "$(date '+%F %T') === Latest ${target_name} version: ${latest_version}"
           if [[ "$current_version" != "${latest_version}" ]]; then
               echo "$(date '+%F %T') === Current version: $current_version, Latest version: ${latest_version}, Start Getting......"
-              curl -L \
+              curl -fsSL \
                   -X PUT \
                   -H "Authorization: Bearer ${GH_TOKEN}" \
                   https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} \
