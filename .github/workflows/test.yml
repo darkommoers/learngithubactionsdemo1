@@ -16,8 +16,8 @@ jobs:
         run: |
           (ls env:Path).Value -split ";"
       - name: Configure Makefile
-        shell: bash --noprofile --norc -o igncr -eo pipefail '{0}'
-        # shell: C:\msys64\usr\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        # shell: bash --noprofile --norc -o igncr -eo pipefail '{0}'
+        shell: C:\msys64\usr\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
         run: |
           echo 233
           echo 255
