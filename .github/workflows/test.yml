@@ -25,6 +25,22 @@ jobs:
       - run: echo hello > path/to/artifact/world1.txt
 
       - run: echo hello > path/to/artifact/world2.txt
+      - run: |
+            echo -e "\e[30;48;5;1m Hello\e[0m"
+            echo -e "\e[30;48;5;2m Hello\e[0m"
+            echo -e "\e[30;48;5;3m Hello\e[0m"
+            echo -e "\e[30;48;5;4m Hello\e[0m"
+            echo -e "\e[30;48;5;5m Hello\e[0m"
+            echo -e "\e[30;48;5;6m Hello\e[0m"
+            echo -e "\e[30;48;5;7m Hello\e[0m"
+            echo -e "\e[30;48;5;8m Hello\e[0m"
+            echo -e "\e[30;48;5;9m Hello\e[0m"
+            echo -e "\e[30;48;5;10m Hello\e[0m"
+            echo -e "\e[30;48;5;11m Hello\e[0m"
+            echo -e "\e[30;48;5;12m Hello\e[0m"
+            echo -e "\e[30;48;5;13m Hello\e[0m"
+            echo -e "\e[30;48;5;14m Hello\e[0m"
+            echo -e "\e[30;48;5;15m Hello\e[0m"
 
       - name: Delete old release
         env:
