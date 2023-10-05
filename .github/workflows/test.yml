@@ -20,9 +20,9 @@ jobs:
         run: |
           target_name="Haproxy"
           target_url="https://api.github.com/repos/haproxy/haproxy/tags"
-          current_version="$(cat "${CONTENT_PATH}" | head -1)"
+          # current_version="$(cat "${CONTENT_PATH}" | head -1)"
 
-          # current_version="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} | jq -r .content | head -1 | openssl base64 -d)"
+          current_version="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} | jq -r .content | head -1 | openssl base64 -d)"
 
           # List repository tags use
           latest_version="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET ${target_url} | jq -r .[0].name)"
