@@ -136,14 +136,8 @@ jobs:
           path: nginx
 
       - name: Get source
-        # shell: powershell
-        shell: pwsh
         run: |
           echo run
-          $PSVersionTable.PSVersion.Major, (Get-Host).Version.Major, $Host.Version.Major | Get-Random
-          # choco install sed -y
-          # perl --version
-          # sed --version
           $clfileto="$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\$((Get-ChildItem -Path "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\" -Recurse -Name cl.exe)[0])"
           $clfileto | foreach-object { "{0}`t{1}" -f $_.Name, [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_).FileVersion } |% {$_ -match '\d{2}.\d{2}'};$clfilever=$Matches[0];$clfilever
           $newContent = switch -Wildcard -Regex -File .\nginx\auto\cc\msvc {
@@ -154,17 +148,12 @@ jobs:
               default { $_ }
           }
           $newContent | Set-Content .\nginx\auto\cc\msvc
-          Get-Content .\nginx\auto\cc\msvc
-          Get-ChildItem -Force
-          Get-Location
-          cd nginx
-          Get-ChildItem -Force
           echo end
 
       - name: Configure Makefile
-        shell: bash
+        # shell: bash
         # shell: bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
-        # shell: C:\msys64\usr\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        shell: C:\msys64\usr\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
         run: |
           uname -a
           pwd
@@ -173,18 +162,18 @@ jobs:
           CUR=$PWD
           pwd
           ls -al
-          curl -O https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
-          curl -O http://zlib.net/zlib-1.3.tar.gz
-          curl -O https://www.openssl.org/source/openssl-3.0.11.tar.gz
+          curl -R -O https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
+          curl -R -O http://zlib.net/zlib-1.3.tar.gz
+          curl -R -O https://www.openssl.org/source/openssl-3.0.11.tar.gz
           mkdir -p objs/lib
           install -d objs/lib
           cd objs/lib
-          tar -zxf ../../pcre2-10.42.tar.gz
-          tar -zxf ../../zlib-1.3.tar.gz
-          tar -zxf ../../openssl-3.0.11.tar.gz
-          # tar -zxvf ../../pcre2-10.42.tar.gz
-          # tar -zxvf ../../zlib-1.3.tar.gz
-          # tar -zxvf ../../openssl-3.0.11.tar.gz
+          # tar -zxf ../../pcre2-10.42.tar.gz
+          # tar -zxf ../../zlib-1.3.tar.gz
+          # tar -zxf ../../openssl-3.0.11.tar.gz
+          tar -zxvf ../../pcre2-10.42.tar.gz
+          tar -zxvf ../../zlib-1.3.tar.gz
+          tar -zxvf ../../openssl-3.0.11.tar.gz
           pwd
           # cd ..
           # pwd
@@ -236,33 +225,33 @@ jobs:
               --with-stream_ssl_module \
               --with-compat
 
-      - name: Make
-        # shell: powershell
-        shell: pwsh
-        run: |
-          function Invoke-CmdScript {
-            param(
-              [String] $scriptName
-            )
-            $cmdLine = """$scriptName"" $args & set"
-            & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
-            select-string '^([^=]*)=(.*)$' | foreach-object {
-              $varName = $_.Matches[0].Groups[1].Value
-              $varValue = $_.Matches[0].Groups[2].Value
-              set-item -force Env:$varName $varValue
-            }
-          }
-          Invoke-CmdScript "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
-          cl
-          Get-Location
-          Get-ChildItem -Force
-          cd nginx
-          Get-ChildItem -Force
-          nmake
-          # nmake -f objs/Makefile
-          .\objs\nginx.exe -V
+      # - name: Make
+      #   # shell: powershell
+      #   shell: pwsh
+      #   run: |
+      #     function Invoke-CmdScript {
+      #       param(
+      #         [String] $scriptName
+      #       )
+      #       $cmdLine = """$scriptName"" $args & set"
+      #       & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
+      #       select-string '^([^=]*)=(.*)$' | foreach-object {
+      #         $varName = $_.Matches[0].Groups[1].Value
+      #         $varValue = $_.Matches[0].Groups[2].Value
+      #         set-item -force Env:$varName $varValue
+      #       }
+      #     }
+      #     Invoke-CmdScript "$Env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
+      #     cl
+      #     Get-Location
+      #     Get-ChildItem -Force
+      #     cd nginx
+      #     Get-ChildItem -Force
+      #     nmake
+      #     # nmake -f objs/Makefile
+      #     .\objs\nginx.exe -V
 
-      - name: Show nginx version
-        run: |
-          cd nginx
-          .\objs\nginx.exe -V
+      # - name: Show nginx version
+      #   run: |
+      #     cd nginx
+      #     .\objs\nginx.exe -V
