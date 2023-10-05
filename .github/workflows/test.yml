@@ -82,8 +82,8 @@ jobs:
               https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
 
             echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE\e[0m"
-            if [[ ${TARGET_HTTP_CODE} != 200 ]] &>/dev/null; then
-            # if [[ ${TARGET_HTTP_CODE} == 404 ]] &>/dev/null; then
+            # if [[ ${TARGET_HTTP_CODE} != 200 ]] &>/dev/null; then
+            if [[ ${TARGET_HTTP_CODE} == 404 ]] &>/dev/null; then
             echo -e "\e[30;48;5;14m$(date '+%F %T') === release is no exist ready to upload\e[0m"
             echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE\e[0m"
             break 49
