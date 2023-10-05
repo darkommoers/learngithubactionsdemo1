@@ -33,7 +33,7 @@ jobs:
           echo "$(date '+%F %T') === Latest ${target_name} version: ${latest_version}"
           if [[ "$current_version" != "${latest_version}" ]]; then
               echo "$(date '+%F %T') === Current version: $current_version, Latest version: ${latest_version}, Start Getting......"
-              curl -fsSL \
+              result=$( curl -fsSL \
                   -X PUT \
                   -H "Authorization: Bearer ${GH_TOKEN}" \
                   https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} \
@@ -41,8 +41,10 @@ jobs:
                       \"message\":\"Update to ${latest_version}\",
                       \"content\":\"$(echo ${latest_version} | openssl base64 -A)\",
                       \"sha\":$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} | jq .sha)
-                      }" | jq -r .commit.message
-
+                      }" )
+              echo "$(date '+%F %T') === $result"
+              echo "$(date '+%F %T') === $($result | jq -r .commit.message)"
+              
               echo "$(date '+%F %T') === Get ${target_name} latest version Complete."
           else
               echo "$(date '+%F %T') === Current version: $current_version, Latest version: ${latest_version}, No need to get."
