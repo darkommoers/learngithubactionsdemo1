@@ -5,7 +5,7 @@ on:
 
 jobs:
   autocheck:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,65 +26,67 @@ jobs:
 
       - run: echo hello > path/to/artifact/world2.txt
 
+
       - name: Delete old release
+        shell: pwsh
         env:
           # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          TARGET_TAG="caddy"
+          try { Remove-Item alias:curl -Force -Recurse *>$null }
+          catch { Write-Host $_ *>$null }
+          $TARGET_TAG="haproxy"
           # https://docs.github.com/en/rest/git/refs#get-a-reference
-          TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
+          $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "nul" `
+            -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
             https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
 
           # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
-          # TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-          #   -H "Authorization: Bearer ${GH_TOKEN}" \
+          # $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "nul" `
+          #   -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
           #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
 
-          if [[ ${TARGET_HTTP_CODE} != 200 ]]; then
-          # if [[ "$TARGET_HTTP_CODE" -ne 200 ]]; then
-            # echo "Fail: ${TARGET_HTTP_CODE}"
-            # echo "No target tag or release found, skip delete."
-            echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_HTTP_CODE}\e[0m"
-            echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
-          else
-            # echo "Success: ${TARGET_HTTP_CODE}"
-            echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[30;48;5;2m${TARGET_HTTP_CODE}\e[0m"
-            # gh release delete "${TARGET_TAG}" -y --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
-            gh release delete "${TARGET_TAG}" --yes --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
-            # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
+          if ( ${TARGET_HTTP_CODE} -ne 200 ){
+              # echo "Fail: ${TARGET_HTTP_CODE}"
+              # echo "No target tag or release found, skip delete."
+              "$((Get-Date -UFormat "%F %T")) === Fail: ${TARGET_HTTP_CODE}"
+              "$((Get-Date -UFormat "%F %T")) === No target tag or release found, skip delete."
+          }else{
+              # echo "Success: ${TARGET_HTTP_CODE}"
+              "$((Get-Date -UFormat "%F %T")) === Success: ${TARGET_HTTP_CODE}"
+              # gh release delete "${TARGET_TAG}" -y --cleanup-tag
+              # gh release delete "${TARGET_TAG}" --yes --cleanup-tag
+              try { gh release delete "${TARGET_TAG}" --yes --cleanup-tag }
+              catch { Write-Host $_ *>$null }
+              # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
+              
+              # while($True){
+              for (;;){
+                  "$((Get-Date -UFormat "%F %T")) === check release exist"
+                  $TARGET_HTTP_CODE_TAG=$(curl -sI -w "%{http_code}" -o "nul" `
+                  -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
+                  https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+              
+                  $TARGET_HTTP_CODE_RELEASE=$(curl -sI -w "%{http_code}" -o "nul" `
+                    -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
+                    https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
+              
+                  if ( ${TARGET_HTTP_CODE_TAG} -eq 404 -and ${TARGET_HTTP_CODE_RELEASE} -eq 404 ) {
+                      "$((Get-Date -UFormat "%F %T")) === release is no exist ready to upload"
+                      break
+                  }else {
+                      "$((Get-Date -UFormat "%F %T")) === release exist retrying"
+                  }
+                  Start-Sleep -Seconds 3
+              }
+              "$((Get-Date -UFormat "%F %T")) === Target tag or release ${TARGET_TAG} deleted Complete!"
+          }
 
-            while true; do
-            # until false; do
-            echo -e "\e[30;48;5;12m$(date '+%F %T') === check release exist\e[0m"
-
-            TARGET_HTTP_CODE_TAG=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
-  
-            TARGET_HTTP_CODE_RELEASE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
-
-            if [[ ${TARGET_HTTP_CODE_TAG} == 404 && ${TARGET_HTTP_CODE_RELEASE} == 404 ]] &>/dev/null; then
-            echo -e "\e[30;48;5;14m$(date '+%F %T') === release is no exist ready to upload\e[0m"
-            break 49
-            else
-            echo -e "\e[30;48;5;11m$(date '+%F %T') === release exist retrying\e[0m"
-            fi
-
-            sleep 3
-            done
-
-            echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[0m\e[30;48;5;4m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
-          fi
-
-      # - name: Upload to GitHub Release for all platform
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     name: Rolling Release
-      #     tag_name: caddy
-      #     body: These are automatically updated builds of the latest commit.
-      #     files: "path/to/artifact/*"
-      #     token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload to GitHub Release for all platform
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Rolling Release
+          tag_name: caddy
+          body: These are automatically updated builds of the latest commit.
+          files: "path/to/artifact/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
