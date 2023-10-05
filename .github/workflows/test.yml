@@ -12,7 +12,7 @@ jobs:
       #   uses: actions/checkout@v4
 
       - name: Configure Makefile
-        shell: C:\Program Files\Git\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        shell: bash
         run: |
           echo 233
           echo 255
