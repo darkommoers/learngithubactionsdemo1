@@ -12,41 +12,70 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Test Automatic check and push version
+
+      - name: Test Haproxy Automatic check and push version
         env:
           # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
           CONTENT_PATH: "src/haproxy/haproxy.version"
-        run: |
-          target_name="Haproxy"
-          target_url="https://api.github.com/repos/haproxy/haproxy/tags"
-          # current_version="$(cat "${CONTENT_PATH}" | head -1)"
-
-          current_version="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} | jq -r .content | head -1 | openssl base64 -d)"
-
-          # List repository tags use
-          latest_version="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET ${target_url} | jq -r .[0].name)"
-          # List releases use
-          # latest_version="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET ${target_url} | jq -r .[0].tag_name)"
-
-          echo "$(date '+%F %T') === Current $target_name version: $current_version"
-          echo "$(date '+%F %T') === Latest ${target_name} version: ${latest_version}"
-          if [[ "$current_version" != "${latest_version}" ]]; then
-              echo "$(date '+%F %T') === Current version: $current_version, Latest version: ${latest_version}, Start Getting......"
-              result=$( curl -fsSL \
-                  -X PUT \
-                  -H "Authorization: Bearer ${GH_TOKEN}" \
-                  https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} \
-                  -d "{
-                      \"message\":\"Update to ${latest_version}\",
-                      \"content\":\"$(echo ${latest_version} | openssl base64 -A)\",
-                      \"sha\":$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${CONTENT_PATH} | jq .sha)
-                      }"
-                      )
-              # echo "$(date '+%F %T') === $result"
-              echo "$(date '+%F %T') === $(echo ${result} | jq -r .commit.message)"
-              
-              echo "$(date '+%F %T') === Get ${target_name} latest version Complete."
-          else
-              echo "$(date '+%F %T') === Current version: $current_version, Latest version: ${latest_version}, No need to get."
-          fi
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ env.GH_TOKEN }}
+          script: |
+            let target_name = "Haproxy";
+            let target_url = "https://api.github.com/repos/haproxy/haproxy/tags";
+            let current_version;
+            let latest_version;
+            let arrdate = () => {
+              let date = new Date();
+              let curTime = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}:${date.getSeconds().toString().padStart(2,"0")} ${date.getDay()}`;
+              return curTime;
+            }
+          
+            let result_sha = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: `${{ env.CONTENT_PATH }}`
+            })
+            // console.log(arrdate(),result_sha)
+            // console.log(arrdate(),result_sha.data.sha)
+            // console.log(arrdate(),result_sha.data.content)
+            // console.log(arrdate(),atob(result_sha.data.content).replace(/[\r\n]/g,""))
+          
+            // await fetch(`https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }}`, {headers: {"Authorization": `Bearer ${{ env.GH_TOKEN }}`}})
+            // .then(response => response.json())
+            // .then(data => {current_version = data});
+          
+            await fetch(`${target_url}`, {headers: {"Authorization": `Bearer ${{ env.GH_TOKEN }}`}})
+            .then(response => response.json())
+            .then(data => {latest_version = data});
+          
+            current_version = atob(result_sha.data.content).replace(/[\r\n]/g,"");
+          
+            // current_version = atob(current_version.content).replace(/[\r\n]/g,"");
+            // List repository tags use
+            latest_version = latest_version[0].name;
+            // List releases use
+            // latest_version = latest_version[0].tag_name;
+          
+            console.log(arrdate(),`Current ${target_name} version: ${current_version}`);
+            console.log(arrdate(),`Latest ${target_name} version: ${latest_version}`);
+          
+            if (`${current_version}` != `${latest_version}`) {
+              console.log(arrdate(),`Current version: ${current_version}, Latest version: ${latest_version}, Start Getting......`);
+          
+              let result = await github.rest.repos.createOrUpdateFileContents({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: `${{ env.CONTENT_PATH }}`,
+                message: `Update to ${latest_version}`,
+                sha: `${result_sha.data.sha}`,
+                content: btoa(`${latest_version}`)
+              })
+              // console.log(arrdate(),result);
+              console.log(arrdate(),result.data.commit.message);
+          
+              console.log(arrdate(),`Get ${target_name} latest version Complete.`);
+            } else {
+              console.log(arrdate(),`Current version: ${current_version}, Latest version: ${latest_version}, No need to get.`);
+            }
