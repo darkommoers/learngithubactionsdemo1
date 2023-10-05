@@ -10,10 +10,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@main
+      # - name: Delete workflow runs
+      #   uses: Mattraks/delete-workflow-runs@main
+      #   with:
+      #     token: ${{ github.token }}
+      #     repository: ${{ github.repository }}
+      #     retain_days: 0
+      #     keep_minimum_runs: 0
+
+      - run: mkdir -p path/to/artifact
+
+      - run: echo hello > path/to/artifact/world0.txt
+
+      - run: echo hello > path/to/artifact/world1.txt
+
+      - run: echo hello > path/to/artifact/world2.txt
+
+      - name: Upload to GitHub Release for all platform
+        uses: softprops/action-gh-release@v1
         with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
+          name: Rolling Release
+          tag_name: release
+          body: These are automatically updated builds of the latest commit.
+          files: "path/to/artifact/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
