@@ -162,9 +162,9 @@ jobs:
           CUR=$PWD
           pwd
           ls -al
-          wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
-          wget http://zlib.net/zlib-1.3.tar.gz
-          wget https://www.openssl.org/source/openssl-3.0.11.tar.gz
+          curl -sSL https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
+          curl -sSL http://zlib.net/zlib-1.3.tar.gz
+          curl -sSL https://www.openssl.org/source/openssl-3.0.11.tar.gz
           mkdir -p objs/lib
           install -d objs/lib
           cd objs/lib
