@@ -23,3 +23,5 @@ jobs:
           uname -a
           pwd
           ls -al
+          curl
+          wget
