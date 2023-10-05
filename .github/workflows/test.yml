@@ -14,6 +14,8 @@ jobs:
       - name: Configure Makefile
         shell: C:\Program Files\Git\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
         run: |
+          echo 233
+          echo 255
           uname -a
           pwd
           ls -al
