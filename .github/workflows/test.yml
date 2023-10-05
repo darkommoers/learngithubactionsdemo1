@@ -60,23 +60,26 @@ jobs:
               catch { Write-Host $_ *>$null }
               # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
               
-              do {
-                  "$((Get-Date -UFormat "%F %T")) === check release exist"
-                  $TARGET_HTTP_CODE_TAG=$(curl -sI -w "%{http_code}" -o "nul" `
-                  -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
-                  https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
-              
-                  $TARGET_HTTP_CODE_RELEASE=$(curl -sI -w "%{http_code}" -o "nul" `
-                      -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
-                      https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
-              
-                  if ( ${TARGET_HTTP_CODE_TAG} -eq 404 -and ${TARGET_HTTP_CODE_RELEASE} -eq 404 ) {
-                      "$((Get-Date -UFormat "%F %T")) === release is no exist ready to upload"
-                  }else {
-                      "$((Get-Date -UFormat "%F %T")) === release exist retrying"
-                  }
-                  Start-Sleep -Seconds 3
-              } until (${TARGET_HTTP_CODE_TAG} -eq 404 -and ${TARGET_HTTP_CODE_RELEASE} -eq 404)
+            do {
+                "$((Get-Date -UFormat "%F %T")) === check release exist"
+                $TARGET_HTTP_CODE_TAG=$(curl -sI -w "%{http_code}" -o "nul" `
+                -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
+                https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+            
+                $TARGET_HTTP_CODE_RELEASE=$(curl -sI -w "%{http_code}" -o "nul" `
+                    -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
+                    https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
+            
+                $TARGET_HTTP_CODE_TAG
+                $TARGET_HTTP_CODE_RELEASE
+            
+                if ( ${TARGET_HTTP_CODE_TAG} -eq 404 -and ${TARGET_HTTP_CODE_RELEASE} -eq 404 ) {
+                    "$((Get-Date -UFormat "%F %T")) === release is no exist ready to upload"
+                }else {
+                    "$((Get-Date -UFormat "%F %T")) === release exist retrying"
+                }
+                Start-Sleep -Seconds 3
+            } until (${TARGET_HTTP_CODE_TAG} -eq 404 -and ${TARGET_HTTP_CODE_RELEASE} -eq 404)
               
               "$((Get-Date -UFormat "%F %T")) === Target tag or release ${TARGET_TAG} deleted Complete!"
           }
