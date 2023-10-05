@@ -1,8 +1,6 @@
 name: AutoCheck
 
 on:
-  schedule:
-    - cron:  '04 4,16 * * *'
   workflow_dispatch:
 
 jobs:
@@ -11,104 +9,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Delete old release
-        env:
-          # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        run: |
-          TARGET_TAG="haproxy"
-          # https://docs.github.com/en/rest/git/refs#get-a-reference
-          TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
-
-          # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
-          # TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-          #   -H "Authorization: Bearer ${GH_TOKEN}" \
-          #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
-
-          if [[ ${TARGET_HTTP_CODE} != 200 ]]; then
-          # if [[ "$TARGET_HTTP_CODE" -ne 200 ]]; then
-            # echo "Fail: ${TARGET_HTTP_CODE}"
-            # echo "No target tag or release found, skip delete."
-            echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_HTTP_CODE}\e[0m"
-            echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
-          else
-            # echo "Success: ${TARGET_HTTP_CODE}"
-            echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[30;48;5;2m${TARGET_HTTP_CODE}\e[0m"
-            # gh release delete "${TARGET_TAG}" -y --cleanup-tag
-            gh release delete "${TARGET_TAG}" --yes --cleanup-tag
-            # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
-            echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[0m\e[30;48;5;4m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
-          fi
-
-      - name: Test Haproxy Automatic check and push version
-        env:
-          # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          CONTENT_PATH: "src/haproxy/haproxy.version"
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ env.GH_TOKEN }}
-          script: |
-            let target_name = "Haproxy";
-            let target_url = "https://api.github.com/repos/haproxy/haproxy/tags";
-            let current_version;
-            let latest_version;
-            let arrdate = () => {
-              let date = new Date();
-              let curTime = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}:${date.getSeconds().toString().padStart(2,"0")} ${date.getDay()}`;
-              return curTime;
-            }
-          
-            let result_sha = await github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: `${{ env.CONTENT_PATH }}`
-            })
-            // console.log(arrdate(),result_sha)
-            // console.log(arrdate(),result_sha.data.sha)
-            // console.log(arrdate(),result_sha.data.content)
-            // console.log(arrdate(),atob(result_sha.data.content).replace(/[\r\n]/g,""))
-          
-            // await fetch(`https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }}`, {headers: {"Authorization": `Bearer ${{ env.GH_TOKEN }}`}})
-            // .then(response => response.json())
-            // .then(data => {current_version = data});
-          
-            await fetch(`${target_url}`, {headers: {"Authorization": `Bearer ${{ env.GH_TOKEN }}`}})
-            .then(response => response.json())
-            .then(data => {latest_version = data});
-          
-            current_version = atob(result_sha.data.content).replace(/[\r\n]/g,"");
-          
-            // current_version = atob(current_version.content).replace(/[\r\n]/g,"");
-            // List repository tags use
-            latest_version = latest_version[0].name;
-            // List releases use
-            // latest_version = latest_version[0].tag_name;
-          
-            console.log(arrdate(),`Current ${target_name} version: ${current_version}`);
-            console.log(arrdate(),`Latest ${target_name} version: ${latest_version}`);
-          
-            if (`${current_version}` != `${latest_version}`) {
-              console.log(arrdate(),`Current version: ${current_version}, Latest version: ${latest_version}, Start Getting......`);
-          
-              let result = await github.rest.repos.createOrUpdateFileContents({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                path: `${{ env.CONTENT_PATH }}`,
-                message: `Update to ${latest_version}`,
-                sha: `${result_sha.data.sha}`,
-                content: btoa(`${latest_version}`)
-              })
-              // console.log(arrdate(),result);
-              console.log(arrdate(),result.data.commit.message);
-          
-              console.log(arrdate(),`Get ${target_name} latest version Complete.`);
-            } else {
-              console.log(arrdate(),`Current version: ${current_version}, Latest version: ${latest_version}, No need to get.`);
-            }
 
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@main
