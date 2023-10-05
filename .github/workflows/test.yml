@@ -74,17 +74,17 @@ jobs:
             while true; do
             # until false; do
 
-            echo "$(date '+%F %T') === check release exist"
+            echo "\e[30;48;5;5m$(date '+%F %T') === check release exist\e[0m"
             # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
             TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
               -H "Authorization: Bearer ${GH_TOKEN}" \
               https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
 
             if [[ ${TARGET_HTTP_CODE} == 404 ]] &>/dev/null; then
-            echo "$(date '+%F %T') === release is no exist ready to upload"
+            echo "\e[30;48;5;6m$(date '+%F %T') === release is no exist ready to upload\e[0m"
             break 49
             else
-            echo "$(date '+%F %T') === release exist retrying"
+            echo "\e[30;48;5;11m$(date '+%F %T') === release exist retrying\e[0m"
             fi
 
             sleep 3
