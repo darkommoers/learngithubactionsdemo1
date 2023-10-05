@@ -70,13 +70,14 @@ jobs:
             # gh release delete "${TARGET_TAG}" -y --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
             gh release delete "${TARGET_TAG}" --yes --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
             # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
+            TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
             echo -e "\e[30;48;5;9m $TARGET_HTTP_CODE\e[0m"
-
             while true; do
             # until false; do
 
             echo -e "\e[30;48;5;12m$(date '+%F %T') === check release exist\e[0m"
-            # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
             TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
               -H "Authorization: Bearer ${GH_TOKEN}" \
               https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
