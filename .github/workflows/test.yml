@@ -35,7 +35,7 @@ jobs:
         run: |
           try { Remove-Item alias:curl -Force -Recurse *>$null }
           catch { Write-Host $_ *>$null }
-          $TARGET_TAG="haproxy"
+          $TARGET_TAG="caddy"
           # https://docs.github.com/en/rest/git/refs#get-a-reference
           $TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "nul" `
             -H "Authorization: Bearer ${{ env.GH_TOKEN }}" `
