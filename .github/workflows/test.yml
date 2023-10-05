@@ -25,22 +25,6 @@ jobs:
       - run: echo hello > path/to/artifact/world1.txt
 
       - run: echo hello > path/to/artifact/world2.txt
-      - run: |
-            echo -e "\e[30;48;5;1m Hello\e[0m"
-            echo -e "\e[30;48;5;2m Hello\e[0m"
-            echo -e "\e[30;48;5;3m Hello\e[0m"
-            echo -e "\e[30;48;5;4m Hello\e[0m"
-            echo -e "\e[30;48;5;5m Hello\e[0m"
-            echo -e "\e[30;48;5;6m Hello\e[0m"
-            echo -e "\e[30;48;5;7m Hello\e[0m"
-            echo -e "\e[30;48;5;8m Hello\e[0m"
-            echo -e "\e[30;48;5;9m Hello\e[0m"
-            echo -e "\e[30;48;5;10m Hello\e[0m"
-            echo -e "\e[30;48;5;11m Hello\e[0m"
-            echo -e "\e[30;48;5;12m Hello\e[0m"
-            echo -e "\e[30;48;5;13m Hello\e[0m"
-            echo -e "\e[30;48;5;14m Hello\e[0m"
-            echo -e "\e[30;48;5;15m Hello\e[0m"
 
       - name: Delete old release
         env:
@@ -96,11 +80,11 @@ jobs:
             echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[0m\e[30;48;5;4m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
           fi
 
-      - name: Upload to GitHub Release for all platform
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Rolling Release
-          tag_name: caddy
-          body: These are automatically updated builds of the latest commit.
-          files: "path/to/artifact/*"
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload to GitHub Release for all platform
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     name: Rolling Release
+      #     tag_name: caddy
+      #     body: These are automatically updated builds of the latest commit.
+      #     files: "path/to/artifact/*"
+      #     token: ${{ secrets.GITHUB_TOKEN }}
