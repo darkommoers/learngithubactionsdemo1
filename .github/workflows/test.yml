@@ -33,9 +33,9 @@ jobs:
           echo end
 
       - name: Configure Makefile
-        # shell: bash
+        shell: bash
         # shell: bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
-        shell: C:\msys64\usr\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
+        # shell: C:\msys64\usr\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
         run: |
           uname -a
           pwd
@@ -44,9 +44,9 @@ jobs:
           CUR=$PWD
           pwd
           ls -al
-          curl -LJO https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
-          curl -LJO http://zlib.net/zlib-1.3.tar.gz
-          curl -LJO https://www.openssl.org/source/openssl-3.0.11.tar.gz
+          curl -LJRO https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
+          curl -LJRO http://zlib.net/zlib-1.3.tar.gz
+          curl -LJRO https://www.openssl.org/source/openssl-3.0.11.tar.gz
           mkdir -p objs/lib
           install -d objs/lib
           cd objs/lib
