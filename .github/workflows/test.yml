@@ -13,13 +13,15 @@ jobs:
         env:
           # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          CONTENT_PATH: "src/caddy/caddy.version"
+          CONTENT_PATH: "src/haproxy/haproxy.version"
         uses: actions/github-script@v6
         with:
           github-token: ${{ env.GH_TOKEN }}
           script: |
-            let current_caddy;
-            let latest_caddy;
+            let target_name = "Haproxy";
+            let target_url = "https://api.github.com/repos/haproxy/haproxy/tags";
+            let current_version;
+            let latest_version;
             let arrdate = () => {
               let date = new Date();
               let curTime = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}:${date.getSeconds().toString().padStart(2,"0")} ${date.getDay()}`;
@@ -29,10 +31,47 @@ jobs:
             let result_sha = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              path: `"/src/haproxy/haproxy.version"`
+              path: `${{ env.CONTENT_PATH }}`
             })
-            console.log(arrdate(),result_sha)
-            console.log(arrdate(),result_sha.data.sha)
-            console.log(arrdate(),result_sha.data.content)
-            console.log(arrdate(),atob(result_sha.data.content).replace(/[\r\n]/g,""))
+            // console.log(arrdate(),result_sha)
+            // console.log(arrdate(),result_sha.data.sha)
+            // console.log(arrdate(),result_sha.data.content)
+            // console.log(arrdate(),atob(result_sha.data.content).replace(/[\r\n]/g,""))
           
+            // await fetch(`https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }}`, {headers: {"Authorization": `Bearer ${{ env.GH_TOKEN }}`}})
+            // .then(response => response.json())
+            // .then(data => {current_version = data});
+          
+            await fetch(`${target_url}`, {headers: {"Authorization": `Bearer ${{ env.GH_TOKEN }}`}})
+            .then(response => response.json())
+            .then(data => {latest_version = data});
+          
+            current_version = atob(result_sha.data.content).replace(/[\r\n]/g,"");
+          
+            // current_version = atob(current_version.content).replace(/[\r\n]/g,"");
+            // List repository tags use
+            latest_version = latest_version[0].name;
+            // List releases use
+            // latest_version = latest_version[0].tag_name;
+          
+            console.log(arrdate(),`Current ${target_name} version: ${current_version}`);
+            console.log(arrdate(),`Latest ${target_name} version: ${latest_version}`);
+          
+            if (`${current_version}` != `${latest_version}`) {
+              console.log(arrdate(),`Current version: ${current_version}, Latest version: ${latest_version}, Start Getting......`);
+          
+              let result = await github.rest.repos.createOrUpdateFileContents({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: `${{ env.CONTENT_PATH }}`,
+                message: `Update to ${latest_version}`,
+                sha: `${result_sha.data.sha}`,
+                content: btoa(`${latest_version}`)
+              })
+              // console.log(arrdate(),result);
+              console.log(arrdate(),result.data.commit.message);
+          
+              console.log(arrdate(),`Get ${target_name} latest version Complete.`);
+            } else {
+              console.log(arrdate(),`Current version: ${current_version}, Latest version: ${latest_version}, No need to get.`);
+            }
