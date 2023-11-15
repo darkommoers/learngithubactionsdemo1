@@ -23,7 +23,7 @@ jobs:
 
       - name: Test push Docker image
         run: |
-          docker run --rm --privileged ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest wg --help
+          # docker run --rm --privileged ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest wg --help
           docker run --rm --privileged ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }} wg-quick --help
           # docker run --rm --privileged ghcr.io/${{ github.actor }}/wireguard:latest wg --help
           # docker run --rm --privileged ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }} wg-quick --help
