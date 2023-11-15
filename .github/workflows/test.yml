@@ -10,6 +10,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test push Docker image
+        run: |
+          docker run --rm --privileged --entrypoint "/usr/bin/wg" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest --help
+          docker run --rm --privileged --entrypoint "/usr/bin/wg-quick" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION } --help
+
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@main
         with:
