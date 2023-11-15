@@ -1,6 +1,8 @@
 name: Wireguard
 
 on:
+  schedule:
+    - cron:  '04 4 3 * *'
   push:
     paths:
       - 'src/wireguard/wireguard.version'
