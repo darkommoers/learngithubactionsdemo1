@@ -1,0 +1,87 @@
+name: Wireguard
+
+on:
+  push:
+    paths:
+      - 'src/wireguard/wireguard.version'
+  workflow_dispatch:
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Variables
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          CONTENT_PATH: "src/wireguard/wireguard.version"
+        shell: bash
+        run: |
+          # echo "WIREGUARD_VERSION=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }} | jq -r .content | head -1 | base64 -d)" >> $GITHUB_ENV
+          echo "WIREGUARD_VERSION=$(cat "${{ env.CONTENT_PATH }}" | head -n1)" >> $GITHUB_ENV
+
+      - name: Get Dockerfile
+        run: |
+          cp -fr src/wireguard/* $PWD
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          provenance: false
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          push: true
+          # target: final
+          # tags: |
+          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
+          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
+          #   ghcr.io/${{ github.actor }}/wireguard:latest
+          #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
+
+  test:
+    needs: push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Variables
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          CONTENT_PATH: "src/wireguard/wireguard.version"
+        shell: bash
+        run: |
+          # echo "WIREGUARD_VERSION=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }} | jq -r .content | head -1 | base64 -d)" >> $GITHUB_ENV
+          echo "WIREGUARD_VERSION=$(cat "${{ env.CONTENT_PATH }}" | head -n1)" >> $GITHUB_ENV
+
+      - name: Test push Docker image
+        run: |
+          docker run --rm --privileged ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest wg --help
+          docker run --rm --privileged ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }} wg-quick --help
+          # docker run --rm --privileged ghcr.io/${{ github.actor }}/wireguard:latest wg --help
+          # docker run --rm --privileged ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }} wg-quick --help
