@@ -8,12 +8,11 @@ WORKDIR /root
 ADD --chmod=777 wireguard.sh /root/entrypoint.sh
 
 RUN set -ex \
-	&& apk add --no-cache bash ca-certificates wireguard-tools nftables iproute2 openresolv grep tzdata dumb-init tini catatonit \
+	&& apk add --no-cache bash ca-certificates grep tzdata dumb-init tini catatonit wireguard-tools nftables iproute2 openresolv \
 	&& rm -rfv /var/cache/apk/*
 
 VOLUME ["/etc/wireguard"]
 
-ENTRYPOINT ["/usr/bin/catatonit", "--"]
-# ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-# ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["/root/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/catatonit", "--", "/root/entrypoint.sh"]
+# ENTRYPOINT ["/usr/bin/dumb-init", "--", "/root/entrypoint.sh"]
+# ENTRYPOINT ["/sbin/tini", "--", "/root/entrypoint.sh"]
