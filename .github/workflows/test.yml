@@ -25,6 +25,7 @@ jobs:
         run: |
           # docker run --rm --privileged ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest wg --help
           docker run --rm --privileged ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }} wg-quick --help
+          echo "$(cat "${{ env.CONTENT_PATH }}" | head -n1)"
           # docker run --rm --privileged ghcr.io/${{ github.actor }}/wireguard:latest wg --help
           # docker run --rm --privileged ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }} wg-quick --help
 
