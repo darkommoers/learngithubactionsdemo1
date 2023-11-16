@@ -10,7 +10,9 @@ echo "[hit enter key to exit] or run 'docker stop <container>'"
 # tail -f /dev/null
 # sleep infinity
 # read REPLY
-exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
+exec /bin/sh -c "trap : TERM INT; read REPLY"
+# exec /bin/bash -c "trap : TERM INT; read REPLY"
+# exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 # exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"
 # /usr/bin/env sh
 # /usr/bin/env bash
