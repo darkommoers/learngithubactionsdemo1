@@ -46,26 +46,27 @@ jobs:
       #     username: ${{ github.repository_owner }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Build and push alpine
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     file: ./Dockerfile
-      #     provenance: false
-      #     platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
-      #     push: true
-      #     # target: final
-      #     # tags: |
-      #     #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
-      #     #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
-      #     #   ghcr.io/${{ github.actor }}/wireguard:latest
-      #     #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
-      #     tags: |
-      #       ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
-      #       ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine
-      #       ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
+      - name: Build and push Alpine
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          provenance: false
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          push: true
+          # target: final
+          # tags: |
+          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
+          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
+          #   ghcr.io/${{ github.actor }}/wireguard:latest
+          #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine-${{ env.WIREGUARD_VERSION }}
 
-      - name: Build and push debian
+      - name: Build and push Debian
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -82,6 +83,7 @@ jobs:
           #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian-${{ env.WIREGUARD_VERSION }}
 
   test:
     needs: push
