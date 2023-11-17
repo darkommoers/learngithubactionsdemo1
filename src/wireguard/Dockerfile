@@ -8,6 +8,7 @@ WORKDIR /root
 ADD --chmod=777 wireguard.sh /root/entrypoint.sh
 
 RUN set -ex \
+	&& apk -U upgrade \
 	&& apk add --no-cache bash ca-certificates grep tzdata dumb-init tini catatonit wireguard-tools iproute2 openresolv nftables iptables ip6tables \
 	&& rm -rfv /var/cache/apk/*
 
