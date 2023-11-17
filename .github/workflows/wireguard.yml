@@ -46,10 +46,11 @@ jobs:
       #     username: ${{ github.repository_owner }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push alpine
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           provenance: false
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           push: true
@@ -61,7 +62,28 @@ jobs:
           #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine
             ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
+
+      - name: Build and push debian
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.debian
+          provenance: false
+          platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/mips64le,linux/ppc64le,linux/s390x
+          # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/mips64le,linux/ppc64le,linux/riscv64,linux/s390x
+          push: true
+          # target: final
+          # tags: |
+          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
+          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
+          #   ghcr.io/${{ github.actor }}/wireguard:latest
+          #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
+          tags: |
+            # ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian
+            # ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
 
   test:
     needs: push
@@ -81,7 +103,9 @@ jobs:
 
       - name: Test push Docker images
         run: |
-          docker run --rm --privileged --entrypoint "/usr/bin/wg" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest --help
-          docker run --rm --privileged --entrypoint "/usr/bin/wg-quick" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }} --help
+          docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine wg --help
+          docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian wg-quick --help
+          # docker run --rm --privileged --entrypoint "/usr/bin/wg" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest --help
+          # docker run --rm --privileged --entrypoint "/usr/bin/wg-quick" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }} --help
           # docker run --rm --privileged --entrypoint "/usr/bin/wg" ghcr.io/${{ github.actor }}/wireguard:latest --help
           # docker run --rm --privileged --entrypoint "/usr/bin/wg-quick" ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }} --help
