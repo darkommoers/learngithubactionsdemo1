@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-set -ex
+set -e
 
 # wg-quick up wg0
 wg-quick up "$@"
