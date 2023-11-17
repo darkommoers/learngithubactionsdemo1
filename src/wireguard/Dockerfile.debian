@@ -10,9 +10,11 @@ ADD --chmod=777 wireguard.sh /root/entrypoint.sh
 RUN set -ex \
 	&& apt-get update \
 	&& apt-get upgrade -y \
-	&& apt-get install -y --no-install-recommends bash ca-certificates grep tzdata dumb-init tini catatonit wireguard wireguard-tools iproute2 openresolv nftables iptables \
-	&& apt-get remove -y --purge --auto-remove \
+	&& apt-get install -y --no-install-recommends bash ca-certificates grep tzdata dumb-init tini catatonit wireguard-tools iproute2 openresolv nftables iptables \
+	&& apt-get remove --purge --auto-remove -y \
 	&& apt-get purge -y --auto-remove \
+	&& apt-get autoremove -y \
+	&& apt-get autoclean -y \
 	&& apt-get clean -y \
 	&& rm -rfv /var/lib/apt/lists/*
 
