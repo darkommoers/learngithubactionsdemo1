@@ -25,9 +25,6 @@ jobs:
           # for i in "${arrays[@]}"; do
           #   echo "Inspect images: $i"
           # done
-          arrays=($(jq -r '.tags | .[]' <<< $DOCKER_METADATA_OUTPUT_JSON | xargs))
-          for i in "${arrays[@]}"; do
-            echo "Inspect images: $i"
-          done
           jq '.tags | .[]' <<< $DOCKER_METADATA_OUTPUT_JSON
           jq -r '.tags | .[]' <<< $DOCKER_METADATA_OUTPUT_JSON
+          jq -r '.tags | .[]' <<< $DOCKER_METADATA_OUTPUT_JSON | xargs
