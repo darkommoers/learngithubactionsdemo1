@@ -21,7 +21,6 @@ jobs:
 
       - name: Test
         run: |
-          for i in "${${{ fromJSON(steps.meta.outputs.json).tags] }}[@]}"; do 
-          echo "${i}"
-          # docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${i}
-          done
+          echo '${{ steps.meta.outputs.tags }}'
+          echo 233255
+          echo -n "${{ steps.meta.outputs.tags }}" | tr '\n' ','
