@@ -25,6 +25,9 @@ jobs:
 
       - name: Test
         run: |
+          for i in ${{ steps.meta.outputs.version }}; do 
+          echo "${i}"
+          done
           for i in ${{ steps.meta.outputs.labels }}; do 
           echo "${i}"
           done
