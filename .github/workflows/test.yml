@@ -29,3 +29,5 @@ jobs:
           echo "${i}"
           done
           echo "$(${{ steps.meta.outputs.labels }})"
+          echo "$(${{ steps.meta.outputs.tags }})"
+          echo ${{ fromJSON(steps.meta.outputs.json).tags }}
