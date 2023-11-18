@@ -30,4 +30,4 @@ jobs:
           done
           echo "$(${{ steps.meta.outputs.labels }})"
           echo "$(${{ steps.meta.outputs.tags }})"
-          echo ${{ fromJSON(steps.meta.outputs.json).tags }}
+          echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
