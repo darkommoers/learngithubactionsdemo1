@@ -27,5 +27,5 @@ jobs:
           array=($(echo -n "${{ steps.meta.outputs.tags }}" | tr '\n' ' '))
           echo 255
           for i in "${array[@]}"; do
-            echo $i
+            echo "Activity: $i"
           done
