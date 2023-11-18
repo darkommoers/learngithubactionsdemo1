@@ -23,4 +23,4 @@ jobs:
         run: |
           echo '${{ steps.meta.outputs.tags }}'
           echo 233255
-          echo -n "${{ steps.meta.outputs.tags }}" | tr '\n' ','
+          echo -n "${{ steps.meta.outputs.tags }}" | tr '\n' ' '
