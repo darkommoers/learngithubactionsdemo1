@@ -23,6 +23,6 @@ jobs:
         run: |
           arrays=($(echo -n "${{ steps.meta.outputs.tags }}" | tr '\n' ' '))
           for i in "${arrays[@]}"; do
-            echo "Inspect images: $i \n"
-            docker buildx imagetools inspect $i
+            echo "Inspect images: $i"
           done
+          jq '.tags' <<< $DOCKER_METADATA_OUTPUT_JSON
