@@ -21,7 +21,7 @@ jobs:
 
       - name: Test
         run: |
-          arrays=($(echo -n "${{ steps.meta.outputs.tags }}" | tr '\n' ' '))
+          arrays=($(echo '${{ steps.meta.outputs.tags }}' | xargs))
           for i in "${arrays[@]}"; do
             echo "Inspect images: $i"
           done
