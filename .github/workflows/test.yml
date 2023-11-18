@@ -21,5 +21,6 @@ jobs:
 
       - name: Test
         run: |
-          echo $DOCKER_METADATA_OUTPUT_TAGS
-          echo $DOCKER_METADATA_OUTPUT_TAGS | xargs
+          for i in "$DOCKER_METADATA_OUTPUT_TAGS"; do
+            echo "Inspect images: $i"
+          done
