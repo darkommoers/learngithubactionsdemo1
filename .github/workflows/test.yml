@@ -30,7 +30,8 @@ jobs:
           done
           # echo "$(${{ steps.meta.outputs.labels }})"
           # echo "$(${{ steps.meta.outputs.tags }})"
-          for i in ${{ fromJSON(steps.meta.outputs.json).tags }}; do 
+          altest=${{ steps.meta.outputs.tags }}
+          for i in ${altest}; do 
           echo "${i}"
           done
           echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
