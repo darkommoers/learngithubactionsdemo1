@@ -25,8 +25,9 @@ jobs:
 
       - name: Test
         run: |
-          for i in ${{ steps.meta.outputs.tags }}; do 
+          for i in ${{ steps.meta.outputs.version }}; do 
           echo "${i}"
           done
+          echo jq . ${{ fromJSON(steps.meta.outputs.json).tags }}
           echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           echo ${{ fromJSON(steps.meta.outputs.json).tags[1] }}
