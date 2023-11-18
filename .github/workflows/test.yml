@@ -29,10 +29,6 @@ jobs:
           echo "${i}"
           done
           # echo "$(${{ steps.meta.outputs.labels }})"
-          # echo "$(${{ steps.meta.outputs.tags }})"
-          altest=$(${{ steps.meta.outputs.tags }})
-          for i in ${altest}; do 
-          echo "${i}"
-          done
+          echo "$(${{ steps.meta.outputs.tags }})"
           echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           echo ${{ fromJSON(steps.meta.outputs.json).tags[1] }}
