@@ -28,6 +28,6 @@ jobs:
           for i in ${{ steps.meta.outputs.version }}; do 
           echo "${i}"
           done
-          echo jq . ${{ steps.meta.outputs.json }}
+          echo $(jq . ${{ steps.meta.outputs.json }})
           echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           echo ${{ fromJSON(steps.meta.outputs.json).tags[1] }}
