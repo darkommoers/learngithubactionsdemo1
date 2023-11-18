@@ -22,14 +22,6 @@ jobs:
       - name: Test
         run: |
           for i in '${{ steps.meta.outputs.tags }}'; do 
-          echo "${i}"
+          # echo "${i}"
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${i}
           done
-          # cat << EOF >  metadata.json
-          # ${{ steps.meta.outputs.json }}
-          # EOF
-          # echo '${{ steps.meta.outputs.json }}' > metadata.json
-          # cat metadata.json
-          echo '${{ steps.meta.outputs.tags }}'
-          echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '
-          echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          echo ${{ fromJSON(steps.meta.outputs.json).tags[1] }}
