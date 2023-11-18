@@ -29,6 +29,7 @@ jobs:
           # EOF
           # echo '${{ steps.meta.outputs.json }}' > metadata.json
           # cat metadata.json
+          echo '${{ steps.meta.outputs.tags }}'
           echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '
           echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           echo ${{ fromJSON(steps.meta.outputs.json).tags[1] }}
