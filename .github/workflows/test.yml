@@ -17,7 +17,7 @@ jobs:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
             type=raw,enable=true,value=main
-            type=raw,enable=true,value=root,priority=300
+            type=raw,enable=true,value=root
 
       - name: Inspect image
         run: |
@@ -28,6 +28,4 @@ jobs:
           for i in ${{ steps.meta.outputs.version }}; do 
           echo "${i}"
           done
-          for i in ${{ steps.meta.outputs.labels }}; do 
-          echo "${i}"
-          done
+          echo "$(${{ steps.meta.outputs.labels }})"
