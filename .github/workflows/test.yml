@@ -19,10 +19,6 @@ jobs:
             type=raw,enable=true,value=main
             type=raw,enable=true,value=root
 
-      - name: Inspect image
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
-
       - name: Test
         run: |
           # for i in ${{ steps.meta.outputs.version }}; do 
@@ -33,6 +29,6 @@ jobs:
           # EOF
           # echo '${{ steps.meta.outputs.json }}' > metadata.json
           # cat metadata.json
-          echo -n "${{ steps.meta.outputs.tags }}" | tr '\n' ','
+          echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '
           echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           echo ${{ fromJSON(steps.meta.outputs.json).tags[1] }}
