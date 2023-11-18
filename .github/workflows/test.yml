@@ -28,9 +28,10 @@ jobs:
           for i in ${{ steps.meta.outputs.version }}; do 
           echo "${i}"
           done
-          cat << EOF >  metadata.json
-          ${{ steps.meta.outputs.json }}
-          EOF
+          # cat << EOF >  metadata.json
+          # ${{ steps.meta.outputs.json }}
+          # EOF
+          echo '${{ steps.meta.outputs.json }}' > metadata.json
           cat metadata.json
           echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           echo ${{ fromJSON(steps.meta.outputs.json).tags[1] }}
