@@ -151,7 +151,7 @@ jobs:
           name: digests-alpine
           path: /tmp/digests-alpine
       - name: Docker meta alpine
-        id: meta
+        id: meta-alpine
         uses: docker/metadata-action@v5
         with:
           images: |
@@ -177,7 +177,7 @@ jobs:
           name: digests-debian
           path: /tmp/digests-debian
       - name: Docker meta debian
-        id: meta
+        id: meta-debian
         uses: docker/metadata-action@v5
         with:
           images: |
