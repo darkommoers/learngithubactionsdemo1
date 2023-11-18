@@ -24,3 +24,4 @@ jobs:
           for i in $(echo $DOCKER_METADATA_OUTPUT_TAGS | xargs); do
             echo "Inspect images: $i"
           done
+          cat $DOCKER_METADATA_OUTPUT_BAKE_FILE
