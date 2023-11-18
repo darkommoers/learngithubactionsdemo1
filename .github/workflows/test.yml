@@ -24,3 +24,4 @@ jobs:
           jq '.tags | .[]' <<< $DOCKER_METADATA_OUTPUT_JSON
           jq -r '.tags | .[]' <<< $DOCKER_METADATA_OUTPUT_JSON
           jq -r '.tags | .[]' <<< $DOCKER_METADATA_OUTPUT_JSON | xargs
+          echo $DOCKER_METADATA_OUTPUT_TAGS
