@@ -29,6 +29,6 @@ jobs:
           echo "${i}"
           done
           for i in ${{ steps.meta.outputs.tags }}; do 
-          echo "${i}"
+          echo "$(${i})"
           done
           echo "$(${{ steps.meta.outputs.labels }})"
