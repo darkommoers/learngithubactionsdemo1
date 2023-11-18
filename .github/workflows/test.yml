@@ -28,4 +28,7 @@ jobs:
           for i in ${{ steps.meta.outputs.version }}; do 
           echo "${i}"
           done
+          for i in ${{ steps.meta.outputs.tags }}; do 
+          echo "${i}"
+          done
           echo "$(${{ steps.meta.outputs.labels }})"
