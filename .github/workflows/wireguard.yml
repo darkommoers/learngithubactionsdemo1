@@ -2,15 +2,30 @@ name: Wireguard
 
 on:
   schedule:
-    - cron:  '04 4 3 * *'
+    - cron: "4 4 3 * *"
   push:
     paths:
-      - 'src/wireguard/wireguard.version'
+      - "src/wireguard/wireguard.version"
   workflow_dispatch:
 
+env:
+  REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/wireguard
+
 jobs:
-  push:
+  push-alpine:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/386
+          - linux/amd64
+          - linux/arm/v6
+          - linux/arm/v7
+          - linux/arm64/v8
+          - linux/ppc64le
+          # - linux/riscv64
+          - linux/s390x
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +43,16 @@ jobs:
         run: |
           cp -fr src/wireguard/* $PWD
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,enable=true,value=alpine
+            type=raw,enable=true,value=alpine-${{ env.WIREGUARD_VERSION }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -38,55 +63,217 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # - name: Login to GitHub Container Registry
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ghcr.io
-      #     username: ${{ github.actor }}
-      #     username: ${{ github.repository_owner }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Alpine
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           provenance: false
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
-          push: true
-          # target: final
-          # tags: |
-          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
-          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
-          #   ghcr.io/${{ github.actor }}/wireguard:latest
-          #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine
-            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine-${{ env.WIREGUARD_VERSION }}
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          outputs: |
+            type=image
+            name=${{ env.REGISTRY_IMAGE }}
+            push-by-digest=true
+            name-canonical=true
+            push=true
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests; install -d /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@v3
+        with:
+          name: digests-alpine
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
-      - name: Build and push Debian
+  push-debian:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/386
+          - linux/amd64
+          - linux/arm/v5
+          - linux/arm/v7
+          - linux/arm64/v8
+          - linux/mips64le
+          - linux/ppc64le
+          # - linux/riscv64
+          - linux/s390x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Variables
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          CONTENT_PATH: "src/wireguard/wireguard.version"
+        run: |
+          # echo "WIREGUARD_VERSION=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }} | jq -r .content | head -1 | base64 -d)" >> $GITHUB_ENV
+          echo "WIREGUARD_VERSION=$(cat "${{ env.CONTENT_PATH }}" | head -n1)" >> $GITHUB_ENV
+
+      - name: Get Dockerfile
+        run: |
+          cp -fr src/wireguard/* $PWD
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,enable=true,value=latest
+            type=raw,enable=true,value=debian
+            type=raw,enable=true,value=debian-${{ env.WIREGUARD_VERSION }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.debian
           provenance: false
-          platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/mips64le,linux/ppc64le,linux/s390x
-          # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/mips64le,linux/ppc64le,linux/riscv64,linux/s390x
-          push: true
-          # target: final
-          # tags: |
-          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest
-          #   ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }}
-          #   ghcr.io/${{ github.actor }}/wireguard:latest
-          #   ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }}
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          outputs: |
+            type=image
+            name=${{ env.REGISTRY_IMAGE }}
+            push-by-digest=true
+            name-canonical=true
+            push=true
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests; install -d /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@v3
+        with:
+          name: digests-debian
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merges:
+    runs-on: ubuntu-latest
+    needs:
+      - push-alpine
+      - push-debian
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker meta alpine
+        id: meta-alpine
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian
-            ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian-${{ env.WIREGUARD_VERSION }}
+            type=raw,enable=true,value=alpine
+            type=raw,enable=true,value=alpine-${{ env.WIREGUARD_VERSION }}
+
+      - name: Download digests alpine
+        uses: actions/download-artifact@v3
+        with:
+          name: digests-alpine
+          path: /tmp/digests-alpine
+      - name: Create manifest list and push alpine
+        working-directory: /tmp/digests-alpine
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+      # - name: Inspect images alpine
+      #   run: |
+      #     for i in $(echo $DOCKER_METADATA_OUTPUT_TAGS | xargs); do
+      #       echo "Inspect image: $i"
+      #       docker buildx imagetools inspect $i
+      #     done
+
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     # username: ${{ github.actor }}
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Push image to GHCR
+      #   run: |
+      #     docker buildx imagetools create \
+      #       -t ghcr.io/${{ github.actor }}/wireguard:alpine \
+      #       --tag ghcr.io/${{ github.repository_owner }}/wireguard:alpine-${{ env.WIREGUARD_VERSION }} \
+      #       ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine
+
+      - name: Docker meta debian
+        id: meta-debian
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,enable=true,value=latest
+            type=raw,enable=true,value=debian
+            type=raw,enable=true,value=debian-${{ env.WIREGUARD_VERSION }}
+
+      - name: Download digests debian
+        uses: actions/download-artifact@v3
+        with:
+          name: digests-debian
+          path: /tmp/digests-debian
+      - name: Create manifest list and push debian
+        working-directory: /tmp/digests-debian
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+      # - name: Inspect images debian
+      #   run: |
+      #     for i in $(echo $DOCKER_METADATA_OUTPUT_TAGS | xargs); do
+      #       echo "Inspect image: $i"
+      #       docker buildx imagetools inspect $i
+      #     done
+
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     # username: ${{ github.actor }}
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Push image to GHCR
+      #   run: |
+      #     docker buildx imagetools create \
+      #       -t ghcr.io/${{ github.actor }}/wireguard:latest \
+      #       -t ghcr.io/${{ github.actor }}/wireguard:debian \
+      #       --tag ghcr.io/${{ github.repository_owner }}/wireguard:debian-${{ env.WIREGUARD_VERSION }} \
+      #       ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian
 
   test:
-    needs: push
+    needs: [push-alpine, push-debian, merges]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -105,7 +292,5 @@ jobs:
         run: |
           docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine wg --help
           docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian wg-quick --help
-          # docker run --rm --privileged --entrypoint "/usr/bin/wg" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:latest --help
-          # docker run --rm --privileged --entrypoint "/usr/bin/wg-quick" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:${{ env.WIREGUARD_VERSION }} --help
-          # docker run --rm --privileged --entrypoint "/usr/bin/wg" ghcr.io/${{ github.actor }}/wireguard:latest --help
-          # docker run --rm --privileged --entrypoint "/usr/bin/wg-quick" ghcr.io/${{ github.repository_owner }}/wireguard:${{ env.WIREGUARD_VERSION }} --help
+          # docker run --rm --privileged --entrypoint "/usr/bin/wg" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:alpine --help
+          # docker run --rm --privileged --entrypoint "/usr/bin/wg-quick" ${{ secrets.DOCKERHUB_USERNAME }}/wireguard:debian --help
