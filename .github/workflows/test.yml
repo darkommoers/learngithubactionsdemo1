@@ -22,5 +22,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create release ./path/to/artifact/* -t "Rolling Release" -n "bugfix release"
+          gh release create release "$((Get-Item . -Force).FullName)\path\to\artifact\*" -t "Rolling Release" -n "bugfix release"
           # gh release create release ./path/to/artifact/* --title "Rolling Release" --notes "bugfix release"
