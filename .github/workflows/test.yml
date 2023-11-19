@@ -10,14 +10,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@main
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
-
       - run: mkdir -p path/to/artifact
 
       - run: echo hello > path/to/artifact/world0.txt
@@ -26,22 +18,9 @@ jobs:
 
       - run: echo hello > path/to/artifact/world2.txt
       
-      # - name: Delete old tag
-      #   env:
-      #     # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #   run: |
-      #     TARGET_TAG="release"
-      #     curl -sL \
-      #       -X DELETE \
-      #       -H "Authorization: Bearer ${GH_TOKEN}" \
-      #       https://api.github.com/repos/${{ github.repository }}/git/refs/tags/${TARGET_TAG}
-
-      # - name: Upload to GitHub Release for all platform
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     name: Rolling Release
-      #     tag_name: release
-      #     body: These are automatically updated builds of the latest commit.
-      #     files: "path/to/artifact/*"
-      #     token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload to GitHub Release for all platform Test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create release ./path/to/artifact/* -t "Rolling Release" -n "bugfix release"
+          # gh release create release ./path/to/artifact/* --title "Rolling Release" --notes "bugfix release"
