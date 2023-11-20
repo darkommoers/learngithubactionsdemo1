@@ -40,7 +40,7 @@ jobs:
           rustup default stable
           rustup override set stable
           rustup update
-          rustup target add ${{ matrix.target }}
+          # rustup target add ${{ matrix.target }}
           # rustup target add --toolchain stable ${{ matrix.target }}
 
       - name: rustup target list
@@ -61,6 +61,11 @@ jobs:
 
       - name: ls -al
         run: ls -al target
+
+      - name: ls -al
+        run: |
+          cd target/${{ matrix.target }}
+          ls -al
 
       # - uses: actions-rs/toolchain@v1
       #   with:
