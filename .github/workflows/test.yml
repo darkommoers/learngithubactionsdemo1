@@ -52,7 +52,7 @@ jobs:
 
       - name: Build ${{ matrix.target }}
         run: |
-          cross build --target ${{ matrix.target }}
+          cross build --release --target ${{ matrix.target }}
           ls -al
           # cargo build --release --target ${{ matrix.target }}
 
