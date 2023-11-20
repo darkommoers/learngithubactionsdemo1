@@ -14,6 +14,7 @@ jobs:
       matrix:
         target:
           - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
     steps:
       - name: Checkout self
         uses: actions/checkout@v4
@@ -54,6 +55,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        run: |
-          # gh release create phantun ./target/${{ matrix.target }}/release/*.zip -t "phantun Rolling Release" -n "auto."
-          gh release create phantun target/${{ matrix.target }}/release/*.zip --title "phantun Rolling Release" --notes "auto."
+        uses: ncipollo/release-action@v1
+        with:
+          name: phantun Rolling Release
+          tag: phantun
+          body: These are automatically updated builds of the latest commit.
+          artifacts: "target/${{ matrix.target }}/release/*.zip"
+          allowUpdates: true
+          # token: ${{ secrets.GITHUB_TOKEN }}
+          # token: ${{ secrets.MY_GITHUB_TOKEN }}
