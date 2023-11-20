@@ -33,6 +33,8 @@ jobs:
           # - mips64el-unknown-linux-muslabi64
           # - powerpc64le-unknown-linux-gnu
           # - powerpc64le-unknown-linux-musl # no work
+          # - riscv64gc-unknown-linux-gnu
+          # - riscv64gc-unknown-linux-musl # no work
           # - s390x-unknown-linux-gnu
           # - s390x-unknown-linux-musl # no work
     steps:
