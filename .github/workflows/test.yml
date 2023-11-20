@@ -13,12 +13,12 @@ jobs:
       fail-fast: false
       matrix:
         target:
+          - i686-unknown-linux-gnu
+          - i686-unknown-linux-musl
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
           - aarch64-unknown-linux-gnu
           - aarch64-unknown-linux-musl
-          # - i686-unknown-linux-gnu
-          # - i686-unknown-linux-musl
-          # - x86_64-unknown-linux-gnu
-          # - x86_64-unknown-linux-musl
     steps:
       - name: Checkout self
         uses: actions/checkout@v4
@@ -28,10 +28,8 @@ jobs:
         with:
           repository: dndx/phantun
 
-      # - name: Install dependencies
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y gcc-multilib g++-multilib
+      - name: rustup target list
+        run: rustup target list
 
       - name: Install Rust
         run: |
@@ -39,68 +37,38 @@ jobs:
           rustup toolchain install stable
           rustup default stable
           rustup override set stable
-          rustup update
           # rustup target add ${{ matrix.target }}
           # rustup target add --toolchain stable ${{ matrix.target }}
 
-      - name: rustup target list
-        run: rustup target list
-
       - name: Install cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
-        # run: cargo install cross
+        run: |
+          cargo install cross
+          # cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build ${{ matrix.target }}
         run: |
           cross build --release --target ${{ matrix.target }}
-          ls -al
           # cargo build --release --target ${{ matrix.target }}
 
-      - name: ls -al
-        run: ls -al
-
-      - name: ls -al
-        run: ls -al target
-
-      - name: ls -al
-        run: |
-          cd target/${{ matrix.target }}
-          ls -al
-
-      - name: ls -al
+      - name: Rename artifacts and compress
         run: |
           cd target/${{ matrix.target }}/release
+          mv client phantun_client
+          mv server phantun_server
+          zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
+          strip server client
           ls -al
 
-      # - uses: actions-rs/toolchain@v1
-      #   with:
-      #     toolchain: stable
-      #     target: ${{ matrix.target }}
-      #     override: true
-      # - uses: actions-rs/cargo@v1
-      #   with:
-      #     use-cross: true
-      #     command: build
-      #     args: --release --target ${{ matrix.target }}
-
-      # - name: Rename artifacts and compress
-      #   run: |
-      #     cd target/${{ matrix.target }}/release
-      #     mv client phantun_client
-      #     mv server phantun_server
-      #     zip phantun_${{ matrix.target }}.zip phantun_client phantun_server
-      #     ls -al
-
-      # - name: Upload to GitHub Release for all platform
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     name: phantun Rolling Release
-      #     tag: phantun
-      #     body: These are automatically updated builds of the latest commit.
-      #     artifacts: "target/${{ matrix.target }}/release/*.zip"
-      #     allowUpdates: true
-      #     # token: ${{ secrets.GITHUB_TOKEN }}
-      #     # token: ${{ secrets.MY_GITHUB_TOKEN }}
+      - name: Upload to GitHub Release for all platform
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
+        with:
+          name: phantun Rolling Release
+          tag: phantun
+          body: These are automatically updated builds of the latest commit.
+          artifacts: "target/${{ matrix.target }}/release/*.zip"
+          allowUpdates: true
+          # token: ${{ secrets.GITHUB_TOKEN }}
+          # token: ${{ secrets.MY_GITHUB_TOKEN }}
