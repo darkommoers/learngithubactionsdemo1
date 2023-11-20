@@ -28,32 +28,47 @@ jobs:
         with:
           repository: dndx/phantun
 
-      - name: Install dependencies
+      # - name: Install dependencies
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y gcc-multilib g++-multilib 
+      #     sudo apt-get install -y musl-tools
+      #     # sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      # - name: Install Rust
+      #   run: |
+      #     rustup set profile minimal
+      #     rustup toolchain install stable
+      #     rustup default stable
+      #     rustup override set stable
+      #     rustup update
+      #     rustup target add ${{ matrix.target }}
+      #     # rustup target add --toolchain stable ${{ matrix.target }}
+
+      # - name: rustup target list
+      #   run: rustup target list
+
+      # - name: Install cross
+      #   run: cargo install cross
+
+      # - name: Build ${{ matrix.target }}
+      #   run: |
+      #     cargo build --release --target ${{ matrix.target }}
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: View dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib 
-          sudo apt-get install -y musl-tools
-          # sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-
-      - name: Install Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install stable
-          rustup default stable
-          rustup override set stable
-          rustup update
-          rustup target add ${{ matrix.target }}
-          # rustup target add --toolchain stable ${{ matrix.target }}
-
-      - name: rustup target list
-        run: rustup target list
-
-      - name: Install cross
-        run: cargo install cross
-
-      - name: Build ${{ matrix.target }}
-        run: |
-          cargo build --release --target ${{ matrix.target }}
+          sudo apt list --installed
 
       - name: Rename artifacts and compress
         run: |
