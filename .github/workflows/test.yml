@@ -53,6 +53,7 @@ jobs:
       - name: Build ${{ matrix.target }}
         run: |
           cross build --target ${{ matrix.target }}
+          ls -al
           # cargo build --release --target ${{ matrix.target }}
 
       # - uses: actions-rs/toolchain@v1
@@ -66,28 +67,24 @@ jobs:
       #     command: build
       #     args: --release --target ${{ matrix.target }}
 
-      # - name: View dependencies
+      # - name: Rename artifacts and compress
       #   run: |
-      #     sudo apt list --installed
+      #     cd target/${{ matrix.target }}/release
+      #     mv client phantun_client
+      #     mv server phantun_server
+      #     zip phantun_${{ matrix.target }}.zip phantun_client phantun_server
+      #     ls -al
 
-      - name: Rename artifacts and compress
-        run: |
-          cd target/${{ matrix.target }}/release
-          mv client phantun_client
-          mv server phantun_server
-          zip phantun_${{ matrix.target }}.zip phantun_client phantun_server
-          ls -al
-
-      - name: Upload to GitHub Release for all platform
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        uses: ncipollo/release-action@v1
-        with:
-          name: phantun Rolling Release
-          tag: phantun
-          body: These are automatically updated builds of the latest commit.
-          artifacts: "target/${{ matrix.target }}/release/*.zip"
-          allowUpdates: true
-          # token: ${{ secrets.GITHUB_TOKEN }}
-          # token: ${{ secrets.MY_GITHUB_TOKEN }}
+      # - name: Upload to GitHub Release for all platform
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     name: phantun Rolling Release
+      #     tag: phantun
+      #     body: These are automatically updated builds of the latest commit.
+      #     artifacts: "target/${{ matrix.target }}/release/*.zip"
+      #     allowUpdates: true
+      #     # token: ${{ secrets.GITHUB_TOKEN }}
+      #     # token: ${{ secrets.MY_GITHUB_TOKEN }}
