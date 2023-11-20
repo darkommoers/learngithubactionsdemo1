@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - mips64el-unknown-linux-gnuabi64
+          # - mips64el-unknown-linux-gnuabi64 # no work
           - mips64el-unknown-linux-muslabi64
           - powerpc64le-unknown-linux-gnu
           # - powerpc64le-unknown-linux-musl # no work
