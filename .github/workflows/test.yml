@@ -38,7 +38,8 @@ jobs:
           rustup default stable
           rustup override set stable
           rustup update
-          rustup target add --toolchain stable ${{ matrix.target }}
+          rustup target add ${{ matrix.target }}
+          # rustup target add --toolchain stable ${{ matrix.target }}
 
       - name: rustup target list
         run: rustup target list
