@@ -56,6 +56,12 @@ jobs:
           ls -al
           # cargo build --release --target ${{ matrix.target }}
 
+      - name: ls -al
+        run: ls -al
+
+      - name: ls -al
+        run: ls -al target
+
       # - uses: actions-rs/toolchain@v1
       #   with:
       #     toolchain: stable
