@@ -27,6 +27,12 @@ jobs:
         with:
           repository: dndx/phantun
 
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libc6-dev
+          # sudo apt-get install -y libc6-dev
+
       - name: Install Rust
         run: |
           rustup set profile minimal
@@ -41,10 +47,6 @@ jobs:
 
       - name: Install cross
         run: cargo install cross
-
-      - name: Install dependencies
-        run: |
-          apt-get install -y libc6-dev
 
       - name: Build ${{ matrix.target }}
         run: |
