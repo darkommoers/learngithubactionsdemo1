@@ -6,42 +6,51 @@ on:
 jobs:
   autocheck:
     runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: full
+      CARGO_TERM_COLOR: always
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - i686-unknown-linux-gnu
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@main
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
+      - name: Install Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable
+          rustup default stable
+          rustup override set stable
+          rustup update
+          # rustup target add --toolchain stable ${{ matrix.target }}
+          rustup target add ${{ matrix.target }}
 
-      # - run: mkdir -p path/to/artifact
+      - name: rustup target list
+        run: rustup target list
 
-      # - run: echo hello > path/to/artifact/world0.txt
+      - name: Install cross
+        run: cargo install cross
 
-      # - run: echo hello > path/to/artifact/world1.txt
+      - name: Build ${{ matrix.target }}
+        run: |
+          cargo build --release --target ${{ matrix.target }}
 
-      # - run: echo hello > path/to/artifact/world2.txt
-      
-      # - name: Delete old tag
-      #   env:
-      #     # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #   run: |
-      #     TARGET_TAG="release"
-      #     curl -sL \
-      #       -X DELETE \
-      #       -H "Authorization: Bearer ${GH_TOKEN}" \
-      #       https://api.github.com/repos/${{ github.repository }}/git/refs/tags/${TARGET_TAG}
+      - name: Rename artifacts and compress
+        run: |
+          cd target/${{ matrix.target }}/release
+          mv client phantun_client
+          mv server phantun_server
+          zip phantun_${{ matrix.target }}.zip phantun_client phantun_server
 
-      # - name: Upload to GitHub Release for all platform
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     name: Rolling Release
-      #     tag_name: release
-      #     body: These are automatically updated builds of the latest commit.
-      #     files: "path/to/artifact/*"
-      #     token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload to GitHub Release for all platform
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          # gh release create phantun ./target/${{ matrix.target }}/release/*.zip -t "phantun Rolling Release" -n "auto."
+          gh release create target/${{ matrix.target }}/release/*.zip --title "phantun Rolling Release" --notes "auto."
