@@ -20,45 +20,42 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
 
-      - name: Checkout haproxy repo
+      - name: Checkout phantun repo
         uses: actions/checkout@v4
         with:
           repository: dndx/phantun
 
+      - name: Install Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable
+          rustup default stable
+          rustup override set stable
+          rustup update
+          rustup target add ${{ matrix.target }}
+          # rustup target add --toolchain stable ${{ matrix.target }}
+
       - name: rustup target list
-        run: ls -al
-      
-      # - name: Install Rust
-      #   run: |
-      #     rustup set profile minimal
-      #     rustup toolchain install stable
-      #     rustup default stable
-      #     rustup override set stable
-      #     rustup update
-      #     # rustup target add --toolchain stable ${{ matrix.target }}
-      #     rustup target add ${{ matrix.target }}
+        run: rustup target list
 
-      # - name: rustup target list
-      #   run: rustup target list
+      - name: Install cross
+        run: cargo install cross
 
-      # - name: Install cross
-      #   run: cargo install cross
+      - name: Build ${{ matrix.target }}
+        run: |
+          cargo build --release --target ${{ matrix.target }}
 
-      # - name: Build ${{ matrix.target }}
-      #   run: |
-      #     cargo build --release --target ${{ matrix.target }}
+      - name: Rename artifacts and compress
+        run: |
+          cd target/${{ matrix.target }}/release
+          mv client phantun_client
+          mv server phantun_server
+          zip phantun_${{ matrix.target }}.zip phantun_client phantun_server
 
-      # - name: Rename artifacts and compress
-      #   run: |
-      #     cd target/${{ matrix.target }}/release
-      #     mv client phantun_client
-      #     mv server phantun_server
-      #     zip phantun_${{ matrix.target }}.zip phantun_client phantun_server
-
-      # - name: Upload to GitHub Release for all platform
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #   run: |
-      #     # gh release create phantun ./target/${{ matrix.target }}/release/*.zip -t "phantun Rolling Release" -n "auto."
-      #     gh release create target/${{ matrix.target }}/release/*.zip --title "phantun Rolling Release" --notes "auto."
+      - name: Upload to GitHub Release for all platform
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          # gh release create phantun ./target/${{ matrix.target }}/release/*.zip -t "phantun Rolling Release" -n "auto."
+          gh release create target/${{ matrix.target }}/release/*.zip --title "phantun Rolling Release" --notes "auto."
