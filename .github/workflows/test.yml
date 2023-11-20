@@ -37,6 +37,10 @@ jobs:
           # - riscv64gc-unknown-linux-musl # no work
           # - s390x-unknown-linux-gnu
           # - s390x-unknown-linux-musl # no work
+          # - i686-pc-windows-gnu
+          # - i686-pc-windows-msvc
+          # - x86_64-pc-windows-gnu
+          # - x86_64-pc-windows-msvc
     steps:
       - name: Checkout self
         uses: actions/checkout@v4
