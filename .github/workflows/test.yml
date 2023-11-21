@@ -42,12 +42,6 @@ jobs:
           # - x86_64-pc-windows-gnu
           # - x86_64-pc-windows-msvc
     steps:
-
-      - name: Checkout phantun repo
-        uses: actions/checkout@v4
-        with:
-          repository: dndx/phantun
-
       - name: Checkout self
         uses: actions/checkout@v4
 
@@ -70,9 +64,9 @@ jobs:
 
       - name: Build ${{ matrix.target }}
         run: |
-          # git clone https://github.com/dndx/phantun.git
-          # # cp -fr phantun/* $PWD
-          # cp -fr phantun/* .
+          git clone https://github.com/dndx/phantun.git
+          # cp -fr phantun/* $PWD
+          cp -fr phantun/* .
           ls -al
           cross build --release --target ${{ matrix.target }}
           # cargo build --release --target ${{ matrix.target }}
