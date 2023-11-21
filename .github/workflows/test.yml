@@ -76,10 +76,10 @@ jobs:
 
       - name: Rename artifacts and compress
         run: |
-          cd target/${{ matrix.target }}/release
-          mv client phantun_client
-          mv server phantun_server
-          zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
+          # cd target/${{ matrix.target }}/release
+          # mv client phantun_client
+          # mv server phantun_server
+          # zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
           ls -al
 
       # - name: Upload to GitHub Release for all platform
