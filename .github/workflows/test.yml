@@ -81,6 +81,8 @@ jobs:
           # mv server phantun_server
           # zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
           ls -al
+          cd phantun || exit 2
+          ls -al
 
       # - name: Upload to GitHub Release for all platform
       #   env:
