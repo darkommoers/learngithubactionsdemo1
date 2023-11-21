@@ -42,13 +42,14 @@ jobs:
           # - x86_64-pc-windows-gnu
           # - x86_64-pc-windows-msvc
     steps:
-      - name: Checkout self
-        uses: actions/checkout@v4
 
       - name: Checkout phantun repo
         uses: actions/checkout@v4
         with:
           repository: dndx/phantun
+
+      - name: Checkout self
+        uses: actions/checkout@v4
 
       - name: rustup target list
         run: rustup target list
@@ -91,8 +92,8 @@ jobs:
 
       - name: Upload to GitHub Release for all platform
         env:
-          # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           target_name="phantun"
           if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${target_name}" ]]; then
