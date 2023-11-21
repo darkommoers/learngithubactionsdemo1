@@ -58,7 +58,7 @@ jobs:
           # gh help formatting
           # gh api repos/{owner}/{repo}/releases --jq '.'
           gh api repos/{owner}/{repo}/tags --jq '.'
-          gh api repos/{owner}/{repo}/tags --jq '.name'
+          gh api repos/{owner}/{repo}/tags --jq '.[].name'
 
       # - name: rustup target list
       #   run: rustup target list
