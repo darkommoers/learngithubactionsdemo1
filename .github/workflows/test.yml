@@ -78,13 +78,15 @@ jobs:
           mv client phantun_client
           mv server phantun_server
           zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
+          mkdir -p /tmp/phantun; install -d /tmp/phantun
+          cp -fr phantun_${{ matrix.target }}.zip /tmp/phantun
 
       - name: Upload to GitHub Release for all platform
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          gh release create phantun 'target/${{ matrix.target }}/release/*.zip' --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+          gh release create phantun /tmp/phantun/* --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
 
       # - name: Upload to GitHub Release for all platform
       #   env:
