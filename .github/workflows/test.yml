@@ -51,9 +51,11 @@ jobs:
       #     repository: dndx/phantun
 
       - name: test
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           gh api repos/{owner}/{repo}/releases
-
 
       # - name: rustup target list
       #   run: rustup target list
