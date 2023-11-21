@@ -87,6 +87,8 @@ jobs:
           ls -al
           cd release || exit 2
           ls -al
+          cd build || exit 2
+          ls -al
 
       # - name: Upload to GitHub Release for all platform
       #   env:
