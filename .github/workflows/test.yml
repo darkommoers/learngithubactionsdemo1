@@ -83,6 +83,10 @@ jobs:
           ls -al
           cd phantun || exit 2
           ls -al
+          cd target || exit 2
+          ls -al
+          cd release || exit 2
+          ls -al
 
       # - name: Upload to GitHub Release for all platform
       #   env:
