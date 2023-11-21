@@ -77,9 +77,10 @@ jobs:
           cross build --release --target ${{ matrix.target }}
           # cargo build --release --target ${{ matrix.target }}
 
-      - run: mkdir -p path/to/ready; install -d path/to/ready
       - name: Rename artifacts and compress
         run: |
+          mkdir -p path/to/ready; install -d path/to/ready
+          ls -al
           cd target/${{ matrix.target }}/release
           ls -al
           mv client phantun_client
