@@ -14,9 +14,9 @@ jobs:
       matrix:
         target:
           - i686-unknown-linux-gnu
-          # - i686-unknown-linux-musl
-          # - x86_64-unknown-linux-gnu
-          # - x86_64-unknown-linux-musl
+          - i686-unknown-linux-musl
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
           # - armv5te-unknown-linux-gnueabi
           # - armv5te-unknown-linux-musleabi
           # - arm-unknown-linux-gnueabi
@@ -64,7 +64,8 @@ jobs:
 
       - name: Build ${{ matrix.target }}
         run: |
-          git clone https://github.com/dndx/phantun.git
+          # git clone https://github.com/dndx/phantun.git
+          gh repo clone dndx/phantun
           # cp -fr phantun/* $PWD
           cp -fr phantun/* .
           ls -al
@@ -82,7 +83,7 @@ jobs:
           mv server phantun_server
           zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
           cp -fr phantun_${{ matrix.target }}.zip $currrr/path/to/ready
-          ls -lhR $currrr/path/to/ready
+          ls -lhR $PWD/path/to/ready
 
       - name: Upload to GitHub Release for all platform
         env:
