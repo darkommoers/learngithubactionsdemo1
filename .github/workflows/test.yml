@@ -14,7 +14,7 @@ jobs:
       matrix:
         target:
           - i686-unknown-linux-gnu
-          - i686-unknown-linux-musl
+          # - i686-unknown-linux-musl
           # - x86_64-unknown-linux-gnu
           # - x86_64-unknown-linux-musl
           # - armv5te-unknown-linux-gnueabi
@@ -85,7 +85,8 @@ jobs:
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           # gh release create phantun ./path/to/ready/* -t "phantun Rolling Release" -n "These are automatically updated builds of the latest commit."
-          gh release create phantun "target/${{ matrix.target }}/release/*.zip" --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+          aaa="target/${{ matrix.target }}/release/*.zip"
+          gh release create phantun $aaa --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
 
       # - name: Upload to GitHub Release for all platform
       #   env:
