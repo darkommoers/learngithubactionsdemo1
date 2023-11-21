@@ -81,13 +81,15 @@ jobs:
         run: |
           mkdir -p path/to/ready; install -d path/to/ready
           ls -al
+          currrr=$PWD
           cd target/${{ matrix.target }}/release
           ls -al
           mv client phantun_client
           mv server phantun_server
           zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
-          cp -fr phantun_${{ matrix.target }}.zip path/to/ready
-          ls -lhR path/to/ready
+          cd target/${{ matrix.target }}/release
+          cp -fr phantun_${{ matrix.target }}.zip $currrr/path/to/ready
+          ls -lhR $currrr/path/to/ready
 
       # - name: Upload to GitHub Release for all platform
       #   env:
