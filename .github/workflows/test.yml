@@ -45,10 +45,10 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
 
-      - name: Checkout phantun repo
-        uses: actions/checkout@v4
-        with:
-          repository: dndx/phantun
+      # - name: Checkout phantun repo
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: dndx/phantun
 
       - name: rustup target list
         run: rustup target list
@@ -69,6 +69,8 @@ jobs:
 
       - name: Build ${{ matrix.target }}
         run: |
+          git clone https://github.com/dndx/phantun.git
+          cd phantun || exit 2
           cross build --release --target ${{ matrix.target }}
           # cargo build --release --target ${{ matrix.target }}
 
@@ -78,15 +80,7 @@ jobs:
           mv client phantun_client
           mv server phantun_server
           zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
-          mkdir -p /tmp/phantun; install -d /tmp/phantun
-          cp -fr phantun_${{ matrix.target }}.zip /tmp/phantun
-
-      - name: Upload to GitHub Release for all platform
-        env:
-          # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        run: |
-          gh release create phantun /tmp/phantun/* --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+          ls -al
 
       # - name: Upload to GitHub Release for all platform
       #   env:
