@@ -59,7 +59,7 @@ jobs:
           # gh api repos/{owner}/{repo}/releases --jq '.'
           # gh api repos/{owner}/{repo}/tags --jq '.'
           gh api repos/{owner}/{repo}/tags --jq '.[].name'
-          target_name="Caddy"
+          target_name="phantun"
           if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${target_name}" ]]; then
           echo "True"
           else
