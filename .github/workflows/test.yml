@@ -17,16 +17,16 @@ jobs:
           - i686-unknown-linux-musl
           - x86_64-unknown-linux-gnu
           - x86_64-unknown-linux-musl
-          - armv5te-unknown-linux-gnueabi
-          - armv5te-unknown-linux-musleabi
+          # - armv5te-unknown-linux-gnueabi
+          # - armv5te-unknown-linux-musleabi
           # - arm-unknown-linux-gnueabi
           # - arm-unknown-linux-musleabi
-          - arm-unknown-linux-gnueabihf
-          - arm-unknown-linux-musleabihf
+          # - arm-unknown-linux-gnueabihf
+          # - arm-unknown-linux-musleabihf
           # - armv7-unknown-linux-gnueabi
           # - armv7-unknown-linux-musleabi
-          - armv7-unknown-linux-gnueabihf
-          - armv7-unknown-linux-musleabihf
+          # - armv7-unknown-linux-gnueabihf
+          # - armv7-unknown-linux-musleabihf
           - aarch64-unknown-linux-gnu
           - aarch64-unknown-linux-musl
           # - mips64el-unknown-linux-gnuabi64 # no work
@@ -83,12 +83,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        uses: ncipollo/release-action@v1
-        with:
-          name: phantun Rolling Release
-          tag: phantun
-          body: These are automatically updated builds of the latest commit.
-          artifacts: "target/${{ matrix.target }}/release/*.zip"
-          allowUpdates: true
-          # token: ${{ secrets.GITHUB_TOKEN }}
-          # token: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          # gh release create phantun ./path/to/ready/* -t "phantun Rolling Release" -n "These are automatically updated builds of the latest commit."
+          gh release create phantun target/${{ matrix.target }}/release/*.zip --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+
+      # - name: Upload to GitHub Release for all platform
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     name: phantun Rolling Release
+      #     tag: phantun
+      #     body: These are automatically updated builds of the latest commit.
+      #     artifacts: "target/${{ matrix.target }}/release/*.zip"
+      #     allowUpdates: true
+      #     # token: ${{ secrets.GITHUB_TOKEN }}
+      #     # token: ${{ secrets.MY_GITHUB_TOKEN }}
