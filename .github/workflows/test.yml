@@ -15,8 +15,8 @@ jobs:
         target:
           - i686-unknown-linux-gnu
           - i686-unknown-linux-musl
-          - x86_64-unknown-linux-gnu
-          - x86_64-unknown-linux-musl
+          # - x86_64-unknown-linux-gnu
+          # - x86_64-unknown-linux-musl
           # - armv5te-unknown-linux-gnueabi
           # - armv5te-unknown-linux-musleabi
           # - arm-unknown-linux-gnueabi
@@ -27,8 +27,8 @@ jobs:
           # - armv7-unknown-linux-musleabi
           # - armv7-unknown-linux-gnueabihf
           # - armv7-unknown-linux-musleabihf
-          - aarch64-unknown-linux-gnu
-          - aarch64-unknown-linux-musl
+          # - aarch64-unknown-linux-gnu
+          # - aarch64-unknown-linux-musl
           # - mips64el-unknown-linux-gnuabi64 # no work
           # - mips64el-unknown-linux-muslabi64
           # - powerpc64le-unknown-linux-gnu
@@ -85,7 +85,7 @@ jobs:
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           # gh release create phantun ./path/to/ready/* -t "phantun Rolling Release" -n "These are automatically updated builds of the latest commit."
-          gh release create phantun target/${{ matrix.target }}/release/*.zip --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+          gh release create phantun "target/${{ matrix.target }}/release/*.zip" --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
 
       # - name: Upload to GitHub Release for all platform
       #   env:
