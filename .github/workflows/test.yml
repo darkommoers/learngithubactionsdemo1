@@ -84,7 +84,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          gh release create phantun ./target/${{ matrix.target }}/release/*.zip --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+          gh release create phantun 'target/${{ matrix.target }}/release/*.zip' --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
 
       # - name: Upload to GitHub Release for all platform
       #   env:
