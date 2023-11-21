@@ -63,6 +63,9 @@ jobs:
           # cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build ${{ matrix.target }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           # git clone https://github.com/dndx/phantun.git
           gh repo clone dndx/phantun
