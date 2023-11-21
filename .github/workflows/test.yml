@@ -55,10 +55,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          gh help formatting
+          # gh help formatting
           # gh api repos/{owner}/{repo}/releases --jq '.'
-          gh api repos/{owner}/{repo}/tags --jq '.'
+          # gh api repos/{owner}/{repo}/tags --jq '.'
           gh api repos/{owner}/{repo}/tags --jq '.[].name'
+          target_name="Caddy"
+          if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${target_name}" ]]; then
+          echo "True"
+          else
+          echo "False"
+          fi
+          if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "2656" ]]; then
+          echo "True"
+          else
+          echo "False"
+          fi
 
       # - name: rustup target list
       #   run: rustup target list
