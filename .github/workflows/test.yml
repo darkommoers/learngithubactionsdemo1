@@ -87,7 +87,6 @@ jobs:
           mv client phantun_client
           mv server phantun_server
           zip -9vr phantun_${{ matrix.target }}.zip phantun_client phantun_server
-          cd target/${{ matrix.target }}/release
           cp -fr phantun_${{ matrix.target }}.zip $currrr/path/to/ready
           ls -lhR $currrr/path/to/ready
 
