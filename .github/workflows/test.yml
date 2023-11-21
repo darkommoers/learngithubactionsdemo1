@@ -52,7 +52,7 @@ jobs:
 
       - name: test
         run: |
-          gh api -H /repos/{owner}/{repo}/git/ref/tags/release
+          gh api repos/{owner}/{repo}/releases
 
 
       # - name: rustup target list
