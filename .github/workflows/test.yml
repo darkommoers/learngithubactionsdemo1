@@ -45,6 +45,12 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
 
+      - name: Checkout phantun repo
+        uses: actions/checkout@v4
+        with:
+          repository: dndx/phantun
+          path: phantun
+          
       - name: rustup target list
         run: rustup target list
 
@@ -68,7 +74,7 @@ jobs:
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           # git clone https://github.com/dndx/phantun.git
-          gh repo clone dndx/phantun
+          # gh repo clone dndx/phantun
           # cp -fr phantun/* $PWD
           cp -fr phantun/* .
           ls -al
