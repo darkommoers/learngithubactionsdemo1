@@ -18,8 +18,10 @@ jobs:
           # - { goos: windows, target: x86_64-pc-windows-gnu }
           # - { goos: windows, target: x86_64-pc-windows-msvc }
           # - { goos: windows, target: aarch64-pc-windows-msvc }
-          - { goos: linux, target: i686-unknown-linux-gnu }
-          - { goos: linux, target: i686-unknown-linux-musl }
+          - { goos: windows, target: i686-unknown-linux-gnu }
+          - { goos: windows, target: i686-unknown-linux-musl }
+          # - { goos: linux, target: i686-unknown-linux-gnu }
+          # - { goos: linux, target: i686-unknown-linux-musl }
           - { goos: linux, target: x86_64-unknown-linux-gnu }
           - { goos: linux, target: x86_64-unknown-linux-musl }
           # - { goos: linux, target: armv5te-unknown-linux-gnueabi }
@@ -42,6 +44,10 @@ jobs:
           # - { goos: linux, target: riscv64gc-unknown-linux-musl } # no work
           # - { goos: linux, target: s390x-unknown-linux-gnu }
           # - { goos: linux, target: s390x-unknown-linux-musl } # no work
+          # - { goos: linux, target: mips-unknown-linux-gnu }
+          # - { goos: linux, target: mips-unknown-linux-musl }
+          # - { goos: linux, target: mipsel-unknown-linux-gnu }
+          # - { goos: linux, target: mipsel-unknown-linux-musl }
     steps:
       - name: Checkout self
         uses: actions/checkout@v4
@@ -69,14 +75,14 @@ jobs:
       - name: To see rust a list of available targets
         run: rustup target list
 
-      - name: Install Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install stable
-          rustup default stable
-          rustup override set stable
-          # rustup target add ${{ matrix.config.target }}
-          # rustup target add --toolchain stable ${{ matrix.config.target }}
+      # - name: Install Rust
+      #   run: |
+      #     rustup set profile minimal
+      #     rustup toolchain install stable
+      #     rustup default stable
+      #     rustup override set stable
+      #     # rustup target add ${{ matrix.config.target }}
+      #     # rustup target add --toolchain stable ${{ matrix.config.target }}
 
       - name: Install cross
         run: |
@@ -88,18 +94,39 @@ jobs:
           cross build --release --target ${{ matrix.config.target }}
           # cargo build --release --target ${{ matrix.config.target }}
 
-      - name: Rename artifacts and compress
+      - name: Generate zip for Windows
+        if: matrix.config.goos == 'windows'
         run: |
           mkdir -p path/to/ready; install -d path/to/ready
           ls -al
-          currrr=$PWD
+          current_path=$PWD
+          cd target/${{ matrix.config.target }}/release
+          ls -al
+          mv client phantun_client.exe
+          mv server phantun_server.exe
+          openssl sha256 phantun_client.exe phantun_server.exe > sha256sum.txt
+          cat sha256sum.txt
+          zip -9vr phantun_${{ matrix.config.target }}.zip phantun_client.exe phantun_server.exe sha256sum.txt
+          ls -al
+          cp -fr phantun_${{ matrix.config.target }}.zip $current_path/path/to/ready
+          ls -lhR $current_path/path/to/ready
+
+      - name: Generate tar for other platform
+        if: matrix.config.goos != 'windows'
+        run: |
+          mkdir -p path/to/ready; install -d path/to/ready
+          ls -al
+          current_path=$PWD
           cd target/${{ matrix.config.target }}/release
           ls -al
           mv client phantun_client
           mv server phantun_server
-          zip -9vr phantun_${{ matrix.config.target }}.zip phantun_client phantun_server
-          cp -fr phantun_${{ matrix.config.target }}.zip $currrr/path/to/ready
-          ls -lhR $currrr/path/to/ready
+          openssl sha256 phantun_client phantun_server > sha256sum.txt
+          cat sha256sum.txt
+          tar -zcvf phantun_${{ matrix.config.target }}.tar.gz phantun_client phantun_server sha256sum.txt
+          ls -al
+          cp -fr phantun_${{ matrix.config.target }}.tar.gz $current_path/path/to/ready
+          ls -lhR $current_path/path/to/ready
 
       - name: Upload to GitHub Release for all platform
         env:
@@ -110,7 +137,7 @@ jobs:
           if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${target_name}" ]]; then
           gh release upload "${target_name}" path/to/ready/* --clobber
           else
-          gh release create phantun path/to/ready/* --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+          gh release create "${target_name}" path/to/ready/* --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
           fi
 
       # - name: Upload to GitHub Release for all platform
