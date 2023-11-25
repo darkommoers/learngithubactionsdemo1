@@ -50,18 +50,32 @@ jobs:
         with:
           repository: dndx/phantun
           path: phantun
-          
-      - name: rustup target list
+
+      # - name: Checkout phantun repo
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #   run: |
+      #     git clone https://github.com/dndx/phantun.git
+      #     # gh repo clone dndx/phantun
+
+      - name: Copy phantun repo
+        run: |
+          # cp -fr phantun/* $PWD
+          cp -fr phantun/* .
+          ls -al
+
+      - name: To see rust a list of available targets
         run: rustup target list
 
-      - name: Install Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install stable
-          rustup default stable
-          rustup override set stable
-          # rustup target add ${{ matrix.target }}
-          # rustup target add --toolchain stable ${{ matrix.target }}
+      # - name: Install Rust
+      #   run: |
+      #     rustup set profile minimal
+      #     rustup toolchain install stable
+      #     rustup default stable
+      #     rustup override set stable
+      #     # rustup target add ${{ matrix.target }}
+      #     # rustup target add --toolchain stable ${{ matrix.target }}
 
       - name: Install cross
         run: |
@@ -69,15 +83,7 @@ jobs:
           # cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build ${{ matrix.target }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          # git clone https://github.com/dndx/phantun.git
-          # gh repo clone dndx/phantun
-          # cp -fr phantun/* $PWD
-          cp -fr phantun/* .
-          ls -al
           cross build --release --target ${{ matrix.target }}
           # cargo build --release --target ${{ matrix.target }}
 
