@@ -18,10 +18,8 @@ jobs:
           # - { goos: windows, target: x86_64-pc-windows-gnu }
           # - { goos: windows, target: x86_64-pc-windows-msvc }
           # - { goos: windows, target: aarch64-pc-windows-msvc }
-          - { goos: windows, target: i686-unknown-linux-gnu }
-          - { goos: windows, target: i686-unknown-linux-musl }
-          # - { goos: linux, target: i686-unknown-linux-gnu }
-          # - { goos: linux, target: i686-unknown-linux-musl }
+          - { goos: linux, target: i686-unknown-linux-gnu }
+          - { goos: linux, target: i686-unknown-linux-musl }
           - { goos: linux, target: x86_64-unknown-linux-gnu }
           - { goos: linux, target: x86_64-unknown-linux-musl }
           # - { goos: linux, target: armv5te-unknown-linux-gnueabi }
@@ -98,46 +96,108 @@ jobs:
         if: matrix.config.goos == 'windows'
         run: |
           mkdir -p path/to/ready; install -d path/to/ready
-          ls -al
+          # ls -al
           current_path=$PWD
           cd target/${{ matrix.config.target }}/release
-          ls -al
+          # ls -al
           mv client phantun_client.exe
           mv server phantun_server.exe
           openssl sha256 phantun_client.exe phantun_server.exe > sha256sum.txt
           cat sha256sum.txt
-          zip -9vr phantun_${{ matrix.config.target }}.zip phantun_client.exe phantun_server.exe sha256sum.txt
+          zip -9vr phantun-${{ matrix.config.target }}.zip phantun_client.exe phantun_server.exe sha256sum.txt
           ls -al
-          cp -fr phantun_${{ matrix.config.target }}.zip $current_path/path/to/ready
+          cp -fr phantun-${{ matrix.config.target }}.zip $current_path/path/to/ready
           ls -lhR $current_path/path/to/ready
 
       - name: Generate tar for other platform
         if: matrix.config.goos != 'windows'
         run: |
           mkdir -p path/to/ready; install -d path/to/ready
-          ls -al
+          # ls -al
           current_path=$PWD
           cd target/${{ matrix.config.target }}/release
-          ls -al
+          # ls -al
           mv client phantun_client
           mv server phantun_server
           openssl sha256 phantun_client phantun_server > sha256sum.txt
           cat sha256sum.txt
-          tar -zcvf phantun_${{ matrix.config.target }}.tar.gz phantun_client phantun_server sha256sum.txt
+          tar -zcvf phantun-${{ matrix.config.target }}.tar.gz phantun_client phantun_server sha256sum.txt
           ls -al
-          cp -fr phantun_${{ matrix.config.target }}.tar.gz $current_path/path/to/ready
+          cp -fr phantun-${{ matrix.config.target }}.tar.gz $current_path/path/to/ready
           ls -lhR $current_path/path/to/ready
+
+      - name: Delete old release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          TARGET_TAG="phantun"
+          # https://docs.github.com/en/rest/git/refs#get-a-reference
+          TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+
+          # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
+          # TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
+          #   -H "Authorization: Bearer ${GH_TOKEN}" \
+          #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
+
+          if [[ ${TARGET_HTTP_CODE} != 200 ]]; then
+          # if [[ "$TARGET_HTTP_CODE" -ne 200 ]]; then
+            # echo "Fail: ${TARGET_HTTP_CODE}"
+            # echo "No target tag or release found, skip delete."
+            echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_HTTP_CODE}\e[0m"
+            echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
+          else
+            # echo "Success: ${TARGET_HTTP_CODE}"
+            echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[30;48;5;2m${TARGET_HTTP_CODE}\e[0m"
+            # gh release delete "${TARGET_TAG}" -y --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
+            gh release delete "${TARGET_TAG}" --yes --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
+            # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
+
+            while true; do
+            # until false; do
+            echo -e "\e[30;48;5;12m$(date '+%F %T') === check release exist\e[0m"
+
+            TARGET_HTTP_CODE_TAG=$(curl -sI -w "%{http_code}" -o "/dev/null" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+
+            TARGET_HTTP_CODE_RELEASE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
+
+            if [[ ${TARGET_HTTP_CODE_TAG} == 200 ]] &>/dev/null; then
+            curl -sL \
+              -X DELETE \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              https://api.github.com/repos/${{ github.repository }}/git/refs/tags/${TARGET_TAG} &>/dev/null
+            fi
+
+            if [[ ${TARGET_HTTP_CODE_TAG} == 404 && ${TARGET_HTTP_CODE_RELEASE} == 404 ]] &>/dev/null; then
+            echo -e "\e[30;48;5;14m$(date '+%F %T') === release is no exist ready to upload\e[0m"
+            sleep 1
+            break 49
+            else
+            echo -e "\e[30;48;5;11m$(date '+%F %T') === release exist retrying\e[0m"
+            fi
+
+            sleep 3
+            done
+
+            echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[0m\e[30;48;5;4m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
+          fi
 
       - name: Upload to GitHub Release for all platform
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          target_name="phantun"
-          if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${target_name}" ]]; then
-          gh release upload "${target_name}" path/to/ready/* --clobber
+          TARGET_TAG="phantun"
+          if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${TARGET_TAG}" ]]; then
+          gh release upload "${TARGET_TAG}" path/to/ready/* --clobber
           else
-          gh release create "${target_name}" path/to/ready/* --title "phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
+          gh release create "${TARGET_TAG}" path/to/ready/* --title "Phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
           fi
 
       # - name: Upload to GitHub Release for all platform
