@@ -4,38 +4,53 @@ echo "Run"
 
 PLATFORM=$1
 if [ -z "$PLATFORM" ]; then
-    ARCH="amd64"
+    # ARCH="x86_64-unknown-linux-gnu"
+    ARCH="x86_64-unknown-linux-musl"
 else
     case "${PLATFORM}" in
         linux/386)
-            ARCH="386"
+            # ARCH="i686-unknown-linux-gnu"
+            ARCH="i686-unknown-linux-musl"
             ;;
         linux/amd64)
-            ARCH="amd64"
+            # ARCH="x86_64-unknown-linux-gnu"
+            ARCH="x86_64-unknown-linux-musl"
             ;;
         linux/arm/v5)
-            ARCH="arm5"
+            # ARCH="armv5te-unknown-linux-gnueabi"
+            ARCH="armv5te-unknown-linux-musleabi"
             ;;
         linux/arm/v6)
-            ARCH="arm6"
+            # ARCH="arm-unknown-linux-gnueabi"
+            # ARCH="arm-unknown-linux-musleabi"
+            # ARCH="arm-unknown-linux-gnueabihf"
+            ARCH="arm-unknown-linux-musleabihf"
             ;;
         linux/arm/v7)
-            ARCH="arm7"
+            # ARCH="armv7-unknown-linux-gnueabi"
+            # ARCH="armv7-unknown-linux-musleabi"
+            # ARCH="armv7-unknown-linux-gnueabihf"
+            ARCH="armv7-unknown-linux-musleabihf"
             ;;
         linux/arm64|linux/arm64/v8)
-            ARCH="arm64"
+            # ARCH="aarch64-unknown-linux-gnu"
+            ARCH="aarch64-unknown-linux-musl"
             ;;
         linux/mips64le)
-            ARCH="mips64le"
+            # ARCH="mips64el-unknown-linux-gnuabi64"
+            ARCH="mips64el-unknown-linux-muslabi64"
             ;;
         linux/ppc64le)
-            ARCH="ppc64le"
+            ARCH="powerpc64le-unknown-linux-gnu"
+            # ARCH="powerpc64le-unknown-linux-musl"
             ;;
         linux/riscv64)
-            ARCH="riscv64"
+            ARCH="riscv64gc-unknown-linux-gnu"
+            # ARCH="riscv64gc-unknown-linux-musl"
             ;;
         linux/s390x)
-            ARCH="s390x"
+            ARCH="s390x-unknown-linux-gnu"
+            # ARCH="s390x-unknown-linux-musl"
             ;;
         *)
             ARCH=""
@@ -44,7 +59,7 @@ else
 fi
 [ -z "${ARCH}" ] && echo "Error: Not supported OS Architecture" && exit 1
 
-TARGET_FILE="phantun-linux-${ARCH}.tar.gz"
+TARGET_FILE="phantun-${ARCH}.tar.gz"
 DIR_TMP="$(mktemp -d)"
 
 echo "Downloading archive file: ${TARGET_FILE}"
