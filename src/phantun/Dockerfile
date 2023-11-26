@@ -29,7 +29,7 @@ COPY --from=ready --chmod=755 /usr/bin/phantun_client /usr/bin/phantun_client
 RUN set -eux; \
 	apt-get update; \
 	apt-get upgrade -y; \
-	apt-get install -y --no-install-recommends bash ca-certificates tzdata; \
+	apt-get install -y --no-install-recommends bash ca-certificates tzdata grep nftables iptables; \
 	apt-get remove --purge --auto-remove -y; \
 	apt-get purge -y --auto-remove; \
 	apt-get autoremove -y; \
