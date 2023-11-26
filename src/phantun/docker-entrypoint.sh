@@ -25,7 +25,6 @@ error() {
 
 apply_sysctl() {
   info "apply sysctl: $(sysctl -w net.ipv4.conf.all.forwarding=1)"
-  ! _is_ipv4_only "$@" || return
   info "apply sysctl: $(sysctl -w net.ipv6.conf.all.forwarding=1)"
 
   MyNic=`ip route | grep default | grep -oP '(?<=dev[\s?])(\S*)'`
