@@ -10,7 +10,7 @@ RUN set -ex \
 	&& apt-get update \
 	&& apt-get upgrade -y \
 	&& apt-get install -y --no-install-recommends ca-certificates curl wget libcap2-bin mailcap \
-	&& /usr/local/bin/phantun.sh "${TARGETPLATFORM}" \
+	&& phantun.sh "${TARGETPLATFORM}" \
 	&& rm -rfv /usr/local/bin/phantun.sh \
 	&& apt-get remove --purge --auto-remove -y \
 	&& apt-get purge -y --auto-remove \
