@@ -5,25 +5,47 @@ on:
 
 jobs:
   autocheck:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-      - run: git config --global core.autocrlf input
       - name: Checkout
         uses: actions/checkout@v4
 
-      - run: |
-          mkdir -p path\to\ready
-          echo hello > path\to\ready\world0.txt
-          echo hello > path\to\ready\world1.txt
-          echo hello > path\to\ready\world2.txt
+      - run: mkdir -p path/to/artifact
+
+      - run: echo hello > path/to/artifact/world0.txt
+
+      - run: echo hello > path/to/artifact/world1.txt
+
+      - run: echo hello > path/to/artifact/world2.txt
+
+
 
       - name: Upload to GitHub Release for all platform
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          CONTENT_PATH: "src/haproxy/haproxy.version"
         run: |
-          $TARGET_TAG="haproxy"
-          $TARGET_VERSION=$(cat ${{ env.CONTENT_PATH }})
-          gh release create "${TARGET_TAG}" (Get-Item ".\path\to\ready\*" -Force) --title "Haproxy Rolling Release" `
-          --notes "Haproxy Version: <code>[${TARGET_VERSION}](https://github.com/haproxy/haproxy/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
+          TARGET_TAG="chisel"
+          if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${TARGET_TAG}" ]]; then
+          gh release upload "${TARGET_TAG}" path/to/artifact/* --clobber
+          else
+          gh release create "${TARGET_TAG}" path/to/artifact/* --title "Chisel Rolling Release" \
+          --notes "Chisel Version: <code>[v1.9.1](https://github.com/jpillora/chisel/releases/tag/v1.9.1)</code><br><br>**These are automatically updated builds of the latest commit.**"
+          fi
+
+      # - run: |
+      #     mkdir -p path\to\ready
+      #     echo hello > path\to\ready\world0.txt
+      #     echo hello > path\to\ready\world1.txt
+      #     echo hello > path\to\ready\world2.txt
+
+      # - name: Upload to GitHub Release for all platform
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #     CONTENT_PATH: "src/haproxy/haproxy.version"
+      #   run: |
+      #     $TARGET_TAG="haproxy"
+      #     $TARGET_VERSION=$(cat ${{ env.CONTENT_PATH }})
+      #     gh release create "${TARGET_TAG}" (Get-Item ".\path\to\ready\*" -Force) --title "Haproxy Rolling Release" `
+      #     --notes "Haproxy Version: <code>[${TARGET_VERSION}](https://github.com/haproxy/haproxy/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
