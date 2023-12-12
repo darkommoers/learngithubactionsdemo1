@@ -28,6 +28,5 @@ jobs:
           gh release upload "${TARGET_TAG}" path/to/artifact/* --clobber
           else
           gh release create "${TARGET_TAG}" path/to/artifact/* --title "Phantun Rolling Release" \
-          --notes "Curren version: ${TARGET_TAG}" \
-          --notes "These are automatically updated builds of the latest commit."
+          --notes "# These are automatically updated builds of the latest commit."
           fi
