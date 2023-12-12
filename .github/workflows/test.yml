@@ -11,10 +11,18 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: Windows x86, goos: windows, goarch: amd64 }
+          - { name: Windows x86, goos: windows, goarch: 386 }
+          - { name: Windows x86_64, goos: windows, goarch: amd64 }
+          - { name: Windows arm5, goos: windows, goarch: arm, goarm: 5 }
+          - { name: Windows arm6, goos: windows, goarch: arm, goarm: 6 }
           - { name: Windows arm7, goos: windows, goarch: arm, goarm: 7 }
+          - { name: Windows arm64, goos: windows, goarch: arm64 }
+          - { name: Linux x86, goos: linux, goarch: 386 }
           - { name: Linux x86_64, goos: linux, goarch: amd64 }
+          - { name: Linux arm5, goos: linux, goarch: arm, goarm: 5 }
+          - { name: Linux arm6, goos: linux, goarch: arm, goarm: 6 }
           - { name: Linux arm7, goos: linux, goarch: arm, goarm: 7 }
+          - { name: Linux arm64, goos: linux, goarch: arm64 }
     steps:
       - name: Checkout self
         uses: actions/checkout@v4
@@ -101,16 +109,23 @@ jobs:
           cp -fr chisel-${{ env.ASSET_NAME }}.tar.gz $current_path/path/to/ready
           ls -lhR $current_path/path/to/ready
 
-      - name: Upload to GitHub Release for all platform
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          # CONTENT_PATH: "src/chisel/chisel.version"
-        run: |
-          TARGET_TAG="chisel"
-          if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${TARGET_TAG}" ]]; then
-          gh release upload "${TARGET_TAG}" path/to/ready/* --clobber
-          else
-          gh release create "${TARGET_TAG}" path/to/ready/* --title "Chisel Rolling Release" \
-          --notes "Chisel Version: <code>[v1.9.1](https://github.com/jpillora/chisel/releases/tag/v1.9.1)</code><br><br>**These are automatically updated builds of the latest commit.**"
-          fi
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: caddy-${{ env.ASSET_NAME }}
+          path: ./path/to/ready/*
+          retention-days: 1
+
+      # - name: Upload to GitHub Release for all platform
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #     # CONTENT_PATH: "src/chisel/chisel.version"
+      #   run: |
+      #     TARGET_TAG="chisel"
+      #     if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${TARGET_TAG}" ]]; then
+      #     gh release upload "${TARGET_TAG}" path/to/ready/* --clobber
+      #     else
+      #     gh release create "${TARGET_TAG}" path/to/ready/* --title "Chisel Rolling Release" \
+      #     --notes "Chisel Version: <code>[v1.9.1](https://github.com/jpillora/chisel/releases/tag/v1.9.1)</code><br><br>**These are automatically updated builds of the latest commit.**"
+      #     fi
