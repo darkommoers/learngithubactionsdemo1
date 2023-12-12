@@ -27,6 +27,5 @@ jobs:
           if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${TARGET_TAG}" ]]; then
           gh release upload "${TARGET_TAG}" path/to/artifact/* --clobber
           else
-          # gh release create "${TARGET_TAG}" path/to/artifact/* --title "Phantun Rolling Release" --notes "These are automatically updated builds of the latest commit."
-          gh release create "${TARGET_TAG}" path/to/artifact/* --generate-notes
+          gh release create "${TARGET_TAG}" path/to/artifact/* --title "Phantun Rolling Release" --notes "Curren version: ${TARGET_TAG}\nThese are automatically updated builds of the latest commit."
           fi
