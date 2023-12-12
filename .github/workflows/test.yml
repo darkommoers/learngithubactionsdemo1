@@ -5,47 +5,111 @@ on:
 
 jobs:
   autocheck:
+    name: Build - ${{ matrix.config.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: Windows x86, goos: windows, goarch: amd64 }
+          - { name: Windows arm7, goos: windows, goarch: arm, goarm: 7 }
+          - { name: Linux x86_64, goos: linux, goarch: amd64 }
+          - { name: Linux arm7, goos: linux, goarch: arm, goarm: 7 }
     steps:
-      - name: Checkout
+      - name: Checkout self
         uses: actions/checkout@v4
 
-      - run: mkdir -p path/to/artifact
+      - name: Checkout chisel repo
+        uses: actions/checkout@v4
+        with:
+          repository: jpillora/chisel
+          path: chisel
 
-      - run: echo hello > path/to/artifact/world0.txt
+      # - name: Checkout chisel repo
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #   run: |
+      #     git clone https://github.com/jpillora/chisel.git
+      #     # gh repo clone jpillora/chisel
 
-      - run: echo hello > path/to/artifact/world1.txt
+      # - name: Copy chisel repo
+      #   run: |
+      #     # cp -fr chisel/* $PWD
+      #     cp -fr chisel/* .
+      #     ls -al
 
-      - run: echo hello > path/to/artifact/world2.txt
+      - name: Setup Variables
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          # CONTENT_PATH: "src/chisel/chisel.version"
+          GOOS: ${{ matrix.config.goos }}
+          GOARCH: ${{ matrix.config.goarch }}
+          GOARM: ${{ matrix.config.goarm }}
+        run: |
+          echo "GO_VERSION=$(wget -qO- https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json | jq -r .[0].version)" >> $GITHUB_ENV
+          echo "GO_VERSION: $(curl -sL https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json | jq -r '.[0].version')"
+          echo "ASSET_NAME=$GOOS-$GOARCH$GOARM" >> $GITHUB_ENV
+          echo "ASSET_NAME: $GOOS-$GOARCH$GOARM"
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
 
+      - name: Build chisel
+        env:
+          GOOS: ${{ matrix.config.goos }}
+          GOARCH: ${{ matrix.config.goarch }}
+          GOARM: ${{ matrix.config.goarm }}
+          CGO_ENABLED: 0
+        run: |
+          mkdir -p build-tmp; install -d build-tmp
+          go build -v -o ./build-tmp/chisel -trimpath -ldflags "-s -w -X github.com/jpillora/chisel/share.BuildVersion=${Version}"
+
+      - name: Generate zip for Windows
+        if: matrix.config.goos == 'windows'
+        run: |
+          mkdir -p path/to/ready; install -d path/to/ready
+          ls -al
+          current_path=$PWD
+          cd ./build-tmp
+          ls -al
+          mv chisel chisel.exe
+          openssl sha256 * > sha256sum.txt
+          cat sha256sum.txt
+          zip -9vr chisel-${{ env.ASSET_NAME }}.zip *
+          ls -al
+          cp -fr chisel-${{ env.ASSET_NAME }}.zip $current_path/path/to/ready
+          ls -lhR $current_path/path/to/ready
+
+      - name: Generate tar for other platform
+        if: matrix.config.goos != 'windows'
+        run: |
+          mkdir -p path/to/ready; install -d path/to/ready
+          ls -al
+          current_path=$PWD
+          cd ./build-tmp
+          ls -al
+          openssl sha256 * > sha256sum.txt
+          cat sha256sum.txt
+          tar -zcvf chisel-${{ env.ASSET_NAME }}.tar.gz *
+          ls -al
+          cp -fr chisel-${{ env.ASSET_NAME }}.tar.gz $current_path/path/to/ready
+          ls -lhR $current_path/path/to/ready
 
       - name: Upload to GitHub Release for all platform
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          # CONTENT_PATH: "src/chisel/chisel.version"
         run: |
           TARGET_TAG="chisel"
           if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${TARGET_TAG}" ]]; then
-          gh release upload "${TARGET_TAG}" path/to/artifact/* --clobber
+          gh release upload "${TARGET_TAG}" path/to/ready/* --clobber
           else
-          gh release create "${TARGET_TAG}" path/to/artifact/* --title "Chisel Rolling Release" \
+          gh release create "${TARGET_TAG}" path/to/ready/* --title "Chisel Rolling Release" \
           --notes "Chisel Version: <code>[v1.9.1](https://github.com/jpillora/chisel/releases/tag/v1.9.1)</code><br><br>**These are automatically updated builds of the latest commit.**"
           fi
-
-      # - run: |
-      #     mkdir -p path\to\ready
-      #     echo hello > path\to\ready\world0.txt
-      #     echo hello > path\to\ready\world1.txt
-      #     echo hello > path\to\ready\world2.txt
-
-      # - name: Upload to GitHub Release for all platform
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #     CONTENT_PATH: "src/haproxy/haproxy.version"
-      #   run: |
-      #     $TARGET_TAG="haproxy"
-      #     $TARGET_VERSION=$(cat ${{ env.CONTENT_PATH }})
-      #     gh release create "${TARGET_TAG}" (Get-Item ".\path\to\ready\*" -Force) --title "Haproxy Rolling Release" `
-      #     --notes "Haproxy Version: <code>[${TARGET_VERSION}](https://github.com/haproxy/haproxy/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
