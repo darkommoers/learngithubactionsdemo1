@@ -5,226 +5,91 @@ on:
 
 jobs:
   autocheck:
-    name: Build - ${{ matrix.config.name }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - { name: Windows x86, goos: windows, goarch: 386 }
-          - { name: Windows x86_64, goos: windows, goarch: amd64 }
-          - { name: Windows arm5, goos: windows, goarch: arm, goarm: 5 }
-          - { name: Windows arm6, goos: windows, goarch: arm, goarm: 6 }
-          - { name: Windows arm7, goos: windows, goarch: arm, goarm: 7 }
-          - { name: Windows arm64, goos: windows, goarch: arm64 }
-          - { name: Linux x86, goos: linux, goarch: 386 }
-          - { name: Linux x86_64, goos: linux, goarch: amd64 }
-          - { name: Linux arm5, goos: linux, goarch: arm, goarm: 5 }
-          - { name: Linux arm6, goos: linux, goarch: arm, goarm: 6 }
-          - { name: Linux arm7, goos: linux, goarch: arm, goarm: 7 }
-          - { name: Linux arm64, goos: linux, goarch: arm64 }
-    steps:
-      - name: Checkout self
-        uses: actions/checkout@v4
-
-      - name: Checkout chisel repo
-        uses: actions/checkout@v4
-        with:
-          repository: jpillora/chisel
-          path: chisel
-
-      # - name: Checkout chisel repo
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #   run: |
-      #     git clone https://github.com/jpillora/chisel.git
-      #     # gh repo clone jpillora/chisel
-
-      # - name: Copy chisel repo
-      #   run: |
-      #     # cp -fr chisel/* $PWD
-      #     cp -fr chisel/* .
-      #     ls -al
-
-      - name: Setup Variables
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          # CONTENT_PATH: "src/chisel/chisel.version"
-          GOOS: ${{ matrix.config.goos }}
-          GOARCH: ${{ matrix.config.goarch }}
-          GOARM: ${{ matrix.config.goarm }}
-        run: |
-          echo "GO_VERSION=$(wget -qO- https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json | jq -r .[0].version)" >> $GITHUB_ENV
-          echo "GO_VERSION: $(curl -sL https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json | jq -r '.[0].version')"
-          echo "ASSET_NAME=$GOOS-$GOARCH$GOARM" >> $GITHUB_ENV
-          echo "ASSET_NAME: $GOOS-$GOARCH$GOARM"
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          check-latest: true
-
-      - name: Build chisel
-        env:
-          GOOS: ${{ matrix.config.goos }}
-          GOARCH: ${{ matrix.config.goarch }}
-          GOARM: ${{ matrix.config.goarm }}
-          CGO_ENABLED: 0
-        run: |
-          mkdir -p build-tmp; install -d build-tmp
-          cd ./chisel
-          go build -v -o ../build-tmp/chisel -trimpath -ldflags "-s -w -X github.com/jpillora/chisel/share.BuildVersion=${Version}"
-
-      - name: Generate zip for Windows
-        if: matrix.config.goos == 'windows'
-        run: |
-          mkdir -p path/to/ready; install -d path/to/ready
-          ls -al
-          current_path=$PWD
-          cd ./build-tmp
-          ls -al
-          mv chisel chisel.exe
-          openssl sha256 * > sha256sum.txt
-          cat sha256sum.txt
-          zip -9vr chisel-${{ env.ASSET_NAME }}.zip *
-          ls -al
-          cp -fr chisel-${{ env.ASSET_NAME }}.zip $current_path/path/to/ready
-          ls -lhR $current_path/path/to/ready
-
-      - name: Generate tar for other platform
-        if: matrix.config.goos != 'windows'
-        run: |
-          mkdir -p path/to/ready; install -d path/to/ready
-          ls -al
-          current_path=$PWD
-          cd ./build-tmp
-          ls -al
-          openssl sha256 * > sha256sum.txt
-          cat sha256sum.txt
-          tar -zcvf chisel-${{ env.ASSET_NAME }}.tar.gz *
-          ls -al
-          cp -fr chisel-${{ env.ASSET_NAME }}.tar.gz $current_path/path/to/ready
-          ls -lhR $current_path/path/to/ready
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: chisel-${{ env.ASSET_NAME }}
-          path: ./path/to/ready/*
-          # retention-days: 5
-
-  push-releases:
-    needs:
-      - autocheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Setup Variables
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #     CONTENT_PATH: "src/chisel/chisel.version"
-      #   run: |
-      #     # echo "CADDY_VERSION=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }} | jq -r .content | head -1 | base64 -d)" >> $GITHUB_ENV
-      #     echo "CADDY_VERSION=$(cat "${{ env.CONTENT_PATH }}" | head -n1)" >> $GITHUB_ENV
-
-      - run: mkdir -p path/to/artifact; install -d path/to/artifact
-      - run: mkdir -p path/to/ready; install -d path/to/ready
-      - name: Download Artifact
-        id: download
-        uses: actions/download-artifact@v3
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@main
         with:
-          path: path/to/artifact
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0
 
-      - name: Ready Upload files
-        run: |
-          for i in path/to/artifact/*/*; do echo "Copy ${i} to path/to/ready"; cp -fr ${i} path/to/ready; done
-          ls -lhR path/to/ready
+      # - run: mkdir -p path/to/artifact
 
-      - name: Delete old release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        run: |
-          TARGET_TAG="chisel"
-          # https://docs.github.com/en/rest/git/refs#get-a-reference
-          TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
+      # - run: echo hello > path/to/artifact/world0.txt
 
-          # https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
-          # TARGET_HTTP_CODE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-          #   -H "Authorization: Bearer ${GH_TOKEN}" \
-          #   https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
+      # - run: echo hello > path/to/artifact/world1.txt
 
-          if [[ ${TARGET_HTTP_CODE} != 200 ]]; then
-          # if [[ "$TARGET_HTTP_CODE" -ne 200 ]]; then
-            # echo "Fail: ${TARGET_HTTP_CODE}"
-            # echo "No target tag or release found, skip delete."
-            echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_HTTP_CODE}\e[0m"
-            echo -e "\033[1;40;91m$(date '+%F %T') === No target tag or release found, skip delete. \033[0m"
-          else
-            # echo "Success: ${TARGET_HTTP_CODE}"
-            echo -e "\033[1;40;92m$(date '+%F %T') === Success: \033[0m\e[30;48;5;2m${TARGET_HTTP_CODE}\e[0m"
-            # gh release delete "${TARGET_TAG}" -y --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
-            gh release delete "${TARGET_TAG}" --yes --cleanup-tag || echo -e "\033[1;40;96m$(date '+%F %T') === Fail: \033[0m\e[30;48;5;1m${TARGET_TAG} release not found\e[0m"
-            # echo "Target tag or release ${TARGET_TAG} deleted Complete!"
-
-            while true; do
-            # until false; do
-            echo -e "\e[30;48;5;12m$(date '+%F %T') === check release exist\e[0m"
-
-            TARGET_HTTP_CODE_TAG=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              https://api.github.com/repos/${{ github.repository }}/git/ref/tags/${TARGET_TAG} )
-
-            TARGET_HTTP_CODE_RELEASE=$(curl -sI -w "%{http_code}" -o "/dev/null" \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              https://api.github.com/repos/${{ github.repository }}/releases/tags/${TARGET_TAG} )
-
-            if [[ ${TARGET_HTTP_CODE_TAG} == 200 ]] &>/dev/null; then
-            curl -sL \
-              -X DELETE \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              https://api.github.com/repos/${{ github.repository }}/git/refs/tags/${TARGET_TAG} &>/dev/null
-            fi
-
-            if [[ ${TARGET_HTTP_CODE_TAG} == 404 && ${TARGET_HTTP_CODE_RELEASE} == 404 ]] &>/dev/null; then
-            echo -e "\e[30;48;5;14m$(date '+%F %T') === release is no exist ready to upload\e[0m"
-            sleep 1
-            break 49
-            else
-            echo -e "\e[30;48;5;11m$(date '+%F %T') === release exist retrying\e[0m"
-            fi
-
-            sleep 3
-            done
-
-            echo -e "\033[1;40;94m$(date '+%F %T') === Target tag or release \e[0m\e[30;48;5;4m${TARGET_TAG}\e[0m\033[1;40;94m deleted Complete! \033[0m"
-          fi
+      # - run: echo hello > path/to/artifact/world2.txt
 
       # - name: Upload to GitHub Release for all platform
       #   env:
       #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      #     CONTENT_PATH: "src/chisel/chisel.version"
       #   run: |
       #     TARGET_TAG="chisel"
-      #     TARGET_VERSION=$(cat ${{ env.CONTENT_PATH }})
-      #     gh release create "${TARGET_TAG}" path/to/ready/* --title "Chisel Rolling Release" \
-      #     --notes "Chisel Version: <code>[${TARGET_VERSION}](https://github.com/caddyserver/caddy/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
+      #     if [[ "$(gh api repos/{owner}/{repo}/tags --jq '.[].name')" = "${TARGET_TAG}" ]]; then
+      #     gh release upload "${TARGET_TAG}" path/to/artifact/* --clobber
+      #     else
+      #     gh release create "${TARGET_TAG}" path/to/artifact/* --title "Chisel Rolling Release" \
+      #     --notes "Chisel Version: <code>[v1.9.1](https://github.com/jpillora/chisel/releases/tag/v1.9.1)</code><br><br>**These are automatically updated builds of the latest commit.**"
+      #     fi
 
-      - name: Upload to GitHub Release for all platform
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          # CONTENT_PATH: "src/chisel/chisel.version"
-        run: |
-          TARGET_TAG="chisel"
-          gh release create "${TARGET_TAG}" path/to/ready/* --title "Chisel Rolling Release" \
-          --notes "Chisel Version: <code>[v1.9.1](https://github.com/jpillora/chisel/releases/tag/v1.9.1)</code><br><br>**These are automatically updated builds of the latest commit.**"
+      # - run: |
+      #     mkdir -p path\to\ready
+      #     echo hello > path\to\ready\world0.txt
+      #     echo hello > path\to\ready\world1.txt
+      #     echo hello > path\to\ready\world2.txt
+
+      # - name: Upload to GitHub Release for all platform
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #     CONTENT_PATH: "src/haproxy/haproxy.version"
+      #   run: |
+      #     $TARGET_TAG="haproxy"
+      #     $TARGET_VERSION=$(cat ${{ env.CONTENT_PATH }})
+      #     gh release create "${TARGET_TAG}" (Get-Item ".\path\to\ready\*" -Force) --title "Haproxy Rolling Release" `
+      #     --notes "Haproxy Version: <code>[${TARGET_VERSION}](https://github.com/haproxy/haproxy/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
+
+      
+      # - name: Delete old tag
+      #   env:
+      #     # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #   run: |
+      #     TARGET_TAG="release"
+      #     curl -sL \
+      #       -X DELETE \
+      #       -H "Authorization: Bearer ${GH_TOKEN}" \
+      #       https://api.github.com/repos/${{ github.repository }}/git/refs/tags/${TARGET_TAG}
+
+      # - name: Upload to GitHub Release for all platform
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     name: Rolling Release
+      #     tag_name: release
+      #     body: These are automatically updated builds of the latest commit.
+      #     files: "path/to/artifact/*"
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      
+	  # - run: |
+      #     mkdir -p path\to\ready
+      #     echo hello > path\to\ready\world0.txt
+      #     echo hello > path\to\ready\world1.txt
+      #     echo hello > path\to\ready\world2.txt
+
+      # - name: Upload to GitHub Release for all platform
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      #     CONTENT_PATH: "src/haproxy/haproxy.version"
+      #   run: |
+      #     $TARGET_TAG="haproxy"
+      #     $TARGET_VERSION=$(cat ${{ env.CONTENT_PATH }})
+      #     gh release create "${TARGET_TAG}" (Get-Item ".\path\to\ready\*" -Force) --title "Haproxy Rolling Release" `
+      #     --notes "Haproxy Version: <code>[${TARGET_VERSION}](https://github.com/haproxy/haproxy/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
