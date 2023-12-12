@@ -67,6 +67,7 @@ jobs:
           CGO_ENABLED: 0
         run: |
           mkdir -p build-tmp; install -d build-tmp
+          cd ./chisel
           go build -v -o ./build-tmp/chisel -trimpath -ldflags "-s -w -X github.com/jpillora/chisel/share.BuildVersion=${Version}"
 
       - name: Generate zip for Windows
