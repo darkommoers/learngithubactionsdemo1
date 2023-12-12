@@ -21,8 +21,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          CONTENT_PATH: ".github/haproxy.version"
+          CONTENT_PATH: "src/haproxy/haproxy.version"
         run: |
+          $TARGET_VERSION=$(cat ${{ env.CONTENT_PATH }})
           $TARGET_TAG="haproxy"
           gh release create "${TARGET_TAG}" (Get-Item .\path\to\ready\* -Force) --title "Haproxy Rolling Release" `
-          --notes "Haproxy Version: <code>[${{ env.CONTENT_PATH }}](https://github.com/haproxy/haproxy/releases/tag/${{ env.CONTENT_PATH }})</code><br><br>**These are automatically updated builds of the latest commit.**"
+          --notes "Haproxy Version: <code>[${TARGET_VERSION}](https://github.com/haproxy/haproxy/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
