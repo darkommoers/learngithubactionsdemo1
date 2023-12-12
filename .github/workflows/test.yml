@@ -28,6 +28,5 @@ jobs:
           gh release upload "${TARGET_TAG}" path/to/artifact/* --clobber
           else
           gh release create "${TARGET_TAG}" path/to/artifact/* --title "Chisel Rolling Release" \
-          --generate-notes
-          # --notes "Chisel Current Version: <code>[${TARGET_TAG}]()</code><br><br>**These are automatically updated builds of the latest commit.**"
+          --notes "Chisel Current Version: <code>[${TARGET_TAG}](https://github.com/jpillora/chisel/releases/tag/v1.9.1)</code><br><br>**These are automatically updated builds of the latest commit.**"
           fi
