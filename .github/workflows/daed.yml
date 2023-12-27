@@ -69,6 +69,7 @@ jobs:
           cd $CURRENT_PATH/daed
           ls -al
           git submodule update --init --recursive
+          sed -i 's|FROM docker.io/node.*|FROM node:slim AS base|g' Dockerfile
           cat Dockerfile
 
       - name: Modify daed repo
