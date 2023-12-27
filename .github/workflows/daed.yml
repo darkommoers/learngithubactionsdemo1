@@ -80,6 +80,7 @@ jobs:
           cat Dockerfile
 
       # https://docs.docker.com/build/ci/github-actions/push-multi-registries/
+      # https://github.com/daeuniverse/daed/discussions/291
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
