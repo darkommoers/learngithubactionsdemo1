@@ -77,7 +77,6 @@ jobs:
           PORT=3000
           EOF
           ls -al
-          cat Dockerfile
           echo "233255"
           cat .env.local
 
