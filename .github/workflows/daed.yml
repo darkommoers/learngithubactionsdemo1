@@ -76,7 +76,9 @@ jobs:
           HOSTNAME="0.0.0.0"
           PORT=3000
           EOF
+          ls -al
           cat Dockerfile
+          echo "233255"
           cat .env.local
 
       - name: Modify daed repo
@@ -105,25 +107,25 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push - ${{ matrix.config.name }}
-        if: matrix.config.target == 'frontend'
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ env.CURRENT_PATH }}/daed
-          # file: Dockerfile
-          provenance: false
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ghcr.io/${{ github.actor }}/daed:latest
-      - name: Build and push - ${{ matrix.config.name }}
-        if: matrix.config.target == 'backend'
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ env.CURRENT_PATH }}/daed/wing
-          # file: Dockerfile
-          provenance: false
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/dae-wing:latest
+      # - name: Build and push - ${{ matrix.config.name }}
+      #   if: matrix.config.target == 'frontend'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ${{ env.CURRENT_PATH }}/daed
+      #     # file: Dockerfile
+      #     provenance: false
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: |
+      #       ghcr.io/${{ github.actor }}/daed:latest
+      # - name: Build and push - ${{ matrix.config.name }}
+      #   if: matrix.config.target == 'backend'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ${{ env.CURRENT_PATH }}/daed/wing
+      #     # file: Dockerfile
+      #     provenance: false
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: |
+      #       ghcr.io/${{ github.repository_owner }}/dae-wing:latest
