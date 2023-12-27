@@ -76,6 +76,7 @@ jobs:
           cd $CURRENT_PATH/daed/wing
           ls -al
           sed -i '/^RUN make APPNAME=dae*/i RUN go mod tidy' Dockerfile
+          cat Dockerfile
 
       # https://docs.docker.com/build/ci/github-actions/push-multi-registries/
       - name: Set up QEMU
@@ -98,7 +99,7 @@ jobs:
         if: matrix.config.target == 'frontend'
         uses: docker/build-push-action@v5
         with:
-          context: $CURRENT_PATH/daed
+          context: ${{ env.CURRENT_PATH }}/daed
           # file: Dockerfile
           provenance: false
           platforms: linux/386,linux/amd64,linux/arm64
@@ -109,7 +110,7 @@ jobs:
         if: matrix.config.target == 'backend'
         uses: docker/build-push-action@v5
         with:
-          context: $CURRENT_PATH/daed/wing
+          context: ${{ env.CURRENT_PATH }}/daed/wing
           # file: Dockerfile
           provenance: false
           platforms: linux/386,linux/amd64,linux/arm64
