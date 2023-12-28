@@ -70,16 +70,17 @@ jobs:
           ls -al
           git submodule update --init --recursive
           sed -i 's|FROM docker.io/node.*|FROM node:slim AS base|g' Dockerfile
+          cat Dockerfile
           
-          cat <<EOF> .env.local
-          WING_API_URL=http://10.18.27.27:2023
-          HOSTNAME=0.0.0.0
-          PORT=3000
+          # cat <<EOF> .env.local
+          # WING_API_URL=http://10.18.27.27:2023
+          # HOSTNAME=0.0.0.0
+          # PORT=3000
           
-          EOF
-          ls -al
-          echo "233255"
-          cat .env.local
+          # EOF
+          # ls -al
+          # echo "233255"
+          # cat .env.local
 
       - name: Modify daed repo
         if: matrix.config.target == 'backend'
