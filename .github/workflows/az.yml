@@ -9,10 +9,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      - name: Run a multi-line script
+      - name: Run all script test
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          curl -sOL https://github.com/jackrun123/cfiptest/releases/download/v1.2.7/cfiptest-v1.2.7-linux-amd64.tar.gz
+          tar -xzvf cfiptest-v1.2.7-linux-amd64.tar.gz
+          chmod +x ./cfiptest
+          ls -al
+          ./cfiptest -h
+
+      - name: Commit and push file  test
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: './cfiptest'
+          author_name: github-actions[bot]
+          author_email: github-actions[bot]@users.noreply.github.com
+          message: 'Auto commit test'
+          token: ${{ secrets.GH_TOKEN }}
+          # token: ${{ secrets.GITHUB_TOKEN }}
