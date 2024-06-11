@@ -16,13 +16,14 @@ jobs:
           chmod +x ./cfiptest
           ls -al
           ./cfiptest -h
+          ./cfiptest asn -as 209242
 
       - name: Commit and push file  test
         uses: EndBug/add-and-commit@v9
         with:
           add: './cfiptest'
-          author_name: github-actions[bot]
-          author_email: github-actions[bot]@users.noreply.github.com
+          # author_name: github-actions[bot]
+          # author_email: github-actions[bot]@users.noreply.github.com
           message: 'Auto commit test'
-          token: ${{ secrets.GH_TOKEN }}
+          # token: ${{ secrets.GH_TOKEN }}
           # token: ${{ secrets.GITHUB_TOKEN }}
