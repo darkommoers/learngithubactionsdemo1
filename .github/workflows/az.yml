@@ -9,21 +9,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: S
+        run: |
+          cat <<EOF> ./ip.txt
+          14.102.228.0/23
+          EOF
+
       - name: Run all script test
         run: |
           curl -sOL https://github.com/jackrun123/cfiptest/releases/download/v1.2.7/cfiptest-v1.2.7-linux-amd64.tar.gz
           tar -xzvf cfiptest-v1.2.7-linux-amd64.tar.gz
           chmod +x ./cfiptest
           ls -al
-          ./cfiptest -h
-          ./cfiptest asn -as 209242
+          # ./cfiptest -h
+          # ./cfiptest asn -as 209242
+          ./cfiptest -f ./ip.txt -dt 100 -st 0 -delay_url www.cloudflare.com
 
       - name: Commit and push file  test
         uses: EndBug/add-and-commit@v9
         with:
           add: './cfiptest'
+          message: 'Auto commit test'
+          # default_author: github_actions
+          # committer_name: GitHub Actions
+          # committer_email: actions@github.com
+          # committer_email: github-actions[bot]@users.noreply.github.com
           # author_name: github-actions[bot]
           # author_email: github-actions[bot]@users.noreply.github.com
-          message: 'Auto commit test'
           # token: ${{ secrets.GH_TOKEN }}
           # token: ${{ secrets.GITHUB_TOKEN }}
