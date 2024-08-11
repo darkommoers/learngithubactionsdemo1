@@ -26,7 +26,7 @@ jobs:
       - name: Run a multi-line script
         run: |
           TARGET_TAG=${{ env.CONTENT_TARGET }}
-          TARGET_NAME=$(echo $TARGET_TAG | sed 's/^./\u&/')
+          TARGET_NAME="$(echo $TARGET_TAG | sed 's/^./\u&/')"
           echo "$TARGET_TAG"
           echo "$TARGET_NAME"
           echo ${{ env.CONTENT_REPO }}
