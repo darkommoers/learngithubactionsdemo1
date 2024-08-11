@@ -35,6 +35,7 @@ jobs:
           mkdir -p ${{ env.CONTENT_TARGET }}
           cd ./${{ env.CONTENT_TARGET }}
           pwd
+          id
 
       # - run: mkdir -p path/to/artifact
 
