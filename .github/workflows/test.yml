@@ -3,6 +3,11 @@ name: AutoCheck
 on:
   workflow_dispatch:
 
+env:
+  CONTENT_TARGET: "cloudflared"
+  CONTENT_REPO: "cloudflare/cloudflared"
+  CONTENT_VERSION: "src/cloudflared/cloudflared.version"
+
 jobs:
   autocheck:
     runs-on: ubuntu-latest
@@ -10,13 +15,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@main
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
+      # - name: Delete workflow runs
+      #   uses: Mattraks/delete-workflow-runs@main
+      #   with:
+      #     token: ${{ github.token }}
+      #     repository: ${{ github.repository }}
+      #     retain_days: 0
+      #     keep_minimum_runs: 0
+
+      - name: Run a multi-line script
+        run: |
+          TARGET_TAG=${{ env.CONTENT_TARGET }}
+          echo "$TARGET_TAG"
+          echo "${$TARGET_TAG^^}"
+          echo ${{ env.CONTENT_REPO }}
+          echo ${{ env.CONTENT_VERSION }}
 
       # - run: mkdir -p path/to/artifact
 
