@@ -36,6 +36,7 @@ jobs:
           cd ./${{ env.CONTENT_TARGET }}
           pwd
           id
+          echo "-X main.Version=$(cat "${{ env.CONTENT_VERSION }}" | head -n1) -X main.BuildTime=$(date -u '+%Y-%m-%d-%H%M UTC')"
 
       # - run: mkdir -p path/to/artifact
 
