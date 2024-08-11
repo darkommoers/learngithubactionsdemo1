@@ -27,7 +27,8 @@ jobs:
         run: |
           TARGET_TAG=${{ env.CONTENT_TARGET }}
           echo "$TARGET_TAG"
-          echo "${$TARGET_TAG^^}"
+          echo "$(echo "$TARGET_TAG" | awk '{print toupper($0)}')"
+          echo "$(tr '[:lower:]' '[:upper:]' <<< echo "$TARGET_TAG")"
           echo ${{ env.CONTENT_REPO }}
           echo ${{ env.CONTENT_VERSION }}
 
