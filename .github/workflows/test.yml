@@ -31,6 +31,7 @@ jobs:
           echo "$TARGET_NAME"
           echo ${{ env.CONTENT_REPO }}
           echo ${{ env.CONTENT_VERSION }}
+          echo "${TARGET_NAME} Version: <code>[${TARGET_VERSION}](https://github.com/${{ env.CONTENT_REPO }}/releases/tag/${TARGET_VERSION})</code><br><br>**These are automatically updated builds of the latest commit.**"
 
       # - run: mkdir -p path/to/artifact
 
