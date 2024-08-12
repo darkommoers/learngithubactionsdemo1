@@ -1,207 +1,87 @@
-#!/usr/bin/env bash
-#
-#=#!/bin/bash
+name: CI Actions Test
 
-mkdir -p $PWD/mymain; install -d $PWD/mymain
-WORKING_DIR="$PWD/mymain"
-echo $WORKING_DIR
+on:
+  push:
+    paths:
+      - "src/a/b.version"
+  workflow_dispatch:
 
-mkdir -p $WORKING_DIR/dev/shm; install -d $WORKING_DIR/dev/shm
-mkdir -p $WORKING_DIR/etc/xray; install -d $WORKING_DIR/etc/xray
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-cat <<EOF > $WORKING_DIR/etc/xray/config.json
-{
-  "log":{"access":"/dev/null","error":"/dev/null","loglevel":"none"},
-  "inbounds": 
-  [
-    {
-      "tag": "vless-in-ws-tls",
-    #   "listen": "::",
-      "listen": "$WORKING_DIR/dev/shm/vlessws.socket,0666",
-    #   "port": "54949",
-      "protocol": "vless",
-      "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000000"}],"decryption": "none"},
-      "streamSettings": {"network": "ws","wsSettings": {"path": "vlessws"}},
-      "sniffing": {"enabled": true,"destOverride": ["http","tls","quic"]}
-    },
-    {
-      "tag": "vless-in-httpupgrade-tls",
-    #   "listen": "::",
-      "listen": "$WORKING_DIR/dev/shm/vlesshttpupgrade.socket,0666",
-    #   "port": "54949",
-      "protocol": "vless",
-      "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000001"}],"decryption": "none"},
-      "streamSettings": {"network": "httpupgrade","httpupgradeSettings": {"path": "/vlesshttpupgrade"}},
-      "sniffing": {"enabled": true,"destOverride": ["http","tls","quic"]}
-    },
-    {
-      "tag": "vless-in-grpc-tls",
-    #   "listen": "::",
-      "listen": "$WORKING_DIR/dev/shm/vlessgrpc.socket,0666",
-    #   "port": "54949",
-      "protocol": "vless",
-      "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000002"}],"decryption": "none"},
-      "streamSettings": {"network": "grpc","grpcSettings": {"serviceName": "vlessgrpc"}},
-      "sniffing": {"enabled": true,"destOverride": ["http","tls","quic"]}
-    },
-    {
-      "tag": "vless-in-splithttp-tls",
-    #   "listen": "::",
-      "listen": "$WORKING_DIR/dev/shm/vlesssplithttp.socket,0666",
-    #   "port": "54949",
-      "protocol": "vless",
-      "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000003"}],"decryption": "none"},
-      "streamSettings": {"network": "splithttp","splithttpSettings": {"path": "/vlesssplithttp"}},
-      "sniffing": {"enabled": true,"destOverride": ["http","tls","quic"]}
-    }
-  ],
-  "outbounds": 
-  [
-    {"protocol": "freedom","tag": "direct"},
-    {"protocol": "blackhole","tag": "reject"},
-    {
-      "tag": "WARP",
-      "protocol": "wireguard",
-      "settings": {
-        "secretKey": "IP50qUeHhUOKhP7oE4/2aDGV6r3oCm5is7Dlk+dqLVM=",
-        "address": [
-          "172.16.0.2/32",
-          "2606:4700:110:8577:4243:68b5:38f1:f798/128"
-        ],
-        "peers": [
-          {
-            "endpoint": "engage.cloudflareclient.com:2408",
-            "publicKey": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
-            "allowedIPs": [
-              "0.0.0.0/0",
-              "::/0"
-            ]
-          }
-        ],
-        "reserved": [186, 204, 130],
-        "mtu": 1280
-      }
-    }
-  ],
-  "routing": {
-    "domainStrategy": "IPOnDemand",
-    "rules": [
-      {
-        "type": "field",
-        "domain": [
-          "domain:openai.com",
-          "domain:ai.com",
-          "domain:chatgpt.com",
-          "domain:lmsys.org",
-          "domain:ip.sb"
-        ],
-        "outboundTag": "WARP"
-      },
-      {
-        "type": "field",
-        "outboundTag": "WARP",
-        "ip": [
-          "::/0"
-        ]
-      }
-    ]
-  }
-}
-EOF
-target_custom_general="$WORKING_DIR/etc/xray/config.json"
-sed '/#/d' "$target_custom_general" | cat -s | tee "${target_custom_general}.new" | \
-cat -n; mv -f "${target_custom_general}.new" "${target_custom_general}"
-unset target_custom_general &>/dev/null
+    steps:
+      - name: Checkout self
+        uses: actions/checkout@v4
 
-mkdir -p $WORKING_DIR/etc/caddy; install -d $WORKING_DIR/etc/caddy
-cat <<EOF > $WORKING_DIR/etc/caddy/Caddyfile
-{
-# http_port 58480
-# https_port 58443
-# servers :58480 {
-# protocols h1 h2 h2c h3
-# }
-# servers :58443 {
-# protocols h1 h2 h2c h3
-# }
-# Customizes the admin API endpoint 2019
-admin off
-# order forward_proxy before reverse_proxy
-# order reverse_proxy before route
-# auto_https off
-log {
-output discard
-}
-servers :54949 {
-protocols h1 h2 h2c h3
-}
+      - name: Prepare Preparing to test some commands.
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+          ls -al
+          ls -al /
+          ls -al /etc
+          id 
+          sudo id
 
-}
+      - name: Prepare a
+        run: |
+          # cp -fr src/cf/run.sh $PWD/run.sh && chmod +x run.sh && ./run.sh
+          cp -fr src/cf/run.sh . && chmod +x run.sh && ./run.sh
+          # sudo chmod -R 777 ./run.sh; sudo chown -R root:root ./run.sh
+          # bash ./run.sh
 
-# http://, :54949 {
-:54949 {
+      - name: Prepare z
+        run: |
+          mkdir -p $PWD/mymain; install -d $PWD/mymain
+          WORKING_DIR="$PWD/mymain"
+          echo $WORKING_DIR
+          # https://github.com/cloudflare/cloudflared
+          # https://hub.docker.com/r/cloudflare/cloudflared
 
-@vlessws {
-header Connection *Upgrade*
-header Upgrade    websocket
-path /vlessws
-}
-reverse_proxy @vlessws unix/$WORKING_DIR/dev/shm/vlessws.socket
+          sudo docker run -itd \
+            --name=cloudflared \
+            --privileged \
+            --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE \
+            --network=host \
+            --restart=always \
+            -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
+            cloudflare/cloudflared \
+            tunnel --no-autoupdate --edge-ip-version auto --protocol auto run --token ${{ secrets.Argo_TOKEN }}
 
-@vlesshttpupgrade {
-header Connection *Upgrade*
-header Upgrade    websocket
-path /vlesshttpupgrade
-}
-reverse_proxy @vlesshttpupgrade unix/$WORKING_DIR/dev/shm/vlesshttpupgrade.socket
+          cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
+          docker logs xray
+          docker logs caddy
+          docker logs cloudflared
+          sleep 5
+          sudo docker restart cloudflared
+          docker ps -as
+          docker logs xray
+          docker logs caddy
+          docker logs cloudflared
 
-@vlessgrpc {
-# protocol grpc
-path /vlessgrpc/*
-}
-reverse_proxy @vlessgrpc unix+h2c/$WORKING_DIR/dev/shm/vlessgrpc.socket
+      - name: Run Docker ps every 5 seconds for 30 minutes
+        run: |
+          INTERVAL=5
+          TOTAL_TIME=1800  # 30 minutes in seconds
+          START_TIME=$(date +%s)
 
-# handle /vlesssplithttp/* {
-# reverse_proxy unix/$WORKING_DIR/dev/shm/vlesssplithttp.socket
-# }
-@vlesssplithttp {
-path /vlesssplithttp/*
-}
-reverse_proxy @vlesssplithttp unix/$WORKING_DIR/dev/shm/vlesssplithttp.socket
+          while true; do
+              docker ps -as
 
-}
+              CURRENT_TIME=$(date +%s)
+              ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
 
-EOF
-target_custom_general="$WORKING_DIR/etc/caddy/Caddyfile"
-sed '/#/d' "${target_custom_general}" | cat -s | tee "${target_custom_general}.new" | \
-cat -n; mv -f "${target_custom_general}.new" "${target_custom_general}"
-unset target_custom_general &>/dev/null
+              if [ "$ELAPSED_TIME" -ge "$TOTAL_TIME" ]; then
+                  echo "Reached 30 minutes, stopping."
+                  break
+              fi
 
-sudo docker run -it --rm --privileged --net host --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE -v $WORKING_DIR/etc/caddy:/etc/caddy caddy \
-caddy fmt --overwrite /etc/caddy/Caddyfile &>/dev/null
+              sleep $INTERVAL
+          done
 
-sudo docker run -itd \
-  --name=xray \
-  --privileged \
-  --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE \
-  --network=host \
-  --restart=always \
-  -v $WORKING_DIR/etc/xray:/etc/xray \
-  -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
-  teddysun/xray
-
-xray_images="$(docker images | grep xray | awk 'NR==1 {print $1}')";if [ ${xray_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled xray image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull xray image."; fi
-
-sudo docker run -itd \
-  --name=caddy \
-  --privileged \
-  --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE \
-  --network=host \
-  --restart=always \
-  -v $WORKING_DIR/etc/caddy:/etc/caddy \
-  -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
-  caddy
-
-caddy_images="$(docker images | grep caddy | awk 'NR==1 {print $1}')";if [ ${caddy_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled caddy image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull caddy image."; fi
-
-docker ps -as
+      # - name: Pause for 30 minutes
+      #   run: |
+      #     sleep 5
+      #     docker ps -as
+      #     sleep 30m
