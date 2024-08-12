@@ -47,13 +47,41 @@ jobs:
             --restart=always \
             -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
             cloudflare/cloudflared \
-            tunnel --no-autoupdate --edge-ip-version auto --protocol auto run --token ${{ secrets.Argo_TOKEN }}
+            tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token ${{ secrets.Argo_TOKEN }}
 
           cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
-          docker ps -as
-
-      - name: Pause for 30 minutes
-        run: |
+          docker logs xray
+          docker logs caddy
+          docker logs cloudflared
           sleep 5
+          sudo docker restart cloudflared
           docker ps -as
-          sleep 30m
+          docker logs xray
+          docker logs caddy
+          docker logs cloudflared
+
+      - name: Run Docker ps every 5 seconds for 30 minutes
+        run: |
+          INTERVAL=5
+          TOTAL_TIME=1800  # 30 minutes in seconds
+          START_TIME=$(date +%s)
+
+          while true; do
+              docker ps -as
+
+              CURRENT_TIME=$(date +%s)
+              ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+
+              if [ "$ELAPSED_TIME" -ge "$TOTAL_TIME" ]; then
+                  echo "Reached 30 minutes, stopping."
+                  break
+              fi
+
+              sleep $INTERVAL
+          done
+
+      # - name: Pause for 30 minutes
+      #   run: |
+      #     sleep 5
+      #     docker ps -as
+      #     sleep 30m
