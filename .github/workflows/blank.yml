@@ -1,0 +1,25 @@
+name: CI Actions Test
+
+on:
+  push:
+    paths:
+      - "src/a/b.version"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout self
+        uses: actions/checkout@v4
+
+      - name: Prepare
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+          ls -al
+          ls -al /
+          ls -al /etc
+          id 
+          sudo id
