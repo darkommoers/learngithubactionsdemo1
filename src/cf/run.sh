@@ -204,6 +204,4 @@ sudo docker run -itd \
 
 caddy_images="$(docker images | grep caddy | awk 'NR==1 {print $1}')";if [ ${caddy_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled caddy image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull caddy image."; fi
 
-sudo docker exec -it --privileged caddy cat /etc/caddy/Caddyfile
-
 docker ps -as
