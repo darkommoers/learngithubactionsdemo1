@@ -33,6 +33,9 @@ jobs:
 
       - name: Prepare z
         run: |
+          mkdir -p $PWD/mymain; install -d $PWD/mymain
+          WORKING_DIR="$PWD/mymain"
+          echo $WORKING_DIR
           # https://github.com/cloudflare/cloudflared
           # https://hub.docker.com/r/cloudflare/cloudflared
 
@@ -42,7 +45,7 @@ jobs:
             --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE \
             --network=host \
             --restart=always \
-            -v /dev/shm:/dev/shm \
+            -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
             cloudflare/cloudflared \
             tunnel --no-autoupdate --edge-ip-version auto --protocol auto run --token ${{ secrets.Argo_TOKEN }}
 
@@ -53,4 +56,4 @@ jobs:
         run: |
           sleep 5
           docker ps -as
-          sleep 1800
+          sleep 30m
