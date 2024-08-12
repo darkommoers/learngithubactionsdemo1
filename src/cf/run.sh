@@ -116,7 +116,6 @@ unset target_custom_general &>/dev/null
 mkdir -p $WORKING_DIR/etc/caddy; install -d $WORKING_DIR/etc/caddy
 cat <<EOF > $WORKING_DIR/etc/caddy/Caddyfile
 {
-# 可更改默认端口
 # http_port 58480
 # https_port 58443
 # servers :58480 {
@@ -125,13 +124,11 @@ cat <<EOF > $WORKING_DIR/etc/caddy/Caddyfile
 # servers :58443 {
 # protocols h1 h2 h2c h3
 # }
-# Customizes the admin API endpoint 2019端口这玩意
+# Customizes the admin API endpoint 2019
 admin off
 # order forward_proxy before reverse_proxy
 # order reverse_proxy before route
-# 真关闭证书自动申请
 # auto_https off
-# 关闭日志
 log {
 output discard
 }
