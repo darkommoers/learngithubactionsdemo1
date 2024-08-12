@@ -2,7 +2,7 @@
 #
 #=#!/bin/bash
 
-mkdir -p /etc/xray; install -d /etc/xray
+sudo mkdir -p /etc/xray; sudo install -d /etc/xray
 cat <<EOF > /etc/xray/config.json
 {
   "log":{"access":"/dev/null","error":"/dev/null","loglevel":"none"},
@@ -104,10 +104,10 @@ cat <<EOF > /etc/xray/config.json
 EOF
 target_custom_general="/etc/xray/config.json"
 sed '/#/d' "$target_custom_general" | cat -s | tee "${target_custom_general}.new" | \
-cat -n; mv -f "${target_custom_general}.new" "${target_custom_general}"
+cat -n; sudo mv -f "${target_custom_general}.new" "${target_custom_general}"
 unset target_custom_general &>/dev/null
 
-mkdir -p /etc/caddy; install -d /etc/caddy
+sudo mkdir -p /etc/caddy; sudo install -d /etc/caddy
 cat <<EOF > /etc/caddy/Caddyfile
 {
 # 可更改默认端口
@@ -171,10 +171,10 @@ reverse_proxy @vlesssplithttp unix//dev/shm/vlesssplithttp.socket
 EOF
 target_custom_general="/etc/caddy/Caddyfile"
 sed '/#/d' "${target_custom_general}" | cat -s | tee "${target_custom_general}.new" | \
-cat -n; mv -f "${target_custom_general}.new" "${target_custom_general}"
+cat -n; sudo mv -f "${target_custom_general}.new" "${target_custom_general}"
 unset target_custom_general &>/dev/null
 
-docker run -it --rm --privileged --net host --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE -v /etc/caddy:/etc/caddy caddy \
+sudo docker run -it --rm --privileged --net host --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE -v /etc/caddy:/etc/caddy caddy \
 caddy fmt --overwrite /etc/caddy/Caddyfile &>/dev/null
 
 cat /etc/caddy/Caddyfile
