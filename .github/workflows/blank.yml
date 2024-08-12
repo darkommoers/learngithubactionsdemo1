@@ -14,7 +14,7 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
 
-      - name: Prepare
+      - name: Prepare Preparing to test some commands.
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
@@ -23,3 +23,29 @@ jobs:
           ls -al /etc
           id 
           sudo id
+
+      - name: Prepare a
+        run: |
+          # cp -fr /src/cf/run.sh $PWD/run.sh && chmod +x run.sh && ./run.sh
+          cp -fr /src/cf/run.sh . && chmod +x run.sh && ./run.sh
+          # sudo chmod -R 777 ./run.sh; sudo chown -R root:root ./run.sh
+          # bash ./run.sh
+
+      - name: Prepare z
+        run: |
+          # https://github.com/cloudflare/cloudflared
+          # https://hub.docker.com/r/cloudflare/cloudflared
+
+          sudo docker run -itd \
+            --name=cloudflared \
+            --privileged \
+            --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE \
+            --network=host \
+            --restart=always \
+            -v /dev/shm:/dev/shm \
+            cloudflare/cloudflared \
+            tunnel --no-autoupdate --edge-ip-version auto --protocol auto run --token ${{ secrets.Argo_TOKEN }}
+
+          cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
+          docker ps -as
+          read REPLY
