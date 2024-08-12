@@ -180,8 +180,6 @@ unset target_custom_general &>/dev/null
 sudo docker run -it --rm --privileged --net host --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE -v $WORKING_DIR/etc/caddy:/etc/caddy caddy \
 caddy fmt --overwrite /etc/caddy/Caddyfile &>/dev/null
 
-cat $WORKING_DIR/etc/caddy/Caddyfile
-
 sudo docker run -itd \
   --name=xray \
   --privileged \
@@ -205,5 +203,7 @@ sudo docker run -itd \
   caddy
 
 caddy_images="$(docker images | grep caddy | awk 'NR==1 {print $1}')";if [ ${caddy_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled caddy image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull caddy image."; fi
+
+sudo docker exec -it --privileged caddy cat /etc/caddy/Caddyfile
 
 docker ps -as
