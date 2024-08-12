@@ -48,4 +48,9 @@ jobs:
 
           cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
           docker ps -as
-          read REPLY
+
+      - name: Pause for 30 minutes
+        run: |
+          sleep 5
+          docker ps -as
+          sleep 1800
