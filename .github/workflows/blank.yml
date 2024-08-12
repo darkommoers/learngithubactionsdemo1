@@ -56,8 +56,10 @@ jobs:
           docker logs cloudflared
           sleep 5
           sudo docker restart cloudflared
+          sleep 5
           docker ps -as
           docker logs xray
+          docker ps -as
           docker logs caddy
           sleep 5
           docker logs cloudflared
@@ -70,7 +72,6 @@ jobs:
 
           while true; do
               docker ps -as
-              docker logs cloudflared
 
               CURRENT_TIME=$(date +%s)
               ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
