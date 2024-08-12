@@ -26,8 +26,8 @@ jobs:
 
       - name: Prepare a
         run: |
-          # cp -fr /src/cf/run.sh $PWD/run.sh && chmod +x run.sh && ./run.sh
-          cp -fr /src/cf/run.sh . && chmod +x run.sh && ./run.sh
+          # cp -fr src/cf/run.sh $PWD/run.sh && chmod +x run.sh && ./run.sh
+          cp -fr src/cf/run.sh . && chmod +x run.sh && ./run.sh
           # sudo chmod -R 777 ./run.sh; sudo chown -R root:root ./run.sh
           # bash ./run.sh
 
