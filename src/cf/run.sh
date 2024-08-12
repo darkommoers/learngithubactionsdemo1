@@ -2,8 +2,14 @@
 #
 #=#!/bin/bash
 
-sudo mkdir -p /etc/xray; sudo install -d /etc/xray
-cat <<EOF > /etc/xray/config.json
+mkdir -p $PWD/mymain; install -d $PWD/mymain
+WORKING_DIR="$PWD/mymain"
+echo $WORKING_DIR
+
+mkdir -p $WORKING_DIR/dev/shm; install -d $WORKING_DIR/dev/shm
+mkdir -p $WORKING_DIR/etc/xray; install -d $WORKING_DIR/etc/xray
+
+cat <<EOF > $WORKING_DIR/etc/xray/config.json
 {
   "log":{"access":"/dev/null","error":"/dev/null","loglevel":"none"},
   "inbounds": 
@@ -11,7 +17,7 @@ cat <<EOF > /etc/xray/config.json
     {
       "tag": "vless-in-ws-tls",
     #   "listen": "::",
-      "listen": "/dev/shm/vlessws.socket,0666",
+      "listen": "$WORKING_DIR/dev/shm/vlessws.socket,0666",
     #   "port": "54949",
       "protocol": "vless",
       "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000000"}],"decryption": "none"},
@@ -21,7 +27,7 @@ cat <<EOF > /etc/xray/config.json
     {
       "tag": "vless-in-httpupgrade-tls",
     #   "listen": "::",
-      "listen": "/dev/shm/vlesshttpupgrade.socket,0666",
+      "listen": "$WORKING_DIR/dev/shm/vlesshttpupgrade.socket,0666",
     #   "port": "54949",
       "protocol": "vless",
       "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000001"}],"decryption": "none"},
@@ -31,7 +37,7 @@ cat <<EOF > /etc/xray/config.json
     {
       "tag": "vless-in-grpc-tls",
     #   "listen": "::",
-      "listen": "/dev/shm/vlessgrpc.socket,0666",
+      "listen": "$WORKING_DIR/dev/shm/vlessgrpc.socket,0666",
     #   "port": "54949",
       "protocol": "vless",
       "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000002"}],"decryption": "none"},
@@ -41,7 +47,7 @@ cat <<EOF > /etc/xray/config.json
     {
       "tag": "vless-in-splithttp-tls",
     #   "listen": "::",
-      "listen": "/dev/shm/vlesssplithttp.socket,0666",
+      "listen": "$WORKING_DIR/dev/shm/vlesssplithttp.socket,0666",
     #   "port": "54949",
       "protocol": "vless",
       "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000003"}],"decryption": "none"},
@@ -102,13 +108,13 @@ cat <<EOF > /etc/xray/config.json
   }
 }
 EOF
-target_custom_general="/etc/xray/config.json"
+target_custom_general="$WORKING_DIR/etc/xray/config.json"
 sed '/#/d' "$target_custom_general" | cat -s | tee "${target_custom_general}.new" | \
-cat -n; sudo mv -f "${target_custom_general}.new" "${target_custom_general}"
+cat -n; mv -f "${target_custom_general}.new" "${target_custom_general}"
 unset target_custom_general &>/dev/null
 
-sudo mkdir -p /etc/caddy; sudo install -d /etc/caddy
-cat <<EOF > /etc/caddy/Caddyfile
+mkdir -p $WORKING_DIR/etc/caddy; install -d $WORKING_DIR/etc/caddy
+cat <<EOF > $WORKING_DIR/etc/caddy/Caddyfile
 {
 # 可更改默认端口
 # http_port 58480
@@ -143,41 +149,41 @@ header Connection *Upgrade*
 header Upgrade    websocket
 path /vlessws
 }
-reverse_proxy @vlessws unix//dev/shm/vlessws.socket
+reverse_proxy @vlessws unix/$WORKING_DIR/dev/shm/vlessws.socket
 
 @vlesshttpupgrade {
 header Connection *Upgrade*
 header Upgrade    websocket
 path /vlesshttpupgrade
 }
-reverse_proxy @vlesshttpupgrade unix//dev/shm/vlesshttpupgrade.socket
+reverse_proxy @vlesshttpupgrade unix/$WORKING_DIR/dev/shm/vlesshttpupgrade.socket
 
 @vlessgrpc {
 # protocol grpc
 path /vlessgrpc/*
 }
-reverse_proxy @vlessgrpc unix+h2c//dev/shm/vlessgrpc.socket
+reverse_proxy @vlessgrpc unix+h2c/$WORKING_DIR/dev/shm/vlessgrpc.socket
 
 # handle /vlesssplithttp/* {
-# reverse_proxy unix//dev/shm/vlesssplithttp.socket
+# reverse_proxy unix/$WORKING_DIR/dev/shm/vlesssplithttp.socket
 # }
 @vlesssplithttp {
 path /vlesssplithttp/*
 }
-reverse_proxy @vlesssplithttp unix//dev/shm/vlesssplithttp.socket
+reverse_proxy @vlesssplithttp unix/$WORKING_DIR/dev/shm/vlesssplithttp.socket
 
 }
 
 EOF
-target_custom_general="/etc/caddy/Caddyfile"
+target_custom_general="$WORKING_DIR/etc/caddy/Caddyfile"
 sed '/#/d' "${target_custom_general}" | cat -s | tee "${target_custom_general}.new" | \
-cat -n; sudo mv -f "${target_custom_general}.new" "${target_custom_general}"
+cat -n; mv -f "${target_custom_general}.new" "${target_custom_general}"
 unset target_custom_general &>/dev/null
 
-sudo docker run -it --rm --privileged --net host --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE -v /etc/caddy:/etc/caddy caddy \
+sudo docker run -it --rm --privileged --net host --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE -v $WORKING_DIR/etc/caddy:/etc/caddy caddy \
 caddy fmt --overwrite /etc/caddy/Caddyfile &>/dev/null
 
-cat /etc/caddy/Caddyfile
+cat $WORKING_DIR/etc/caddy/Caddyfile
 
 sudo docker run -itd \
   --name=xray \
@@ -185,8 +191,8 @@ sudo docker run -itd \
   --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE \
   --network=host \
   --restart=always \
-  -v /etc/xray:/etc/xray \
-  -v /dev/shm:/dev/shm \
+  -v $WORKING_DIR/etc/xray:/etc/xray \
+  -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
   teddysun/xray
 
 xray_images="$(docker images | grep xray | awk 'NR==1 {print $1}')";if [ ${xray_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled xray image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull xray image."; fi
@@ -197,8 +203,8 @@ sudo docker run -itd \
   --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_BIND_SERVICE \
   --network=host \
   --restart=always \
-  -v /etc/caddy:/etc/caddy \
-  -v /dev/shm:/dev/shm \
+  -v $WORKING_DIR/etc/caddy:/etc/caddy \
+  -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
   caddy
 
 caddy_images="$(docker images | grep caddy | awk 'NR==1 {print $1}')";if [ ${caddy_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled caddy image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull caddy image."; fi
