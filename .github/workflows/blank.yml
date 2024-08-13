@@ -58,6 +58,12 @@ jobs:
           sleep 5
           sudo docker restart cloudflared
           sleep 15
+          cat $WORKING_DIR/cloudflared/cfed.log
+          # Check if the file exists
+          if [ ! -f "$WORKING_DIR/cloudflared/cfed.log" ]; then
+              echo "File $WORKING_DIR/cloudflared/cfed.log does not exist. Exiting the script."
+              exit 1
+          fi
           argodomain=$(grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
           echo $argodomain
           argodomain1=$(cat $WORKING_DIR/cloudflared/cfed.log | pcregrep -o1 'https://([^ ]+\.trycloudflare\.com)' | sed 's/https:\/\///')
