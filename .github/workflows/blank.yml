@@ -102,7 +102,6 @@ jobs:
 
           for i in {1..3}; do if curl -s -x socks5://localhost:64949 https://ipinfo.io/ip; then echo -e "${GREEN}Success${RESET}"; break; else echo -e "${RED}Attempt $i failed. Retrying in 5 seconds...${RESET}"; for j in {1..5}; do echo -e "${YELLOW}Waiting... ${j} seconds${RESET}"; sleep 1; done; fi; done; echo -e "${RED}Failed after 3 attempts${RESET}"
 
-
           echo -e "${GREEN}Restart cloudflared${RESET}"
           # sudo docker restart cloudflared
           echo -e "${RED}Wait for 10 seconds${RESET}"
@@ -112,6 +111,8 @@ jobs:
           done
           echo -e "${GREEN}Check cloudflared logs again${RESET}"
           docker logs cloudflared
+
+          for i in {1..3}; do if curl -s -x socks5://localhost:64949 https://ipinfo.io/ip; then echo -e "${GREEN}Success${RESET}"; break; else echo -e "${RED}Attempt $i failed. Retrying in 5 seconds...${RESET}"; for j in {1..5}; do echo -e "${YELLOW}Waiting... ${j} seconds${RESET}"; sleep 1; done; fi; done; echo -e "${RED}Failed after 3 attempts${RESET}"
 
           argodomain=$(grep -oE 'https://[[:alnum:]+\._-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
           echo "argodomain $argodomain"
