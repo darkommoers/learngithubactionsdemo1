@@ -37,6 +37,7 @@ jobs:
           WORKING_DIR="$PWD/mymain"
           echo $WORKING_DIR
           mkdir -p $WORKING_DIR/cloudflared; install -d $WORKING_DIR/cloudflared
+          sudo chmod -R 777 $WORKING_DIR/cloudflared; sudo chown -R root:root $WORKING_DIR/cloudflared
           echo $WORKING_DIR/cloudflared
           # https://github.com/cloudflare/cloudflared
           # https://hub.docker.com/r/cloudflare/cloudflared
@@ -60,11 +61,13 @@ jobs:
           sleep 15
           docker logs cloudflared
           cat $WORKING_DIR/cloudflared/cfed.log
+
           # Check if the file exists
           if [ ! -f "$WORKING_DIR/cloudflared/cfed.log" ]; then
               echo "File $WORKING_DIR/cloudflared/cfed.log does not exist. Exiting the script."
               exit 1
           fi
+
           argodomain=$(grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
           echo $argodomain
           argodomain1=$(cat $WORKING_DIR/cloudflared/cfed.log | pcregrep -o1 'https://([^ ]+\.trycloudflare\.com)' | sed 's/https:\/\///')
