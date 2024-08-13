@@ -79,7 +79,7 @@ jobs:
           fi
 
           echo -e "${GREEN}Restart cloudflared${RESET}"
-          sudo docker restart cloudflared
+          # sudo docker restart cloudflared
           echo -e "${RED}Wait for 10 seconds${RESET}"
           for i in {1..10}; do
             echo -e "${YELLOW}Waiting... ${i} seconds${RESET}"
