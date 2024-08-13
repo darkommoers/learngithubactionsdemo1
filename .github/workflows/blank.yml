@@ -95,10 +95,10 @@ jobs:
           echo "argodomain1 $argodomain1"
           argodomain=$argodomain1
 
-          sudo docker logs cloudflared > $WORKING_DIR/cloudflared/cfedaz.log
-          cat $WORKING_DIR/cloudflared/cfedaz.log
-          argodomain2=$(grep -oP '[\w.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfedaz.log | tail -n 1)
-          echo "argodomain2 $argodomain2"
+          # sudo docker logs cloudflared > $WORKING_DIR/cloudflared/cfedaz.log
+          # cat $WORKING_DIR/cloudflared/cfedaz.log
+          # argodomain2=$(grep -oP '[\w.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfedaz.log | tail -n 1)
+          # echo "argodomain2 $argodomain2"
 
           ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g')
           echo $ISP
