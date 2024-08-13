@@ -58,6 +58,7 @@ jobs:
           sleep 5
           sudo docker restart cloudflared
           sleep 15
+          docker logs cloudflared
           cat $WORKING_DIR/cloudflared/cfed.log
           # Check if the file exists
           if [ ! -f "$WORKING_DIR/cloudflared/cfed.log" ]; then
