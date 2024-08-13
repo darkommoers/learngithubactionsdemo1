@@ -37,6 +37,7 @@ jobs:
           WORKING_DIR="$PWD/mymain"
           echo $WORKING_DIR
           mkdir -p $WORKING_DIR/cloudflared; install -d $WORKING_DIR/cloudflared
+          echo $WORKING_DIR/cloudflared
           # https://github.com/cloudflare/cloudflared
           # https://hub.docker.com/r/cloudflare/cloudflared
 
@@ -56,7 +57,7 @@ jobs:
           cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
           sleep 5
           sudo docker restart cloudflared
-          sleep 3
+          sleep 15
           argodomain=$(grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
           echo $argodomain
           argodomain1=$(cat $WORKING_DIR/cloudflared/cfed.log | pcregrep -o1 'https://([^ ]+\.trycloudflare\.com)' | sed 's/https:\/\///')
