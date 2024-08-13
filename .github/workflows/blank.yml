@@ -69,11 +69,9 @@ jobs:
           fi
 
           argodomain=$(grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
-          echo $argodomain
-          argodomain1=$(cat $WORKING_DIR/cloudflared/cfed.log | pcregrep -o1 'https://([^ ]+\.trycloudflare\.com)' | sed 's/https:\/\///')
-          echo $argodomain1
-          argodomain2=$(cat $WORKING_DIR/cloudflared/cfed.log | grep trycloudflare.com | awk 'NR==2{print}' | awk -F// '{print $2}' | awk '{print $1}')"
-          echo $argodomain2
+          echo "argodomain1 $argodomain"
+          argodomain2=$($WORKING_DIR/cloudflared/cfed.log | grep trycloudflare.com | awk 'NR==2{print}' | awk -F// '{print $2}' | awk '{print $1}')"
+          echo "argodomain2 $argodomain2"
 
           ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g')
           echo $ISP
