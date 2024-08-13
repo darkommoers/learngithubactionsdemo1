@@ -56,8 +56,7 @@ jobs:
             # tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token ${{ secrets.Argo_TOKEN }}
 
           cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
-          sleep 5
-          sudo docker restart cloudflared
+
           sleep 15
           docker logs cloudflared
           cat $WORKING_DIR/cloudflared/cfed.log
@@ -70,8 +69,6 @@ jobs:
 
           argodomain=$(grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
           echo "argodomain1 $argodomain"
-          argodomain2=$($WORKING_DIR/cloudflared/cfed.log | grep trycloudflare.com | awk 'NR==2{print}' | awk -F// '{print $2}' | awk '{print $1}')"
-          echo "argodomain2 $argodomain2"
 
           ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g')
           echo $ISP
