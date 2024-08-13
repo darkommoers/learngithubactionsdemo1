@@ -57,7 +57,7 @@ jobs:
 
           cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
 
-          sleep 15
+          sleep 5
           docker logs cloudflared
           cat $WORKING_DIR/cloudflared/cfed.log
 
@@ -67,8 +67,16 @@ jobs:
               exit 1
           fi
 
+          sudo docker restart cloudflared
+          sleep 10
+          docker logs cloudflared
+          cat $WORKING_DIR/cloudflared/cfed.log
           argodomain=$(grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
-          echo "argodomain1 $argodomain"
+          echo "argodomain $argodomain"
+
+          argodomain1=$(grep -oP '[a-zA-Z0-9._-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | tail -n 1)
+          echo "argodomain1 $argodomain1"
+          argodomain=$argodomain1
 
           ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g')
           echo $ISP
@@ -85,9 +93,6 @@ jobs:
           V2=$(echo "vless://${MY_UUID2}@bebecar.com:443?encryption=none&security=tls&sni=$argodomain&type=splithttp&host=$argodomain&path=%2Fvlesssplithttp#$ISP")
           echo $V2
 
-          docker logs xray
-          docker logs caddy
-          docker logs cloudflared
           sleep 5
           docker ps -as
           docker logs xray
