@@ -149,6 +149,11 @@ jobs:
           echo -e "${RED}Wait for 5 seconds${RESET}"
           for i in {5..1}; do
             echo -e "${YELLOW}Waiting... ${i} seconds${RESET}"
+            current_ipv4=$(curl -sL4 checkip.dns.he.net | grep -oP '(?<=is(\s):[\s])(.*?)(?=</)') || current_ipv4=$(curl -sL4 cloudflare.com/cdn-cgi/trace | grep -oP '(?<=ip=)(\S*)') || current_ipv4=$(curl -sL4 ipv4.whatismyip.akamai.com | xargs)
+            echo -e "${RED}Ipv4... ${current_ipv4} ${RESET}"
+
+            current_ipv6=$(curl -sL6 checkip.dns.he.net | grep -oP '(?<=is(\s):[\s])(.*?)(?=</)') || current_ipv6=$(curl -sL6 cloudflare.com/cdn-cgi/trace | grep -oP '(?<=ip=)(\S*)') || current_ipv6=$(curl -sL6 ipv6.whatismyip.akamai.com | xargs)
+            echo -e "${RED}Ipv6... ${current_ipv6} ${RESET}"
             sleep 1
           done
           docker ps -as
