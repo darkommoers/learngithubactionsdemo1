@@ -64,7 +64,7 @@ jobs:
           cloudflared_images="$(docker images | grep cloudflared | awk 'NR==1 {print $1}')";if [ ${cloudflared_images} ]; then  echo "$(date +"%Y-%m-%d %H:%M:%S") === Successfully pulled cloudflared image."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Failed to pull cloudflared image."; fi
 
           echo -e "${RED}Wait for 5 seconds${RESET}"
-          for i in {1..5}; do
+          for i in {5..1}; do
             echo -e "${YELLOW}Waiting... ${i} seconds${RESET}"
             sleep 1
           done
@@ -112,7 +112,7 @@ jobs:
           echo -e "${GREEN}Restart cloudflared${RESET}"
           # sudo docker restart cloudflared
           echo -e "${RED}Wait for 10 seconds${RESET}"
-          for i in {1..10}; do
+          for i in {10..1}; do
             echo -e "${YELLOW}Waiting... ${i} seconds${RESET}"
             sleep 1
           done
@@ -147,7 +147,7 @@ jobs:
           echo $V2
 
           echo -e "${RED}Wait for 5 seconds${RESET}"
-          for i in {1..5}; do
+          for i in {5..1}; do
             echo -e "${YELLOW}Waiting... ${i} seconds${RESET}"
             curl -sL4 -x socks5://localhost:64949 cloudflare.com/cdn-cgi/trace | grep -oP '(?<=ip=)(\S*)'
             sleep 1
