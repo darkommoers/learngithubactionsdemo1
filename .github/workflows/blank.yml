@@ -149,7 +149,6 @@ jobs:
           echo -e "${RED}Wait for 5 seconds${RESET}"
           for i in {5..1}; do
             echo -e "${YELLOW}Waiting... ${i} seconds${RESET}"
-            curl -sL4 -x socks5://localhost:64949 cloudflare.com/cdn-cgi/trace | grep -oP '(?<=ip=)(\S*)'
             sleep 1
           done
           docker ps -as
