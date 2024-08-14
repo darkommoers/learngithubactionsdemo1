@@ -57,7 +57,8 @@ jobs:
             -v $WORKING_DIR/cloudflared:$WORKING_DIR/cloudflared \
             -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
             cloudflare/cloudflared \
-            tunnel --url http://localhost:54949 --no-autoupdate --edge-ip-version auto --protocol http2 --loglevel info --logfile $WORKING_DIR/cloudflared/cfed.log
+            tunnel --url http://localhost:54949 --no-autoupdate --edge-ip-version auto --protocol auto --loglevel info --logfile $WORKING_DIR/cloudflared/cfed.log
+            # tunnel --url http://localhost:54949 --no-autoupdate --edge-ip-version auto --protocol http2 --loglevel info --logfile $WORKING_DIR/cloudflared/cfed.log
             # tunnel --no-autoupdate --edge-ip-version auto --protocol auto run --token ${{ secrets.Argo_TOKEN }}
             # tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token ${{ secrets.Argo_TOKEN }}
 
