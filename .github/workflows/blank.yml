@@ -100,7 +100,14 @@ jobs:
 
           CONTAINER_NAME="xrayc"; if docker ps --filter "name=$CONTAINER_NAME" --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then echo "$(date +"%Y-%m-%d %H:%M:%S") === Container $CONTAINER_NAME is running."; else echo "$(date +"%Y-%m-%d %H:%M:%S") === Container $CONTAINER_NAME is not running."; fi
 
-          for i in {1..3}; do if curl -s -x socks5://localhost:64949 https://ipinfo.io/ip; then echo -e "${GREEN}Success${RESET}"; break; else echo -e "${RED}Attempt $i failed. Retrying in 5 seconds...${RESET}"; for j in {1..5}; do echo -e "${YELLOW}Waiting... ${j} seconds${RESET}"; sleep 1; done; fi; done && [[ ! "${i}" -eq 1 ]] && echo -e "${RED}Failed after 3 attempts, restarting xray container...${RESET}" && eval "$(echo 'sudo docker restart xray')"
+          for i in {1..3}; do
+              curl -s -x socks5://localhost:64949 https://ipinfo.io/ip && { echo -e "${GREEN}Success${RESET}"; break; } || { echo -e "${RED}Attempt $i failed. Retrying in 5 seconds...${RESET}"; for j in {1..5}; do echo -e "${YELLOW}Waiting... ${j} seconds${RESET}"; sleep 1; done; }
+
+              if [ "$i" -eq 3 ]; then
+                  echo -e "${RED}Failed after 3 attempts, restarting xray container...${RESET}"
+                  sudo docker restart xray
+              fi
+          done
 
           echo -e "${GREEN}Restart cloudflared${RESET}"
           # sudo docker restart cloudflared
@@ -111,8 +118,6 @@ jobs:
           done
           echo -e "${GREEN}Check cloudflared logs again${RESET}"
           docker logs cloudflared
-
-          for i in {1..3}; do if curl -s -x socks5://localhost:64949 https://ipinfo.io/ip; then echo -e "${GREEN}Success${RESET}"; break; else echo -e "${RED}Attempt $i failed. Retrying in 5 seconds...${RESET}"; for j in {1..5}; do echo -e "${YELLOW}Waiting... ${j} seconds${RESET}"; sleep 1; done; fi; done
 
           argodomain=$(grep -oE 'https://[[:alnum:]+\._-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfed.log | sed 's@https://@@')
           echo "argodomain $argodomain"
