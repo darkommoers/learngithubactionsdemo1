@@ -53,7 +53,7 @@ cat <<EOF > $WORKING_DIR/etc/xray/config.json
       "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000003"}],"decryption": "none"},
       "streamSettings": {"network": "splithttp","splithttpSettings": {"path": "/vlesssplithttp"}},
       "sniffing": {"enabled": true,"destOverride": ["http","tls","quic"]}
-    }
+    },
     {
       "tag": "vless-in-splithttp-az",
     #   "listen": "::",
