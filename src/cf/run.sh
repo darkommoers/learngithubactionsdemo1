@@ -101,7 +101,6 @@ cat <<EOF > $WORKING_DIR/etc/xray/config.json
         "type": "field",
         "outboundTag": "WARP",
         "ip": [
-          "0.0.0.0/0",
           "::/0"
         ]
       }
