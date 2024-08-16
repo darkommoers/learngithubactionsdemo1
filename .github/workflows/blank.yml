@@ -57,7 +57,7 @@ jobs:
             -v $WORKING_DIR/cloudflared:$WORKING_DIR/cloudflared \
             -v $WORKING_DIR/dev/shm:$WORKING_DIR/dev/shm \
             cloudflare/cloudflared \
-            tunnel --url http://localhost:54949 --no-autoupdate --edge-ip-version auto --protocol auto --loglevel info --logfile $WORKING_DIR/cloudflared/cfed.log
+            tunnel --url http://localhost:54949 --no-autoupdate --edge-ip-version auto --protocol http2 --loglevel info --logfile $WORKING_DIR/cloudflared/cfed.log
             # tunnel --no-autoupdate --edge-ip-version auto --protocol auto run --token ${{ secrets.Argo_TOKEN }}
             # tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token ${{ secrets.Argo_TOKEN }}
 
@@ -131,6 +131,7 @@ jobs:
           argodomain=$argodomain1
 
           # sudo docker logs cloudflared > $WORKING_DIR/cloudflared/cfedaz.log
+          # sudo docker logs -f cloudflared > $WORKING_DIR/cloudflared/cfed.log
           # cat $WORKING_DIR/cloudflared/cfedaz.log
           # argodomain2=$(grep -oP '[\w.-]+\.trycloudflare\.com' $WORKING_DIR/cloudflared/cfedaz.log | tail -n 1)
           # echo "argodomain2 $argodomain2"
@@ -143,12 +144,15 @@ jobs:
           MY_UUID0="54212000-0000-0000-0000-000000000000"
           MY_UUID1="54212000-0000-0000-0000-000000000001"
           MY_UUID2="54212000-0000-0000-0000-000000000003"
+          MY_UUID3="54212000-0000-0000-0000-000000000004"
           V0=$(echo "vless://${MY_UUID0}@bebecar.com:443?encryption=none&security=tls&sni=$argodomain&type=ws&host=$argodomain&path=%2Fvlessws#$ISP")
           echo $V0
           V1=$(echo "vless://${MY_UUID1}@bebecar.com:443?encryption=none&security=tls&sni=$argodomain&type=httpupgrade&host=$argodomain&path=%2Fvlesshttpupgrade#$ISP")
           echo $V1
           V2=$(echo "vless://${MY_UUID2}@bebecar.com:443?encryption=none&security=tls&sni=$argodomain&type=splithttp&host=$argodomain&path=%2Fvlesssplithttp#$ISP")
           echo $V2
+          V3=$(echo "vless://${MY_UUID2}@bebecar.com:443?encryption=none&security=tls&sni=$argodomain&type=splithttp&host=$argodomain#$ISP")
+          echo $V3
 
           echo -e "${RED}Wait for 5 seconds${RESET}"
           for i in {5..1}; do
