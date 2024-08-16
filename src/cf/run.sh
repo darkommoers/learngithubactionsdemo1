@@ -51,17 +51,8 @@ cat <<EOF > $WORKING_DIR/etc/xray/config.json
     #   "port": "54949",
       "protocol": "vless",
       "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000003"}],"decryption": "none"},
-      "streamSettings": {"network": "splithttp","splithttpSettings": {"path": "/vlesssplithttp"}},
-      "sniffing": {"enabled": true,"destOverride": ["http","tls","quic"]}
-    },
-    {
-      "tag": "vless-in-splithttp-az",
-    #   "listen": "::",
-      "listen": "$WORKING_DIR/dev/shm/vlesssplithttpaz.socket,0666",
-    #   "port": "54949",
-      "protocol": "vless",
-      "settings": {"clients": [{"id": "54212000-0000-0000-0000-000000000004"}],"decryption": "none"},
-      "streamSettings": {"network": "splithttp","httpSettings": {"host": "","path": ""}},
+      # "streamSettings": {"network": "splithttp","splithttpSettings": {"path": "/vlesssplithttp"}},
+      "streamSettings": {"network": "splithttp","httpSettings": {"path": "/vlesssplithttp"}},
       "sniffing": {"enabled": true,"destOverride": ["http","tls","quic"]}
     }
   ],
@@ -111,8 +102,8 @@ cat <<EOF > $WORKING_DIR/etc/xray/config.json
         "type": "field",
         "outboundTag": "WARP",
         "ip": [
-            "0.0.0.0/0",
-            "::/0"
+          "0.0.0.0/0",
+          "::/0"
         ]
       }
     ]
@@ -172,9 +163,9 @@ path /vlessgrpc/*
 }
 reverse_proxy @vlessgrpc unix+h2c/$WORKING_DIR/dev/shm/vlessgrpc.socket
 
-handle {
-reverse_proxy unix/$WORKING_DIR/dev/shm/vlesssplithttpaz.socket
-}
+# handle /vlesssplithttp/* {
+# reverse_proxy unix/$WORKING_DIR/dev/shm/vlesssplithttp.socket
+# }
 @vlesssplithttp {
 path /vlesssplithttp/*
 }
