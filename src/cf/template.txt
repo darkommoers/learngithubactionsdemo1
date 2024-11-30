@@ -1,0 +1,108 @@
+mixed-port: 7890
+ipv6: true
+
+dns:
+  enable: true
+  ipv6: true
+  prefer-h3: true
+  # respect-rules: true
+  listen: :7853
+  enhanced-mode: redir-host
+  # enhanced-mode: fake-ip
+  default-nameserver:
+    - tcp://208.67.222.222:443
+    - tcp://8.8.8.8
+    - "tcp://[2620:119:53::53]:443"
+    - "tcp://[2001:4860:4860::8844]"
+  nameserver:
+    - "https://dns.google/dns-query#GlobalSet"
+    - "https://dns.sse.cisco.com/dns-query#GlobalSet"
+    # - "https://odoh.cloudflare-dns.com/dns-query#GlobalSet"
+  proxy-server-nameserver:
+    - tcp://dns.sse.cisco.com:443
+    - tcp://dns.google
+  direct-nameserver:
+    - system
+  direct-nameserver-follow-policy: true
+  nameserver-policy:
+    "geosite:tld-cn,cn,private,geolocation-cn":
+      - system
+      - https://dns.alidns.com/dns-query#DIRECT
+    # "geosite:tld-!cn,gfw,geolocation-!cn":
+    #   - "https://dns.google/dns-query"
+    #   - "https://dns.sse.cisco.com/dns-query"
+    #   - "https://odoh.cloudflare-dns.com/dns-query"
+
+# proxies groups Run
+proxies:
+  - { "name": "Dns-out", "type": "dns" }
+  - { "name": "Custom-direct", "type": "direct", "udp": true }
+${proxiesConfig}
+
+# proxies groups End
+
+# proxy-groups groups Run
+proxy-groups:
+  - name: Manual-select
+    type: select
+    proxies:
+      - "Auto-select"
+    include-all: true
+    filter: "(?i)^(?!.*(?:Dns-out|Dns-out)).*"
+
+  - name: Auto-select
+    type: url-test
+    url: "https://www.googleadservices.com/generate_204"
+    interval: 300
+    # tolerance: 150
+    include-all: true
+    filter: "(?i)^(?!.*(?:Custom-direct|Dns-out)).*"
+
+  - name: GlobalDirect
+    type: select
+    proxies: ["Custom-direct", "DIRECT"]
+
+  - name: GlobalRreject
+    type: select
+    proxies: ["REJECT", "REJECT-DROP"]
+
+  - name: GlobalSet
+    type: select
+    proxies: ["Manual-select", "DIRECT", "REJECT"]
+    include-all: true
+    filter: "(?i)^(?!.*(?:Dns-out|Dns-out)).*"
+
+# proxy-groups groups End
+
+# rules groups Run
+rules:
+  # - DST-PORT,53/853,Dns-out
+  - DOMAIN,google.com,GlobalSet
+  - DOMAIN-SUFFIX,google.com,GlobalSet
+  - DOMAIN-KEYWORD,google,GlobalSet
+  - DOMAIN,youtube.com,GlobalSet
+  - DOMAIN-SUFFIX,youtube.com,GlobalSet
+  - DOMAIN-KEYWORD,youtube,GlobalSet
+  - DOMAIN,github.com,GlobalSet
+  - DOMAIN-SUFFIX,github.com,GlobalSet
+  - DOMAIN-KEYWORD,github,GlobalSet
+  - DOMAIN,csdn.net,DIRECT
+  - DOMAIN-SUFFIX,csdn.net,DIRECT
+  - DOMAIN-KEYWORD,csdn,DIRECT
+
+  # - GEOIP,LAN,DIRECT
+  - GEOIP,LAN,DIRECT,no-resolve
+  # - GEOIP,private,DIRECT
+  # - GEOIP,private,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT
+  # - GEOIP,CN,DIRECT,no-resolve
+
+  - GEOSITE,CN,DIRECT
+  # - GEOSITE,private,DIRECT
+  # - GEOSITE,tld-cn,DIRECT
+  # - GEOSITE,geolocation-cn,DIRECT
+  # - GEOSITE,tld-!cn,GlobalSet
+  # - GEOSITE,geolocation-!cn,GlobalSet
+
+  - MATCH,GlobalSet
+# rules groups End
