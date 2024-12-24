@@ -32,11 +32,12 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: "mainal/cf/pages"
+          # workingDirectory: "mainal/cf/pages"
           preCommands: |
             echo "*** pre commands ***"
           postCommands: |
             echo "*** post commands ***"
           command: |
-            pages deploy --project-name=demo-actions-pages
+            pages project list
+            pages deploy mainal/cf/pages --project-name=demo-actions
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
