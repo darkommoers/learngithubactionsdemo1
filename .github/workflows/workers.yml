@@ -10,7 +10,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Deploy ?
+    name: Deploy Worker
     steps:
       - name: Checkout private repo test
         uses: actions/checkout@v4
