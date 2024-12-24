@@ -1,0 +1,39 @@
+name: Deploy Worker
+
+on:
+  push:
+    paths:
+      - "src/cloudflared/cloudflared.version"
+  workflow_dispatch:
+  repository_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy ?
+    steps:
+      - name: Checkout private repo test
+        uses: actions/checkout@v4
+        with:
+          repository: darkommoers/mainal
+          path: mainal
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+
+      - name: Run a multi-line script
+        run: |
+          ls -al
+          ls -al mainal
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # workingDirectory: "mainal/cf"
+          preCommands: |
+            echo "*** pre commands ***"
+          postCommands: |
+            echo "*** post commands ***"
+          command: |
+            pages project list
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
