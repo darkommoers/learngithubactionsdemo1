@@ -37,10 +37,10 @@ jobs:
           workingDirectory: "mainal/cf/pages"
           preCommands: |
             echo "*** pre commands ***"
-            npx wrangler pages project create $MY_PROJECT_NAME --production-branch main
+            wrangler pages project create $MY_PROJECT_NAME --production-branch main
           postCommands: |
             echo "*** post commands ***"
           command: |
             pages project list
-            pages deploy
+            pages deploy .
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
