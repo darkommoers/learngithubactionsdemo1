@@ -23,6 +23,9 @@ jobs:
         run: |
           ls -al
           ls -al mainal
+          cat mainal/cf/workers/wrangler.toml
+          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' mainal/cf/workers/wrangler.toml
+          cat mainal/cf/workers/wrangler.toml
 
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
@@ -36,5 +39,4 @@ jobs:
             echo "*** post commands ***"
           command: |
             deploy
-            pages project list
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
