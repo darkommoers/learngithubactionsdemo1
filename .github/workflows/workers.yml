@@ -29,11 +29,12 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # workingDirectory: "mainal/cf"
+          workingDirectory: "mainal/cf/workers"
           preCommands: |
             echo "*** pre commands ***"
           postCommands: |
             echo "*** post commands ***"
           command: |
-            pages project list
+            deploy
+            # pages project list
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
