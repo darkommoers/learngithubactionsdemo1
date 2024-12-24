@@ -26,18 +26,25 @@ jobs:
           cat mainal/cf/pages/wrangler.toml
           sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' mainal/cf/pages/wrangler.toml
           cat mainal/cf/pages/wrangler.toml
+          $(sed -n 's/^name = "\(.*\)"$/\1/p' cf/pages/wrangler.toml)
+          # echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)" >> $GITHUB_ENV
+          echo $PROJECT_NAME
+          echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)"
+          echo $PROJECT_NAME
+          echo "PROJECT_NAME=$(awk -F '"' '/^name =/ {print $2}')"
 
-      - name: Deploy Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: "mainal/cf/pages"
-          preCommands: |
-            echo "*** pre commands ***"
-          postCommands: |
-            echo "*** post commands ***"
-          command: |
-            pages project list
-            pages deploy
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Deploy Pages
+      #   uses: cloudflare/wrangler-action@v3
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     # workingDirectory: "mainal/cf/pages"
+      #     preCommands: |
+      #       echo "*** pre commands ***"
+
+      #     postCommands: |
+      #       echo "*** post commands ***"
+      #     command: |
+      #       pages project list
+      #       pages deploy mainal/cf/pages --project-name=demo-actions-pages
+      #     gitHubToken: ${{ secrets.GITHUB_TOKEN }}
