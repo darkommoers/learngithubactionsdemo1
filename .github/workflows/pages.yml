@@ -38,5 +38,5 @@ jobs:
           postCommands: |
             echo "*** post commands ***"
           command: |
-            pages deploy
+            pages deploy --project-name=demo-actions-pages
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
