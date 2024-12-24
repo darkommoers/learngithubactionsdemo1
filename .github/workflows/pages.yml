@@ -37,10 +37,7 @@ jobs:
           workingDirectory: "mainal/cf/pages"
           preCommands: |
             echo "*** pre commands ***"
-            RESPONSE_SUCCESS=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{ env.MY_PROJECT_NAME }} \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-              -H "Content-Type: application/json" | jq -r '.success')
-
+            RESPONSE_SUCCESS="true"
             echo $RESPONSE_SUCCESS
             if [ "$RESPONSE_SUCCESS" == "false" ]; then
               echo "Project not found, creating new project..."
