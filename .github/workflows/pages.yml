@@ -27,7 +27,7 @@ jobs:
           sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' mainal/cf/pages/wrangler.toml
           cat mainal/cf/pages/wrangler.toml
           echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)" >> $GITHUB_ENV
-          echo $MY_PROJECT_NAME
+          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)"
 
       - name: Deploy Pages
         uses: cloudflare/wrangler-action@v3
@@ -37,7 +37,7 @@ jobs:
           workingDirectory: "mainal/cf/pages"
           preCommands: |
             echo "*** pre commands ***"
-            npx wrangler pages project create $MY_PROJECT_NAME
+            npx wrangler pages project create $MY_PROJECT_NAME --production-branch main
           postCommands: |
             echo "*** post commands ***"
           command: |
