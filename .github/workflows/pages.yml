@@ -26,12 +26,11 @@ jobs:
           cat mainal/cf/pages/wrangler.toml
           sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' mainal/cf/pages/wrangler.toml
           cat mainal/cf/pages/wrangler.toml
-          $(sed -n 's/^name = "\(.*\)"$/\1/p' cf/pages/wrangler.toml)
           # echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)" >> $GITHUB_ENV
-          echo $PROJECT_NAME
-          echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)"
-          echo $PROJECT_NAME
-          echo "PROJECT_NAME=$(awk -F '"' '/^name =/ {print $2}')"
+          echo $MY_PROJECT_NAME
+          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)"
+          echo $MY_PROJECT_NAME
+          echo "MY_PROJECT_NAME=$(awk -F '"' '/^name =/ {print $2}' mainal/cf/pages/wrangler.toml)"
 
       # - name: Deploy Pages
       #   uses: cloudflare/wrangler-action@v3
