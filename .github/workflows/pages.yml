@@ -42,6 +42,13 @@ jobs:
           preCommands: |
             echo "*** pre commands ***"
             echo ${{ env.RESPONSE_SUCCESS }}
+            if [ "$RESPONSE_SUCCESS" = "false" ]; then
+              echo "Project not found, creating new project..."
+              wrangler pages project create $MY_PROJECT_NAME --production-branch main
+            else
+              echo "Project already exists, no action needed."
+            fi
+
           postCommands: |
             echo "*** post commands ***"
           command: |
