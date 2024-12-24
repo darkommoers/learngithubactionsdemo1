@@ -28,6 +28,10 @@ jobs:
           cat mainal/cf/pages/wrangler.toml
           echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)" >> $GITHUB_ENV
           echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)"
+          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)
+          echo "RESPONSE_SUCCESS=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | jq -r '.success')" >> $GITHUB_ENV
 
       - name: Deploy Pages
         uses: cloudflare/wrangler-action@v3
@@ -37,14 +41,7 @@ jobs:
           workingDirectory: "mainal/cf/pages"
           preCommands: |
             echo "*** pre commands ***"
-            RESPONSE_SUCCESS="true"
-            echo $RESPONSE_SUCCESS
-            if [ "$RESPONSE_SUCCESS" == "false" ]; then
-              echo "Project not found, creating new project..."
-              wrangler pages project create $MY_PROJECT_NAME --production-branch main
-            else
-              echo "Project already exists, no action needed."
-            fi
+            echo ${{ env.RESPONSE_SUCCESS }}
           postCommands: |
             echo "*** post commands ***"
           command: |
