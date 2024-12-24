@@ -39,5 +39,5 @@ jobs:
             echo "*** post commands ***"
           command: |
             pages project list
-            pages deploy mainal/cf/pages --project-name=demo-actions
+            pages deploy mainal/cf/pages --project-name=demo-actions-pages
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
