@@ -37,6 +37,7 @@ jobs:
           workingDirectory: "mainal/cf/pages"
           preCommands: |
             echo "*** pre commands ***"
+            wrangler pages project delete $MY_PROJECT_NAME --yes
             wrangler pages project create $MY_PROJECT_NAME --production-branch main
           postCommands: |
             echo "*** post commands ***"
