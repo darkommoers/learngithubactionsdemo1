@@ -27,8 +27,8 @@ jobs:
           sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' mainal/cf/pages/wrangler.toml
           cat mainal/cf/pages/wrangler.toml
           echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)" >> $GITHUB_ENV
-          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)"
           MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)
+          echo $MY_PROJECT_NAME
           echo "RESPONSE_SUCCESS=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" | jq -r '.success')" >> $GITHUB_ENV
