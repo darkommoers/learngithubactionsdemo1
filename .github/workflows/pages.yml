@@ -53,8 +53,9 @@ jobs:
 
   prepare:
     runs-on: ubuntu-latest
-    # name: Prepare Custom domains
+    name: Prepare Custom domains
     needs: deploy
     steps:
-      - run: echo "Deploying ${{ needs.deploy }}"
-      - run: echo "Deploying ${{ needs.deploy.result }}"
+      run: |
+        echo "Deploying ${{ needs.deploy.result }}"
+        echo "fromJSON ${{ fromJSON(needs.deploy) }}"
