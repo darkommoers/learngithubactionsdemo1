@@ -58,4 +58,4 @@ jobs:
     steps:
       - name: Prepare script
         run: |
-          echo "Deploying ${{ needs.deploy.result }}"
+          echo "Deploy Pages ${{ needs.deploy.result }}"
