@@ -56,6 +56,7 @@ jobs:
     name: Prepare Custom domains
     needs: deploy
     steps:
-      run: |
-        echo "Deploying ${{ needs.deploy.result }}"
-        echo "fromJSON ${{ fromJSON(needs.deploy) }}"
+      - name: Prepare script
+        run: |
+          echo "Deploying ${{ needs.deploy.result }}"
+          echo "fromJSON ${{ fromJSON(needs.deploy) }}"
