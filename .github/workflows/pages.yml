@@ -63,14 +63,14 @@ jobs:
           echo "*** ***"
           echo $DEPLOYMENT_ALIAS_URL
           echo "command-output"
-          echo ${{ steps.deploy.outputs.command-output }}
+          echo "${{ steps.deploy.outputs.command-output }}"
           echo "command-stderr"
-          echo ${{ steps.deploy.outputs.command-stderr }}
+          echo "${{ steps.deploy.outputs.command-stderr }}"
           echo "deployment-url"
-          echo ${{ steps.deploy.outputs.deployment-url }}
+          echo "${{ steps.deploy.outputs.deployment-url }}"
           echo "pages-deployment-alias-url"
-          echo ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+          echo "${{ steps.deploy.outputs.pages-deployment-alias-url }}"
           echo "pages-deployment-id"
-          echo ${{ steps.deploy.outputs.pages-deployment-id }}
+          echo "${{ steps.deploy.outputs.pages-deployment-id }}"
           echo "pages-environment"
-          echo ${{ steps.deploy.outputs.pages-environment }}
+          echo "${{ steps.deploy.outputs.pages-environment }}"
