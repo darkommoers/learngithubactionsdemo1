@@ -110,7 +110,7 @@ jobs:
           }
           EOF
           )
-          curl https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME/domains \
+          curl https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
               -H 'Content-Type: application/json' \
               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
               -d "$json_data"
