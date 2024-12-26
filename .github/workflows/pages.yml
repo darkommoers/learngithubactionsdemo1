@@ -59,4 +59,3 @@ jobs:
       - name: Prepare script
         run: |
           echo "Deploying ${{ needs.deploy.result }}"
-          echo "fromJSON ${{ fromJSON(needs.deploy) }}"
