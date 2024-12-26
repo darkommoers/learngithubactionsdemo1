@@ -56,6 +56,24 @@ jobs:
     name: Prepare Custom domains
     needs: deploy
     steps:
+      - name: Checkout private repo test
+        uses: actions/checkout@v4
+        with:
+          repository: darkommoers/mainal
+          path: mainal
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
       - name: Prepare script
         run: |
           echo "Deploy Pages ${{ needs.deploy.result }}"
+          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)
+          echo $MY_PROJECT_NAME
+          json_data=$(cat <<EOF
+          {
+            "name": "${MY_PROJECT_NAME}.alruaex126.us.kg"
+          }
+          EOF
+          )
+          curl https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME/domains \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -d "$json_data"
