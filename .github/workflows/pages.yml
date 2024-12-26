@@ -102,15 +102,15 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json")
 
-          if [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]]; then exit 0; else exit 1; fi
+          [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
 
-          # json_data=$(cat <<EOF
-          # {
-          #   "name": "${MY_PROJECT_NAME}.alruaex126.us.kg"
-          # }
-          # EOF
-          # )
-          # curl https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME/domains \
-          #     -H 'Content-Type: application/json' \
-          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-          #     -d "$json_data"
+          json_data=$(cat <<EOF
+          {
+            "name": "${RESULT_NAME}"
+          }
+          EOF
+          )
+          curl https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME/domains \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -d "$json_data"
