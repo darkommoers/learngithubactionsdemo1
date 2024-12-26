@@ -97,12 +97,35 @@ jobs:
           echo "${{needs.deploy.outputs.RESULT_SUCCESS}}"
 
           RESULT_NAME="demo-actions-pages.alruaex126.us.kg"
+          ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
 
           RESULT_RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${RESULT_NAME} \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json")
 
           [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
+
+          json_data=$(cat <<EOF
+          {
+            "deletes": [],
+            "patches": [],
+            "puts": [],
+            "posts": [
+              {
+                "content": "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}",
+                "name": "${{needs.deploy.outputs.RESULT_NAME}}",
+                "proxied": false,
+                "ttl": 1,
+                "type": "CNAME"
+              }
+            ]
+          }
+          EOF
+          )
+          curl curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -d "$json_data"
 
           json_data=$(cat <<EOF
           {
