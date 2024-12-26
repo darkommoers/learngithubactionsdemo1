@@ -56,4 +56,5 @@ jobs:
     # name: Prepare Custom domains
     needs: deploy
     steps:
+      - run: echo "Deploying ${{ needs.deploy }}"
       - run: echo "Deploying ${{ needs.deploy.result }}"
