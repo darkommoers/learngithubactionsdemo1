@@ -96,6 +96,14 @@ jobs:
           echo "${{needs.deploy.outputs.RESULT_DOMAINS}}"
           echo "${{needs.deploy.outputs.RESULT_SUCCESS}}"
 
+          RESULT_NAME="demo-actions-pages.alruaex126.us.kg"
+
+          RESULT_RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${RESULT_NAME} \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+
+          if [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]]; then exit 0; else exit 1; fi
+
           # json_data=$(cat <<EOF
           # {
           #   "name": "${MY_PROJECT_NAME}.alruaex126.us.kg"
