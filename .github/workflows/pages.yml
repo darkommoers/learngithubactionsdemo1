@@ -34,6 +34,7 @@ jobs:
             -H "Content-Type: application/json" | jq -r '.success')" >> $GITHUB_ENV
 
       - name: Deploy Pages
+        id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -49,3 +50,27 @@ jobs:
             pages project list
             pages deploy .
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print wrangler command output
+        env:
+          CMD_OUTPUT: ${{ steps.deploy.outputs.command-output }}
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+          DEPLOYMENT_ALIAS_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+        run: |
+          echo $CMD_OUTPUT
+          echo "*** ***"
+          echo $DEPLOYMENT_URL
+          echo "*** ***"
+          echo $DEPLOYMENT_ALIAS_URL
+          echo "command-output"
+          echo ${{ steps.deploy.outputs.command-output }}
+          echo "command-stderr"
+          echo ${{ steps.deploy.outputs.command-stderr }}
+          echo "deployment-url"
+          echo ${{ steps.deploy.outputs.deployment-url }}
+          echo "pages-deployment-alias-url"
+          echo ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+          echo "pages-deployment-id"
+          echo ${{ steps.deploy.outputs.pages-deployment-id }}
+          echo "pages-environment"
+          echo ${{ steps.deploy.outputs.pages-environment }}
