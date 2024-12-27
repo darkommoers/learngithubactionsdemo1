@@ -33,12 +33,16 @@ jobs:
         run: |
           ls -al
           ls -al mainal
-          cat ${{ env.WRANGLER_FILE }}
-          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' ${{ env.WRANGLER_FILE }}
-          cat ${{ env.WRANGLER_FILE }}
+          MY_WRANGLER_FILE="${{ env.WRANGLER_FILE }}"
+          cat $MY_WRANGLER_FILE
 
-          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' ${{ env.WRANGLER_FILE }})" >> $GITHUB_ENV
-          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' ${{ env.WRANGLER_FILE }})
+          MY_WORKING_DIRECTORY=$(dirname "${MY_WRANGLER_FILE}")
+          echo $MY_WORKING_DIRECTORY
+          echo "MY_WORKING_DIRECTORY=$MY_WORKING_DIRECTORY" >> $GITHUB_ENV
+          echo "MY_WORKING_DIRECTORY=${MY_WORKING_DIRECTORY}" >> "$GITHUB_OUTPUT"
+
+          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> $GITHUB_ENV
+          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)
           echo $MY_PROJECT_NAME
 
           RESULT_RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME \
@@ -49,8 +53,10 @@ jobs:
           echo "RESULT_NAME=${MY_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
           echo "RESULT_SUCCESS=$(echo "$RESULT_RESPONSE" | jq -r '.success')" >> $GITHUB_ENV
           echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> "$GITHUB_OUTPUT"
-          echo "PAGES_CUSTOM_DOMAIN=$(sed -n 's/^PAGES_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' ${{ env.WRANGLER_FILE }})" >> "$GITHUB_OUTPUT"
-          sed -i '/^PAGES_CUSTOM_DOMAIN/d' ${{ env.WRANGLER_FILE }}
+          echo "PAGES_CUSTOM_DOMAIN=$(sed -n 's/^PAGES_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> "$GITHUB_OUTPUT"
+          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' $MY_WRANGLER_FILE
+          sed -i '/^PAGES_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
+          cat ${MY_WRANGLER_FILE}
 
       - name: Deploy Pages
         id: deploy
@@ -58,7 +64,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: "mainal/cf/pages"
+          workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
           preCommands: |
             echo "*** pre commands ***"
             echo "GITHUB_ENV ${{ env.RESULT_SUCCESS }}"
