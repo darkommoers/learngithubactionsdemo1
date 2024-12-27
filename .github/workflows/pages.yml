@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
   repository_dispatch:
 
+env:
+  WRANGLER_FILE: "main/cf/pages/a0/wrangler.toml"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -30,12 +33,12 @@ jobs:
         run: |
           ls -al
           ls -al mainal
-          cat mainal/cf/pages/wrangler.toml
-          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' mainal/cf/pages/wrangler.toml
-          cat mainal/cf/pages/wrangler.toml
+          cat ${{ env.WRANGLER_FILE }}
+          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' ${{ env.WRANGLER_FILE }}
+          cat ${{ env.WRANGLER_FILE }}
 
-          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)" >> $GITHUB_ENV
-          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' mainal/cf/pages/wrangler.toml)
+          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' ${{ env.WRANGLER_FILE }})" >> $GITHUB_ENV
+          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' ${{ env.WRANGLER_FILE }})
           echo $MY_PROJECT_NAME
 
           RESULT_RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME \
@@ -46,6 +49,8 @@ jobs:
           echo "RESULT_NAME=${MY_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
           echo "RESULT_SUCCESS=$(echo "$RESULT_RESPONSE" | jq -r '.success')" >> $GITHUB_ENV
           echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> "$GITHUB_OUTPUT"
+          echo "PAGES_CUSTOM_DOMAIN=$(sed -n 's/^PAGES_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' ${{ env.WRANGLER_FILE }})" >> "$GITHUB_OUTPUT"
+          sed -i '/^PAGES_CUSTOM_DOMAIN/d' ${{ env.WRANGLER_FILE }}
 
       - name: Deploy Pages
         id: deploy
@@ -81,6 +86,7 @@ jobs:
           echo "RESULT_DOMAINS=$(echo "${RESULT_RESPONSE}" | jq -r '.result.domains | join(",")')" >> "$GITHUB_OUTPUT"
           echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> $GITHUB_ENV
           echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> "$GITHUB_OUTPUT"
+          echo "PAGES_CUSTOM_DOMAIN=${{ steps.init_pass.outputs.PAGES_CUSTOM_DOMAIN }}" >> "$GITHUB_OUTPUT"
 
   prepare:
     runs-on: ubuntu-latest
@@ -89,51 +95,51 @@ jobs:
     steps:
       - name: Prepare script
         run: |
-          echo "Deploy Pages ${{ needs.deploy.result }}"
-          echo "${{needs.deploy.outputs.RESULT_ID}}"
-          echo "${{needs.deploy.outputs.RESULT_NAME}}"
-          echo "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}"
-          echo "${{needs.deploy.outputs.RESULT_DOMAINS}}"
-          echo "${{needs.deploy.outputs.RESULT_SUCCESS}}"
+          echo "Deploy Pages: ${{ needs.deploy.result }}"
+          echo "RESULT_ID: ${{needs.deploy.outputs.RESULT_ID}}"
+          echo "RESULT_NAME: ${{needs.deploy.outputs.RESULT_NAME}}"
+          echo "RESULT_SUBDOMAIN: ${{needs.deploy.outputs.RESULT_SUBDOMAIN}}"
+          echo "RESULT_DOMAINS: ${{needs.deploy.outputs.RESULT_DOMAINS}}"
+          echo "RESULT_SUCCESS: ${{needs.deploy.outputs.RESULT_SUCCESS}}"
+          echo "PAGES_CUSTOM_DOMAIN: ${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}"
 
-          RESULT_NAME="demo-actions-pages.alruaex126.us.kg"
-          ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
+          PAGES_CUSTOM_DOMAIN="${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}"
 
-          RESULT_RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${RESULT_NAME} \
+          RESULT_RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}/domains/${PAGES_CUSTOM_DOMAIN} \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json")
-
           [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
 
-          json_data=$(cat <<EOF
-          {
-            "deletes": [],
-            "patches": [],
-            "puts": [],
-            "posts": [
-              {
-                "content": "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}",
-                "name": "${{needs.deploy.outputs.RESULT_NAME}}",
-                "proxied": false,
-                "ttl": 1,
-                "type": "CNAME"
-              }
-            ]
-          }
-          EOF
-          )
-          curl curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
-              -H 'Content-Type: application/json' \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-              -d "$json_data"
+          # ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
+          # json_data=$(cat <<EOF
+          # {
+          #   "deletes": [],
+          #   "patches": [],
+          #   "puts": [],
+          #   "posts": [
+          #     {
+          #       "content": "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}",
+          #       "name": "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}",
+          #       "proxied": false,
+          #       "ttl": 1,
+          #       "type": "CNAME"
+          #     }
+          #   ]
+          # }
+          # EOF
+          # )
+          # curl curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
+          #     -H 'Content-Type: application/json' \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #     -d "$json_data"
 
           json_data=$(cat <<EOF
           {
-            "name": "${RESULT_NAME}"
+            "name": "${PAGES_CUSTOM_DOMAIN}"
           }
           EOF
           )
-          curl https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
+          curl https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}/domains \
               -H 'Content-Type: application/json' \
               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
               -d "$json_data"
