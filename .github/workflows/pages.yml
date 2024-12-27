@@ -20,6 +20,7 @@ jobs:
       RESULT_SUBDOMAIN: ${{ steps.final_pass.outputs.RESULT_SUBDOMAIN }}
       RESULT_DOMAINS: ${{ steps.final_pass.outputs.RESULT_DOMAINS }}
       RESULT_SUCCESS: ${{ steps.final_pass.outputs.RESULT_SUCCESS }}
+      PAGES_CUSTOM_DOMAIN: ${{ steps.final_pass.outputs.PAGES_CUSTOM_DOMAIN }}
     steps:
       - name: Checkout private repo test
         uses: actions/checkout@v4
@@ -37,13 +38,13 @@ jobs:
           cat $MY_WRANGLER_FILE
 
           MY_WORKING_DIRECTORY=$(dirname "${MY_WRANGLER_FILE}")
-          echo $MY_WORKING_DIRECTORY
+          echo "MY_WORKING_DIRECTORY: $MY_WORKING_DIRECTORY"
           echo "MY_WORKING_DIRECTORY=$MY_WORKING_DIRECTORY" >> $GITHUB_ENV
           echo "MY_WORKING_DIRECTORY=${MY_WORKING_DIRECTORY}" >> "$GITHUB_OUTPUT"
 
-          echo "MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> $GITHUB_ENV
           MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)
-          echo $MY_PROJECT_NAME
+          echo "MY_PROJECT_NAME=$MY_PROJECT_NAME" >> $GITHUB_ENV
+          echo "MY_PROJECT_NAME: ${MY_PROJECT_NAME}"
 
           RESULT_RESPONSE=$(curl -s https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
@@ -67,8 +68,8 @@ jobs:
           workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
           preCommands: |
             echo "*** pre commands ***"
-            echo "GITHUB_ENV ${{ env.RESULT_SUCCESS }}"
-            echo "GITHUB_OUTPUT ${{ steps.init_pass.outputs.RESULT_SUCCESS }}"
+            echo "GITHUB_ENV: ${{ env.RESULT_SUCCESS }}"
+            echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.RESULT_SUCCESS }}"
             [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
           postCommands: |
             echo "*** post commands ***"
