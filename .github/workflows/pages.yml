@@ -8,7 +8,7 @@ on:
   repository_dispatch:
 
 env:
-  WRANGLER_FILE: "main/cf/pages/a0/wrangler.toml"
+  WRANGLER_FILE: "mainal/cf/pages/a0/wrangler.toml"
 
 jobs:
   deploy:
