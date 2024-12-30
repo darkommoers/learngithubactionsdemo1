@@ -56,7 +56,7 @@ jobs:
           echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> "$GITHUB_OUTPUT"
           echo "PAGES_CUSTOM_DOMAIN=$(sed -n 's/^PAGES_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> "$GITHUB_OUTPUT"
           sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' $MY_WRANGLER_FILE
-          sed -i '/^PAGES_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
+          # sed -i '/^PAGES_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
           cat ${MY_WRANGLER_FILE}
 
       - name: Deploy Pages
