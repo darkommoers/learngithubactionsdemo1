@@ -99,7 +99,7 @@ jobs:
               -H 'Content-Type: application/json' \
               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
               -d "$(jq -n \
-                  --arg content "censys.io" \
+                  --arg content "shopify.com" \
                   --arg name "nds" \
                   --arg type "CNAME" \
                   --argjson proxied false \
