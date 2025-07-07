@@ -30,7 +30,6 @@ jobs:
         run: |
           ls -al
           ls -al mainal
-          cat "mainal/cf/workers/a0/wrangler.toml"
           MY_WRANGLER_FILE="${{ env.WRANGLER_FILE }}"
           cat $MY_WRANGLER_FILE
 
@@ -47,9 +46,9 @@ jobs:
           echo "WORKERS_CUSTOM_DOMAIN=$(sed -n 's/^WORKERS_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> "$GITHUB_OUTPUT"
           sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' $MY_WRANGLER_FILE
           # sed -i '/^WORKERS_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
-          sed '/^WORKERS_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
           cat ${MY_WRANGLER_FILE}
-          cat $GITHUB_ENV
+          # cat $GITHUB_ENV
+          # cat "$GITHUB_OUTPUT"
 
       - name: Deploy Worker
         id: deploy
@@ -65,7 +64,7 @@ jobs:
           postCommands: |
             echo "*** post commands ***"
           command: |
-            deploy
+            deploy .
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
   prepare:
@@ -82,18 +81,19 @@ jobs:
           WORKERS_CUSTOM_DOMAIN="${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}"
 
           ZONE_ID="bab5f28e186de7ff95efb124aaa124d4"
-          curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes \
-              -H 'Content-Type: application/json' \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-              -d "$(jq -n \
-                  --arg pattern "$WORKERS_CUSTOM_DOMAIN" \
-                  --arg script "$RESULT_NAME" \
-                  --argjson request_limit_fail_open true \
-                  '{
-                    pattern: $pattern,
-                    script: $script,
-                    request_limit_fail_open: $request_limit_fail_open
-                  }')"
+          # 2025-07-08, "code": 10019, "message": "Cannot configure a route for a Worker which does not exist. Please ensure this Worker exists and try again."
+          # curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes \
+          #     -H 'Content-Type: application/json' \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #     -d "$(jq -n \
+          #         --arg pattern "$WORKERS_CUSTOM_DOMAIN" \
+          #         --arg script "$RESULT_NAME" \
+          #         --argjson request_limit_fail_open true \
+          #         '{
+          #           pattern: $pattern,
+          #           script: $script,
+          #           request_limit_fail_open: $request_limit_fail_open
+          #         }')"
 
           curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
               -H 'Content-Type: application/json' \
