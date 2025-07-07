@@ -64,7 +64,7 @@ jobs:
           postCommands: |
             echo "*** post commands ***"
           command: |
-            deploy .
+            deploy
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
   prepare:
