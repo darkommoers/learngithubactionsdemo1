@@ -1,4 +1,4 @@
-name: Deploy Worker 1
+name: Deploy Worker
 
 on:
   push:
@@ -30,6 +30,7 @@ jobs:
         run: |
           ls -al
           ls -al mainal
+          cat "main/cf/workers/a0/wrangler.toml"
           MY_WRANGLER_FILE="${{ env.WRANGLER_FILE }}"
           cat $MY_WRANGLER_FILE
 
