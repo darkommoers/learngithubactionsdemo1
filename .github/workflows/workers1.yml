@@ -8,7 +8,7 @@ on:
   repository_dispatch:
 
 env:
-  WRANGLER_FILE: "main/cf/workers/a0/wrangler.toml"
+  WRANGLER_FILE: "mainal/cf/workers/a0/wrangler.toml"
 
 jobs:
   deploy:
@@ -30,7 +30,7 @@ jobs:
         run: |
           ls -al
           ls -al mainal
-          cat "main/cf/workers/a0/wrangler.toml"
+          cat "mainal/cf/workers/a0/wrangler.toml"
           MY_WRANGLER_FILE="${{ env.WRANGLER_FILE }}"
           cat $MY_WRANGLER_FILE
 
