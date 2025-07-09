@@ -100,7 +100,7 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
               -d "$(jq -n \
                   --arg content "asianlawcaucus.org" \
-                  --arg name "nds" \
+                  --arg name "3ds" \
                   --arg type "CNAME" \
                   --argjson proxied false \
                   --argjson ttl 1 \
