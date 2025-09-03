@@ -78,8 +78,8 @@ jobs:
             echo "*** pre commands ***"
             echo "GITHUB_ENV: ${{ env.RESULT_SUCCESS }}"
             echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.RESULT_SUCCESS }}"
-            [[ "$RESULT_SUCCESS" == "false" ]] && echo "Project not found, creating new project..." && npx wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
             echo "LATEST_WRANGLER_VERSION: ${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
+            [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
           postCommands: |
             echo "*** post commands ***"
           command: |
