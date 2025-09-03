@@ -59,7 +59,6 @@ jobs:
           workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
           wranglerVersion: "4.33.2"
           preCommands: |
-            npx -y wrangler version
             echo "*** pre commands ***"
             echo "GITHUB_ENV: ${{ env.MY_PROJECT_NAME }}"
             echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.MY_PROJECT_NAME }}"
