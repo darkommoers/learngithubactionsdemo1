@@ -96,7 +96,7 @@ jobs:
 
           ZONE_ID="f08fd5f53e2a365147093e1962629b95"
           # 2025-07-08, "code": 10019, "message": "Cannot configure a route for a Worker which does not exist. Please ensure this Worker exists and try again."
-          # curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes \
+          # curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes \
           #     -H 'Content-Type: application/json' \
           #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
           #     -d "$(jq -n \
@@ -109,7 +109,7 @@ jobs:
           #           request_limit_fail_open: $request_limit_fail_open
           #         }')"
 
-          curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
+          curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
               -H 'Content-Type: application/json' \
               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
               -d "$(jq -n \
