@@ -7,36 +7,128 @@ on:
   workflow_dispatch:
   repository_dispatch:
 
+env:
+  WRANGLER_FILE: "mainal/cf/workers/a0/wrangler.toml"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy Worker
+    outputs:
+      RESULT_NAME: ${{ steps.init_pass.outputs.MY_PROJECT_NAME }}
+      WORKERS_CUSTOM_DOMAIN: ${{ steps.init_pass.outputs.WORKERS_CUSTOM_DOMAIN }}
     steps:
       - name: Checkout private repo test
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: darkommoers/mainal
           path: mainal
           token: ${{ secrets.MY_GITHUB_TOKEN }}
 
-      - name: Run a multi-line script
+      - name: Setup Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+
+      - name: Prepare init
+        id: init_pass
         run: |
           ls -al
           ls -al mainal
-          cat mainal/cf/workers/wrangler.toml
-          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' mainal/cf/workers/wrangler.toml
-          cat mainal/cf/workers/wrangler.toml
+          MY_WRANGLER_FILE="${{ env.WRANGLER_FILE }}"
+          cat $MY_WRANGLER_FILE
+
+          MY_WORKING_DIRECTORY=$(dirname "${MY_WRANGLER_FILE}")
+          echo "MY_WORKING_DIRECTORY: $MY_WORKING_DIRECTORY"
+          echo "MY_WORKING_DIRECTORY=$MY_WORKING_DIRECTORY" >> $GITHUB_ENV
+          echo "MY_WORKING_DIRECTORY=${MY_WORKING_DIRECTORY}" >> "$GITHUB_OUTPUT"
+
+          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)
+          echo "MY_PROJECT_NAME: ${MY_PROJECT_NAME}"
+          echo "MY_PROJECT_NAME=$MY_PROJECT_NAME" >> $GITHUB_ENV
+          echo "MY_PROJECT_NAME=$MY_PROJECT_NAME" >> "$GITHUB_OUTPUT"
+
+          echo "WORKERS_CUSTOM_DOMAIN=$(sed -n 's/^WORKERS_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> "$GITHUB_OUTPUT"
+          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' $MY_WRANGLER_FILE
+          # sed -i '/^WORKERS_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
+          cat ${MY_WRANGLER_FILE}
+          # cat $GITHUB_ENV
+          # cat "$GITHUB_OUTPUT"
+
+          echo "LATEST_WRANGLER_VERSION=$(npm view wrangler version)" >> "$GITHUB_OUTPUT"
 
       - name: Deploy Worker
+        id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: "mainal/cf/workers"
+          workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
+          wranglerVersion: "${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
           preCommands: |
             echo "*** pre commands ***"
+            echo "GITHUB_ENV: ${{ env.MY_PROJECT_NAME }}"
+            echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.MY_PROJECT_NAME }}"
+            echo "LATEST_WRANGLER_VERSION: ${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
           postCommands: |
             echo "*** post commands ***"
           command: |
             deploy
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  prepare:
+    runs-on: ubuntu-latest
+    name: Prepare Custom domains
+    needs: deploy
+    steps:
+      - name: Prepare script
+        run: |
+          echo "Deploy Worker: ${{ needs.deploy.result }}"
+          echo "RESULT_NAME: ${{needs.deploy.outputs.RESULT_NAME}}"
+          echo "WORKERS_CUSTOM_DOMAIN: ${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}"
+
+          WORKERS_CUSTOM_DOMAIN="${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}"
+
+          RESULT_RESPONSE=$(curl -sS "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=CNAME" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.result[] | select(.name == "${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}") | .name')" == "${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}" ]] && exit 0
+
+          ZONE_ID="f08fd5f53e2a365147093e1962629b95"
+          # 2025-07-08, "code": 10019, "message": "Cannot configure a route for a Worker which does not exist. Please ensure this Worker exists and try again."
+          # curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes \
+          #     -H 'Content-Type: application/json' \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #     -d "$(jq -n \
+          #         --arg pattern "$WORKERS_CUSTOM_DOMAIN" \
+          #         --arg script "$RESULT_NAME" \
+          #         --argjson request_limit_fail_open true \
+          #         '{
+          #           pattern: $pattern,
+          #           script: $script,
+          #           request_limit_fail_open: $request_limit_fail_open
+          #         }')"
+
+          curl https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -d "$(jq -n \
+                  --arg content "canva.com" \
+                  --arg name "3ds" \
+                  --arg type "CNAME" \
+                  --argjson proxied false \
+                  --argjson ttl 1 \
+                  '{
+                    deletes: [],
+                    patches: [],
+                    puts: [],
+                    posts: [
+                      {
+                        content: $content,
+                        name: $name,
+                        proxied: $proxied,
+                        ttl: $ttl,
+                        type: $type
+                      }
+                    ]
+                  }')"
