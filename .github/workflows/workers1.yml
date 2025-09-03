@@ -96,8 +96,8 @@ jobs:
           curl -sS "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=CNAME" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" | \
-          jq -e --arg domain_name "${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}" \
-            '.result[]? | select(.name == $domain_name)' && exit 0
+            jq -e --arg domain_name "${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}" \
+              '.result[]? | select(.name == $domain_name)' && exit 0
 
           ZONE_ID="f08fd5f53e2a365147093e1962629b95"
           # 2025-07-08, "code": 10019, "message": "Cannot configure a route for a Worker which does not exist. Please ensure this Worker exists and try again."
