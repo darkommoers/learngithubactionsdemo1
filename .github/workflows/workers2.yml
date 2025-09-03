@@ -25,6 +25,11 @@ jobs:
           path: mainal
           token: ${{ secrets.MY_GITHUB_TOKEN }}
 
+      - name: Setup Use Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "latest"
+
       - name: Prepare init
         id: init_pass
         run: |
@@ -50,6 +55,8 @@ jobs:
           # cat $GITHUB_ENV
           # cat "$GITHUB_OUTPUT"
 
+          echo "LATEST_WRANGLER_VERSION=$(npm view wrangler version)" >> "$GITHUB_OUTPUT"
+
       - name: Deploy Worker
         id: deploy
         uses: cloudflare/wrangler-action@v3
@@ -57,11 +64,12 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
-          wranglerVersion: "4.33.2"
+          wranglerVersion: "${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
           preCommands: |
             echo "*** pre commands ***"
             echo "GITHUB_ENV: ${{ env.MY_PROJECT_NAME }}"
             echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.MY_PROJECT_NAME }}"
+            echo "LATEST_WRANGLER_VERSION: ${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
           postCommands: |
             echo "*** post commands ***"
           command: |
