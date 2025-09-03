@@ -161,7 +161,11 @@ jobs:
           #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
           #     -d "$json_data"
 
-          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
-            -H 'Content-Type: application/json' \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -d "$(jq -n --arg domain_name "${PAGES_CUSTOM_DOMAIN}" '{ "name": "$domain_name" }')"
+          curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -d "$(jq -n \
+                  --arg name "${PAGES_CUSTOM_DOMAIN}" \
+                  '{
+                    name: $name,
+                  }')"
