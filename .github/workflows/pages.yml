@@ -121,17 +121,11 @@ jobs:
 
           PAGES_CUSTOM_DOMAIN="${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}"
 
-          # RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}} \
-          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-          #   -H "Content-Type: application/json")
-          # # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
-          # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.result.name')" == "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" ]] && exit 0
-
-          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}} \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -H "Content-Type: application/json" | \
-            jq -e --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
-              '.result.name? == $domain_name' && exit 0
+            -H "Content-Type: application/json")
+          # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
+          [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.result.name')" == "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" ]] && exit 0
 
           # ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
           # json_data=$(cat <<EOF
