@@ -19,7 +19,7 @@ jobs:
       WORKERS_CUSTOM_DOMAIN: ${{ steps.init_pass.outputs.WORKERS_CUSTOM_DOMAIN }}
     steps:
       - name: Checkout private repo test
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: darkommoers/mainal
           path: mainal
@@ -57,7 +57,9 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
+          wranglerVersion: "4.33.2"
           preCommands: |
+            npx -y wrangler version
             echo "*** pre commands ***"
             echo "GITHUB_ENV: ${{ env.MY_PROJECT_NAME }}"
             echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.MY_PROJECT_NAME }}"
