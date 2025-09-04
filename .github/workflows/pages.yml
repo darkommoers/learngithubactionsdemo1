@@ -127,11 +127,19 @@ jobs:
           # # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
           # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.result.name')" == "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" ]] && exit 0
 
-          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          # curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #   -H "Content-Type: application/json" | \
+          #   jq -e \
+          #     --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          #       '.result.name == $domain_name' && exit 0
+
+          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" | \
-            jq -e --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
-              '.result.name == $domain_name' && exit 0
+            jq -e \
+              --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+                'any(.result[]?; .name == $domain_name)' && exit 0
 
           # ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
           # json_data=$(cat <<EOF
@@ -141,11 +149,11 @@ jobs:
           #   "puts": [],
           #   "posts": [
           #     {
-          #       "content": "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}",
           #       "name": "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}",
+          #       "type": "CNAME",
+          #       "content": "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}",
           #       "proxied": false,
-          #       "ttl": 1,
-          #       "type": "CNAME"
+          #       "ttl": 1
           #     }
           #   ]
           # }
@@ -166,6 +174,30 @@ jobs:
           #     -H 'Content-Type: application/json' \
           #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
           #     -d "$json_data"
+
+          # curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
+          #     -H 'Content-Type: application/json' \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #     -d "$(jq -n \
+          #         --arg name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          #         --arg type "CNAME" \
+          #         --arg content "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}" \
+          #         --argjson proxied false \
+          #         --argjson ttl 1 \
+          #         '{
+          #           deletes: [],
+          #           patches: [],
+          #           puts: [],
+          #           posts: [
+          #             {
+          #               name: $name,
+          #               type: $type,
+          #               content: $content,
+          #               proxied: $proxied,
+          #               ttl: $ttl
+          #             }
+          #           ]
+          #         }')"
 
           curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
               -H 'Content-Type: application/json' \
