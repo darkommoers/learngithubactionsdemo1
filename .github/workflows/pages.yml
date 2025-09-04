@@ -40,7 +40,7 @@ jobs:
           ls -al
           ls -al mainal
           MY_WRANGLER_FILE="${{ env.WRANGLER_FILE }}"
-          cat $MY_WRANGLER_FILE
+          # cat $MY_WRANGLER_FILE
 
           MY_WORKING_DIRECTORY=$(dirname "${MY_WRANGLER_FILE}")
           echo "MY_WORKING_DIRECTORY: $MY_WORKING_DIRECTORY"
@@ -62,7 +62,7 @@ jobs:
           echo "PAGES_CUSTOM_DOMAIN=$(sed -n 's/^PAGES_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> "$GITHUB_OUTPUT"
           sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' $MY_WRANGLER_FILE
           # sed -i '/^PAGES_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
-          cat ${MY_WRANGLER_FILE}
+          # cat ${MY_WRANGLER_FILE}
 
           echo "LATEST_WRANGLER_VERSION=$(npm view wrangler version)" >> "$GITHUB_OUTPUT"
 
@@ -79,11 +79,11 @@ jobs:
             echo "GITHUB_ENV: ${{ env.RESULT_SUCCESS }}"
             echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.RESULT_SUCCESS }}"
             echo "LATEST_WRANGLER_VERSION: ${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
-            [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
+            [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx -y wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
           postCommands: |
             echo "*** post commands ***"
           command: |
-            pages project list
+            # pages project list
             pages deploy .
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
@@ -134,12 +134,18 @@ jobs:
           #     --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
           #       '.result.name == $domain_name' && exit 0
 
+          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/purge_build_cache" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | jq -r '"Purge all cached build artifacts for a Pages project: \(.success)"'
+
           curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" | \
             jq -e \
               --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
-                'any(.result[]?; .name == $domain_name)' && exit 0
+                '"\($PAGES_CUSTOM_DOMAIN): \(any(.result[]?; .name == $domain_name))"' && exit 0
+                # 'any(.result[]?; .name == $domain_name)' && exit 0
 
           # ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
           # json_data=$(cat <<EOF
