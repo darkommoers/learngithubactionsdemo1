@@ -82,7 +82,7 @@ jobs:
             [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx -y wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
           postCommands: |
             echo "*** post commands ***"
-            npx -y wrangler pages project list
+            # npx -y wrangler pages project list
           command: |
             pages deploy .
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
@@ -143,7 +143,7 @@ jobs:
           curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" | \
-            jq -e \
+            jq -r \
               --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
                 '"PAGES_CUSTOM_DOMAIN: \(any(.result[]?; .name == $domain_name))"' && exit 0
                 # '"\($domain_name): \(any(.result[]?; .name == $domain_name))"' && exit 0
