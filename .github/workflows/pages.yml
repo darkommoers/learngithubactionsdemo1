@@ -82,9 +82,9 @@ jobs:
             [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx -y wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
           postCommands: |
             echo "*** post commands ***"
+            # pages project list
           command: |
             pages deploy .
-            # pages project list
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare final
