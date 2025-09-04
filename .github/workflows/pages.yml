@@ -82,7 +82,7 @@ jobs:
             [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx -y wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
           postCommands: |
             echo "*** post commands ***"
-            # pages project list
+            npx -y wrangler pages project list
           command: |
             pages deploy .
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
@@ -137,14 +137,16 @@ jobs:
           curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/purge_build_cache" \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -H "Content-Type: application/json" | jq -r '"Purge all cached build artifacts for a Pages project: \(.success)"'
+            -H "Content-Type: application/json" | \
+            jq -r '"Purge all cached build artifacts for a Pages project: \(.success)"'
 
           curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" | \
             jq -e \
               --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
-                '"\($PAGES_CUSTOM_DOMAIN): \(any(.result[]?; .name == $domain_name))"' && exit 0
+                '"\($domain_name): \(any(.result[]?; .name == $domain_name))"' && exit 0
+                # '"\(PAGES_CUSTOM_DOMAIN): \(any(.result[]?; .name == $domain_name))"' && exit 0
                 # 'any(.result[]?; .name == $domain_name)' && exit 0
 
           # ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
