@@ -83,8 +83,8 @@ jobs:
           postCommands: |
             echo "*** post commands ***"
           command: |
-            # pages project list
             pages deploy .
+            # pages project list
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare final
