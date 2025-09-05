@@ -138,7 +138,7 @@ jobs:
             -X POST \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" | \
-            jq -r '"Purge all cached build artifacts for a Pages project: \(.success)"'
+            jq -re '"Purge all cached build artifacts for a Pages project: \(.success)"'
 
           curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
