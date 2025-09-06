@@ -95,9 +95,9 @@ jobs:
             -H "Content-Type: application/json" | \
             jq -re \
               --arg domain_name "${{needs.deploy.outputs.WORKERS_CUSTOM_DOMAIN}}" \
-                'any(.result[]?; .name == $domain_name)' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
-                # '"WORKERS_CUSTOM_DOMAIN: \(any(.result[]?; .name == $domain_name))"' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
+                '"WORKERS_CUSTOM_DOMAIN: \(any(.result[]?; .name == $domain_name))"' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
                 # '"\($domain_name): \(any(.result[]?; .name == $domain_name))"' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
+                # 'any(.result[]?; .name == $domain_name)' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
 
           # 2025-07-08, "code": 10019, "message": "Cannot configure a route for a Worker which does not exist. Please ensure this Worker exists and try again."
           # curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes \
