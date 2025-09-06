@@ -117,7 +117,7 @@ jobs:
               -H 'Content-Type: application/json' \
               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
               -d "$(jq -n \
-                  --arg content "canva.com" \
+                  --arg content "cdn.shopify.com" \
                   --arg name "3ds" \
                   --arg type "CNAME" \
                   --argjson proxied false \
