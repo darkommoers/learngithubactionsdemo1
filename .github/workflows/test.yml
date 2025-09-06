@@ -23,22 +23,28 @@ jobs:
       #     retain_days: 0
       #     keep_minimum_runs: 0
 
-      - name: Run a multi-line script
+      # - name: Run a multi-line script
+      #   run: |
+      #     TARGET_TAG=${{ env.CONTENT_TARGET }}
+      #     TARGET_NAME="$(echo $TARGET_TAG | sed 's/^./\u&/')"
+      #     echo "$TARGET_TAG"
+      #     echo "$TARGET_NAME"
+      #     echo ${{ env.CONTENT_REPO }}
+      #     echo ${{ env.CONTENT_VERSION }}
+      #     pwd
+      #     mkdir -p ${{ env.CONTENT_TARGET }}
+      #     cd ./${{ env.CONTENT_TARGET }}
+      #     pwd
+      #     id
+      #     mkdir -p src/cloudflared
+      #     echo 233255 > ${{ env.CONTENT_VERSION }}
+      #     echo "-X main.Version=$(cat "${{ env.CONTENT_VERSION }}" | head -n1) -X main.BuildTime=$(date -u '+%Y-%m-%d-%H%M UTC')"
+
+      - name: Update latest version of npm
         run: |
-          TARGET_TAG=${{ env.CONTENT_TARGET }}
-          TARGET_NAME="$(echo $TARGET_TAG | sed 's/^./\u&/')"
-          echo "$TARGET_TAG"
-          echo "$TARGET_NAME"
-          echo ${{ env.CONTENT_REPO }}
-          echo ${{ env.CONTENT_VERSION }}
-          pwd
-          mkdir -p ${{ env.CONTENT_TARGET }}
-          cd ./${{ env.CONTENT_TARGET }}
-          pwd
-          id
-          mkdir -p src/cloudflared
-          echo 233255 > ${{ env.CONTENT_VERSION }}
-          echo "-X main.Version=$(cat "${{ env.CONTENT_VERSION }}" | head -n1) -X main.BuildTime=$(date -u '+%Y-%m-%d-%H%M UTC')"
+          echo "$(npm --version)"
+          npm install -g npm@latest
+          echo "$(npm -v)"
 
       # - run: mkdir -p path/to/artifact
 
