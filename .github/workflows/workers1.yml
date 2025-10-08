@@ -118,7 +118,7 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
               -d "$(jq -n \
                   --arg content "cdn.shopify.com" \
-                  --arg name "3ds" \
+                  --arg name "nds" \
                   --arg type "CNAME" \
                   --argjson proxied false \
                   --argjson ttl 1 \
