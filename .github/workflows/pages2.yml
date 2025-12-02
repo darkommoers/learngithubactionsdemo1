@@ -1,0 +1,217 @@
+name: Deploy Pages 2
+
+on:
+  push:
+    paths:
+      - "src/cloudflared/cloudflared.version"
+  workflow_dispatch:
+  repository_dispatch:
+
+env:
+  WRANGLER_FILE: "mainal/cf/pages/a2/wrangler.toml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Pages
+    outputs:
+      RESULT_ID: ${{ steps.final_pass.outputs.RESULT_ID }}
+      RESULT_NAME: ${{ steps.final_pass.outputs.RESULT_NAME }}
+      RESULT_SUBDOMAIN: ${{ steps.final_pass.outputs.RESULT_SUBDOMAIN }}
+      RESULT_DOMAINS: ${{ steps.final_pass.outputs.RESULT_DOMAINS }}
+      RESULT_SUCCESS: ${{ steps.final_pass.outputs.RESULT_SUCCESS }}
+      PAGES_CUSTOM_DOMAIN: ${{ steps.final_pass.outputs.PAGES_CUSTOM_DOMAIN }}
+    steps:
+      - name: Checkout private repo test
+        uses: actions/checkout@v6
+        with:
+          repository: darkommoers/mainal
+          path: mainal
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+
+      - name: Setup Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "latest"
+
+      - name: Prepare init
+        id: init_pass
+        run: |
+          ls -al
+          ls -al mainal
+          MY_WRANGLER_FILE="${{ env.WRANGLER_FILE }}"
+          # cat $MY_WRANGLER_FILE
+
+          MY_WORKING_DIRECTORY=$(dirname "${MY_WRANGLER_FILE}")
+          echo "MY_WORKING_DIRECTORY: $MY_WORKING_DIRECTORY"
+          echo "MY_WORKING_DIRECTORY=$MY_WORKING_DIRECTORY" >> $GITHUB_ENV
+          echo "MY_WORKING_DIRECTORY=${MY_WORKING_DIRECTORY}" >> "$GITHUB_OUTPUT"
+
+          MY_PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)
+          echo "MY_PROJECT_NAME=$MY_PROJECT_NAME" >> $GITHUB_ENV
+          echo "MY_PROJECT_NAME: ${MY_PROJECT_NAME}"
+
+          RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/$MY_PROJECT_NAME \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+            -H "Content-Type: application/json")
+
+          echo "RESULT_NAME=$MY_PROJECT_NAME" >> $GITHUB_ENV
+          echo "RESULT_NAME=${MY_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "RESULT_SUCCESS=$(echo "$RESULT_RESPONSE" | jq -r '.success')" >> $GITHUB_ENV
+          echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> "$GITHUB_OUTPUT"
+          echo "PAGES_CUSTOM_DOMAIN=$(sed -n 's/^PAGES_CUSTOM_DOMAIN = "\(.*\)"$/\1/p' $MY_WRANGLER_FILE)" >> "$GITHUB_OUTPUT"
+          sed -i 's/compatibility_date = "[^"]*"/compatibility_date = "'$(date +"%Y-%m-%d")'"/' $MY_WRANGLER_FILE
+          # sed -i '/^PAGES_CUSTOM_DOMAIN/d' $MY_WRANGLER_FILE
+          # cat ${MY_WRANGLER_FILE}
+
+          echo "LATEST_WRANGLER_VERSION=$(npm view wrangler version)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
+          wranglerVersion: "${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
+          preCommands: |
+            echo "*** pre commands ***"
+            echo "GITHUB_ENV: ${{ env.RESULT_SUCCESS }}"
+            echo "GITHUB_OUTPUT: ${{ steps.init_pass.outputs.RESULT_SUCCESS }}"
+            echo "LATEST_WRANGLER_VERSION: ${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
+            [ "$RESULT_SUCCESS" = "false" ] && echo "Project not found, creating new project..." && npx -y wrangler pages project create $MY_PROJECT_NAME --production-branch main || echo "Project already exists, no action needed."
+          postCommands: |
+            echo "*** post commands ***"
+            # npx -y wrangler pages project list
+          command: |
+            pages deploy .
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare final
+        id: final_pass
+        run: |
+          echo "GITHUB_ENV ${{ env.RESULT_NAME }}"
+          echo "GITHUB_OUTPUT ${{ steps.init_pass.outputs.RESULT_NAME }}"
+          RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/$MY_PROJECT_NAME \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+            -H "Content-Type: application/json")
+
+          echo "RESULT_ID=$(echo "$RESULT_RESPONSE" | jq -r '.result.id')" >> "$GITHUB_OUTPUT"
+          echo "RESULT_NAME=$(echo "${RESULT_RESPONSE}" | jq -r '.result.name')" >> "$GITHUB_OUTPUT"
+          echo "RESULT_SUBDOMAIN=$(echo "${RESULT_RESPONSE}" | jq -r '.result.subdomain')" >> "$GITHUB_OUTPUT"
+          echo "RESULT_DOMAINS=$(echo "${RESULT_RESPONSE}" | jq -r '.result.domains | join(",")')" >> "$GITHUB_OUTPUT"
+          echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> $GITHUB_ENV
+          echo "RESULT_SUCCESS=$(echo "${RESULT_RESPONSE}" | jq -r '.success')" >> "$GITHUB_OUTPUT"
+          echo "PAGES_CUSTOM_DOMAIN=${{ steps.init_pass.outputs.PAGES_CUSTOM_DOMAIN }}" >> "$GITHUB_OUTPUT"
+
+  prepare:
+    runs-on: ubuntu-latest
+    name: Prepare Custom domains
+    needs: deploy
+    steps:
+      - name: Prepare script
+        run: |
+          echo "Deploy Pages: ${{ needs.deploy.result }}"
+          echo "RESULT_ID: ${{needs.deploy.outputs.RESULT_ID}}"
+          echo "RESULT_NAME: ${{needs.deploy.outputs.RESULT_NAME}}"
+          echo "RESULT_SUBDOMAIN: ${{needs.deploy.outputs.RESULT_SUBDOMAIN}}"
+          echo "RESULT_DOMAINS: ${{needs.deploy.outputs.RESULT_DOMAINS}}"
+          echo "RESULT_SUCCESS: ${{needs.deploy.outputs.RESULT_SUCCESS}}"
+          echo "PAGES_CUSTOM_DOMAIN: ${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}"
+
+          PAGES_CUSTOM_DOMAIN="${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}"
+
+          # RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}} \
+          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+          #   -H "Content-Type: application/json")
+          # # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
+          # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.result.name')" == "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" ]] && exit 0
+
+          # curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+          #   -H "Content-Type: application/json" | \
+          #   jq -e \
+          #     --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          #       '.result.name == $domain_name' && exit 0
+
+          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/purge_build_cache" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+            -H "Content-Type: application/json" | \
+            jq -re '"Purge all cached build artifacts for a Pages project: \(.success)"'
+
+          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+            -H "Content-Type: application/json" | \
+            jq -re \
+              --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+                '"PAGES_CUSTOM_DOMAIN: \(any(.result[]?; .name == $domain_name))"' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
+                # '"\($domain_name): \(any(.result[]?; .name == $domain_name))"' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
+                # 'any(.result[]?; .name == $domain_name)' | grep -q "true" && { echo "CNAME record already exists, skipping creation"; exit 0; } || echo "CNAME record not found, creating new record..."
+
+          # ZONE_ID="44d7d9dbc26a8776d77cfd23dc136031"
+          # json_data=$(cat <<EOF
+          # {
+          #   "deletes": [],
+          #   "patches": [],
+          #   "puts": [],
+          #   "posts": [
+          #     {
+          #       "name": "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}",
+          #       "type": "CNAME",
+          #       "content": "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}",
+          #       "proxied": false,
+          #       "ttl": 1
+          #     }
+          #   ]
+          # }
+          # EOF
+          # )
+          # curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
+          #     -H 'Content-Type: application/json' \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+          #     -d "$json_data"
+
+          # json_data=$(cat <<EOF
+          # {
+          #   "name": "${PAGES_CUSTOM_DOMAIN}"
+          # }
+          # EOF
+          # )
+          # curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
+          #     -H 'Content-Type: application/json' \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+          #     -d "$json_data"
+
+          # curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
+          #     -H 'Content-Type: application/json' \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+          #     -d "$(jq -n \
+          #         --arg name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          #         --arg type "CNAME" \
+          #         --arg content "${{needs.deploy.outputs.RESULT_SUBDOMAIN}}" \
+          #         --argjson proxied false \
+          #         --argjson ttl 1 \
+          #         '{
+          #           deletes: [],
+          #           patches: [],
+          #           puts: [],
+          #           posts: [
+          #             {
+          #               name: $name,
+          #               type: $type,
+          #               content: $content,
+          #               proxied: $proxied,
+          #               ttl: $ttl
+          #             }
+          #           ]
+          #         }')"
+
+          curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
+              -H 'Content-Type: application/json' \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}" \
+              -d "$(jq -n \
+                  --arg name "${PAGES_CUSTOM_DOMAIN}" \
+                  '{
+                    name: $name,
+                  }')"
