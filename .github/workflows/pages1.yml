@@ -23,14 +23,14 @@ jobs:
       PAGES_CUSTOM_DOMAIN: ${{ steps.final_pass.outputs.PAGES_CUSTOM_DOMAIN }}
     steps:
       - name: Checkout private repo test
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: darkommoers/mainal
           path: mainal
           token: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Setup Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "latest"
 
@@ -51,8 +51,8 @@ jobs:
           echo "MY_PROJECT_NAME=$MY_PROJECT_NAME" >> $GITHUB_ENV
           echo "MY_PROJECT_NAME: ${MY_PROJECT_NAME}"
 
-          RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/$MY_PROJECT_NAME \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
             -H "Content-Type: application/json")
 
           echo "RESULT_NAME=$MY_PROJECT_NAME" >> $GITHUB_ENV
@@ -70,8 +70,8 @@ jobs:
         id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}
           workingDirectory: "${{ steps.init_pass.outputs.MY_WORKING_DIRECTORY }}"
           wranglerVersion: "${{ steps.init_pass.outputs.LATEST_WRANGLER_VERSION }}"
           preCommands: |
@@ -92,8 +92,8 @@ jobs:
         run: |
           echo "GITHUB_ENV ${{ env.RESULT_NAME }}"
           echo "GITHUB_OUTPUT ${{ steps.init_pass.outputs.RESULT_NAME }}"
-          RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/$MY_PROJECT_NAME \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/$MY_PROJECT_NAME \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
             -H "Content-Type: application/json")
 
           echo "RESULT_ID=$(echo "$RESULT_RESPONSE" | jq -r '.result.id')" >> "$GITHUB_OUTPUT"
@@ -121,27 +121,27 @@ jobs:
 
           PAGES_CUSTOM_DOMAIN="${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}"
 
-          # RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}} \
-          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          # RESULT_RESPONSE=$(curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}} \
+          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
           #   -H "Content-Type: application/json")
           # # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.success')" == "true" ]] && exit 0
           # [[ "$(echo "${RESULT_RESPONSE}" | jq -r '.result.name')" == "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" ]] && exit 0
 
-          # curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
-          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          # curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains/${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
+          #   -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
           #   -H "Content-Type: application/json" | \
           #   jq -e \
           #     --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
           #       '.result.name == $domain_name' && exit 0
 
-          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/purge_build_cache" \
+          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/purge_build_cache" \
             -X POST \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
             -H "Content-Type: application/json" | \
             jq -re '"Purge all cached build artifacts for a Pages project: \(.success)"'
 
-          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          curl -sS "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
             -H "Content-Type: application/json" | \
             jq -re \
               --arg domain_name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
@@ -169,7 +169,7 @@ jobs:
           # )
           # curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
           #     -H 'Content-Type: application/json' \
-          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
           #     -d "$json_data"
 
           # json_data=$(cat <<EOF
@@ -178,14 +178,14 @@ jobs:
           # }
           # EOF
           # )
-          # curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
+          # curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
           #     -H 'Content-Type: application/json' \
-          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
           #     -d "$json_data"
 
           # curl -sS https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/batch \
           #     -H 'Content-Type: application/json' \
-          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          #     -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
           #     -d "$(jq -n \
           #         --arg name "${{needs.deploy.outputs.PAGES_CUSTOM_DOMAIN}}" \
           #         --arg type "CNAME" \
@@ -207,9 +207,9 @@ jobs:
           #           ]
           #         }')"
 
-          curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
+          curl -sS https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID_1 }}/pages/projects/${{needs.deploy.outputs.RESULT_NAME}}/domains \
               -H 'Content-Type: application/json' \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN_1 }}" \
               -d "$(jq -n \
                   --arg name "${PAGES_CUSTOM_DOMAIN}" \
                   '{
