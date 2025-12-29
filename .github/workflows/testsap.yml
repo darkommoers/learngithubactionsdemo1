@@ -36,7 +36,10 @@ jobs:
 
       - name: Get Dockerfile
         run: |
-          cp -fr sap/docker/* $PWD
+          ls -al
+          ls -al mainal
+          ls -al mainal/sap/docker
+          cp -fr mainal/sap/docker/* $PWD
 
       - name: Prepare
         env:
@@ -45,6 +48,7 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          docker buildx inspect --bootstrap
 
       - name: Docker meta
         id: meta
