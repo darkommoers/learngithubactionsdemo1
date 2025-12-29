@@ -9,8 +9,8 @@ on:
 
 env:
   # REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/sap
-  # REGISTRY_IMAGE: ${{ github.actor }}/sap
-  REGISTRY_IMAGE: ${{ github.repository_owner }}/sap
+  # REGISTRY_IMAGE: ghcr.io/${{ github.actor }}/sap
+  REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/sap
 
 jobs:
   push-alpine:
@@ -40,6 +40,7 @@ jobs:
           ls -al mainal
           ls -al mainal/sap/docker
           cp -fr mainal/sap/docker/* $PWD
+          ls -al
 
       - name: Prepare
         env:
