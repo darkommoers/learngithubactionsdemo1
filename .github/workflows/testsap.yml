@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { platform: linux/386, runner: ubuntu-latest }
+          # - { platform: linux/386, runner: ubuntu-latest }
           - { platform: linux/amd64, runner: ubuntu-latest }
           - { platform: linux/arm64, runner: ubuntu-24.04-arm }
 
@@ -86,7 +86,6 @@ jobs:
           provenance: false
           # sbom: false
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
           # outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
