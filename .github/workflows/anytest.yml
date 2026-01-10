@@ -56,6 +56,14 @@ on:
         description: "输入要启动的服务（逗号分隔）"
         default: "caddy,nginx"
 
+      tag:
+        description: "Docker image tag:"
+        required: true
+      latest:
+        description: "Set to latest"
+        type: boolean
+        default: false
+
 
 jobs:
   display_and_run:
