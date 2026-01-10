@@ -1,0 +1,43 @@
+name: Any Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: "choice bulid"
+        required: true
+        default: "caddy"
+        type: choice
+        options:
+          - caddy
+          - nginx
+          - ALL
+
+jobs:
+  choice_caddy:
+    name: "choice caddy"
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.region == 'SG' || github.event.inputs.region == 'ALL' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: caddy hello
+        run: |
+          echo ${{ github.event.inputs.region == 'SG' || github.event.inputs.region == 'ALL' }}
+          echo "${{ github.event.inputs.region }}"
+
+  choice_nginx:
+    name: "choice nginx"
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.region == 'US' || github.event.inputs.region == 'ALL' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: nginx hello
+        run: |
+          echo ${{ github.event.inputs.region == 'US' || github.event.inputs.region == 'ALL' }}
+          echo "${{ github.event.inputs.region }}"
