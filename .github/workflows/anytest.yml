@@ -31,7 +31,7 @@ on:
       include_redis:
         type: boolean
         description: "勾选以包含: Redis"
-        default: true
+        default: false
       include_mongodb:
         type: boolean
         description: "勾选以包含: MongoDB"
