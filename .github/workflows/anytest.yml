@@ -3,39 +3,84 @@ name: Any Test
 on:
   workflow_dispatch:
     inputs:
-      region:
-        description: "choice bulid"
+      # 1. 字符串类型 (最常用)
+      user_name:
+        type: string
+        description: "输入你的名字"
+        required: true
+        default: "GitHub Explorer"
+
+      # 2. 选项类型 (你之前玩过的)
+      target_app:
+        type: choice
+        description: "选择要部署的应用"
         required: true
         default: "caddy"
-        type: choice
         options:
           - caddy
           - nginx
+          - apache
           - ALL
 
+      # 3. 布尔类型 (会显示成一个勾选框)
+      enable_debug:
+        type: boolean
+        description: "是否开启调试模式？"
+        required: false
+        default: false
+
+      # 4. 数字类型 (会校验输入必须是数字)
+      retry_count:
+        type: number
+        description: "重试次数"
+        required: false
+        default: 3
+
+      # 5. 环境类型 (会让你从你 Repo 设置的 Environments 中选)
+      deploy_env:
+        type: environment
+        description: "选择部署环境"
+        required: true
+        default: "production"
+
 jobs:
-  choice_caddy:
-    name: "choice caddy"
+  show_inputs:
+    name: "玩转所有输入"
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.region == 'SG' || github.event.inputs.region == 'ALL' }}
-
+    
+    # 这里的 if 判断展示了布尔值和字符串的判断逻辑
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: caddy hello
+      - name: 打印所有输入内容
         run: |
-          echo ${{ github.event.inputs.region == 'SG' || github.event.inputs.region == 'ALL' }}
-          echo "${{ github.event.inputs.region }}"
+          echo "名字: ${{ inputs.user_name }}"
+          echo "应用: ${{ inputs.target_app }}"
+          echo "调试模式: ${{ inputs.enable_debug }}"
+          echo "重试次数: ${{ inputs.retry_count }}"
+          echo "部署环境: ${{ inputs.deploy_env }}"
 
-  choice_nginx:
-    name: "choice nginx"
+      - name: 只有在开启调试时才运行
+        if: ${{ inputs.enable_debug == true }}
+        run: echo "调试模式已开启，正在输出秘密日志..."
+
+      - name: 根据数字做逻辑 (表达式测试)
+        if: ${{ inputs.retry_count > 5 }}
+        run: echo "哇，重试次数设置得真高！"
+
+  # 演示如何利用 inputs 触发不同的 Job
+  job_caddy:
+    name: "Caddy 专属任务"
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.region == 'US' || github.event.inputs.region == 'ALL' }}
-
+    if: ${{ inputs.target_app == 'caddy' || inputs.target_app == 'ALL' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - run: echo "正在处理 Caddy..."
+
+  job_nginx:
+    name: "Nginx 专属任务"
+    runs-on: ubuntu-latest
+    if: ${{ inputs.target_app == 'nginx' || inputs.target_app == 'ALL' }}
+    steps:
+      - run: echo "正在处理 Nginx..."
+
 
       - name: nginx hello
         run: |
