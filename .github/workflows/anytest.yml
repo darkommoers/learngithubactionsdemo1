@@ -3,84 +3,98 @@ name: Any Test
 on:
   workflow_dispatch:
     inputs:
-      # 1. 字符串类型 (最常用)
-      user_name:
+      # --- 1. 基础信息 (String) ---
+      project_name:
         type: string
-        description: "输入你的名字"
+        description: "项目名称"
         required: true
-        default: "GitHub Explorer"
+        default: "My Awesome App"
 
-      # 2. 选项类型 (你之前玩过的)
-      target_app:
-        type: choice
-        description: "选择要部署的应用"
-        required: true
-        default: "caddy"
-        options:
-          - caddy
-          - nginx
-          - apache
-          - ALL
-
-      # 3. 布尔类型 (会显示成一个勾选框)
-      enable_debug:
-        type: boolean
-        description: "是否开启调试模式？"
-        required: false
-        default: false
-
-      # 4. 数字类型 (会校验输入必须是数字)
-      retry_count:
-        type: number
-        description: "重试次数"
-        required: false
-        default: 3
-
-      # 5. 环境类型 (会让你从你 Repo 设置的 Environments 中选)
+      # --- 2. 部署环境 (Environment) ---
       deploy_env:
         type: environment
         description: "选择部署环境"
         required: true
         default: "production"
 
+      # --- 3. 核心应用 (Choice 单选) ---
+      main_engine:
+        type: choice
+        description: "选择主引擎"
+        options:
+          - caddy
+          - nginx
+          - apache
+        default: "caddy"
+
+      # --- 4. 扩展组件 (多个 Boolean 实现“多选框”效果) ---
+      include_redis:
+        type: boolean
+        description: "勾选以包含: Redis"
+        default: true
+      include_mongodb:
+        type: boolean
+        description: "勾选以包含: MongoDB"
+        default: false
+      include_grafana:
+        type: boolean
+        description: "勾选以包含: Grafana"
+        default: false
+
+      # --- 5. 调试控制 (Boolean & Number) ---
+      enable_debug:
+        type: boolean
+        description: "开启调试输出"
+        default: false
+      retry_limit:
+        type: number
+        description: "失败重试次数"
+        default: 3
+
 jobs:
-  show_inputs:
-    name: "玩转所有输入"
+  display_and_run:
+    name: "处理所有输入项"
     runs-on: ubuntu-latest
-    
-    # 这里的 if 判断展示了布尔值和字符串的判断逻辑
     steps:
-      - name: 打印所有输入内容
+      - name: 1. 打印基础配置
         run: |
-          echo "名字: ${{ inputs.user_name }}"
-          echo "应用: ${{ inputs.target_app }}"
-          echo "调试模式: ${{ inputs.enable_debug }}"
-          echo "重试次数: ${{ inputs.retry_count }}"
+          echo "项目: ${{ inputs.project_name }}"
+          echo "主引擎: ${{ inputs.main_engine }}"
           echo "部署环境: ${{ inputs.deploy_env }}"
 
-      - name: 只有在开启调试时才运行
-        if: ${{ inputs.enable_debug == true }}
-        run: echo "调试模式已开启，正在输出秘密日志..."
+      - name: 2. 处理多选框内容 (Conditional Steps)
+        run: |
+          echo "正在检查勾选的组件..."
+          # 这里演示如何在 Shell 里判断多个勾选框
+          [[ "${{ inputs.include_redis }}" == "true" ]] && echo "✅ 已选中 Redis" || echo "❌ 未选中 Redis"
+          [[ "${{ inputs.include_mongodb }}" == "true" ]] && echo "✅ 已选中 MongoDB" || echo "❌ 未选中 MongoDB"
+          [[ "${{ inputs.include_grafana }}" == "true" ]] && echo "✅ 已选中 Grafana" || echo "❌ 未选中 Grafana"
 
-      - name: 根据数字做逻辑 (表达式测试)
-        if: ${{ inputs.retry_count > 5 }}
-        run: echo "哇，重试次数设置得真高！"
+      - name: 3. 模拟安装选中的组件
+        # 使用 if 进行更精细的控制
+        run: |
+          if [ "${{ inputs.include_redis }}" == "true" ]; then
+            echo "正在安装 Redis 模块..."
+          fi
+          if [ "${{ inputs.include_mongodb }}" == "true" ]; then
+            echo "正在安装 MongoDB 模块..."
+          fi
 
-  # 演示如何利用 inputs 触发不同的 Job
-  job_caddy:
-    name: "Caddy 专属任务"
+      - name: 4. 调试模式
+        if: ${{ inputs.enable_debug }}
+        run: |
+          echo "--- 调试信息 ---"
+          echo "重试限制: ${{ inputs.retry_limit }}"
+          echo "触发者: ${{ github.actor }}"
+
+  # 演示如何根据多选框触发独立的 Job
+  database_setup:
+    name: "数据库专项任务"
     runs-on: ubuntu-latest
-    if: ${{ inputs.target_app == 'caddy' || inputs.target_app == 'ALL' }}
+    # 只要勾选了 Redis 或 MongoDB 其中的任何一个，这个 Job 就会运行
+    if: ${{ inputs.include_redis || inputs.include_mongodb }}
     steps:
-      - run: echo "正在处理 Caddy..."
-
-  job_nginx:
-    name: "Nginx 专属任务"
-    runs-on: ubuntu-latest
-    if: ${{ inputs.target_app == 'nginx' || inputs.target_app == 'ALL' }}
-    steps:
-      - run: echo "正在处理 Nginx..."
-
+      - run: echo "检测到数据库组件需求，正在配置数据库环境..."
 
       - name: nginx hello
         run: |
