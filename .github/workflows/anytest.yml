@@ -50,6 +50,12 @@ on:
         type: number
         description: "失败重试次数"
         default: 3
+        
+      services:
+        type: string
+        description: "输入要启动的服务（逗号分隔）"
+        default: "caddy,nginx"
+
 
 jobs:
   display_and_run:
@@ -86,6 +92,12 @@ jobs:
           echo "--- 调试信息 ---"
           echo "重试限制: ${{ inputs.retry_limit }}"
           echo "触发者: ${{ github.actor }}"
+
+      - name: 检测服务
+        run: |
+          # 使用 contains 判断字符串里有没有对应的服务名
+          if [[ "${{ inputs.services }}" == *"caddy"* ]]; then echo "Caddy selected"; fi
+          if [[ "${{ inputs.services }}" == *"nginx"* ]]; then echo "Nginx selected"; fi
 
   # 演示如何根据多选框触发独立的 Job
   database_setup:
