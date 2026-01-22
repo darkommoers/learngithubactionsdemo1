@@ -35,9 +35,9 @@ on:
   repository_dispatch:
 
 # env:
-  # REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/sap
-  # REGISTRY_IMAGE: ghcr.io/${{ github.actor }}/sap
-  # REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/sap
+# REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/sap
+# REGISTRY_IMAGE: ghcr.io/${{ github.actor }}/sap
+# REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/sap
 
 jobs:
   push-alpine:
@@ -86,10 +86,10 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-          
+
           WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}" >> $GITHUB_ENV
-          
+
           docker buildx inspect --bootstrap
 
       - name: Docker meta
@@ -200,10 +200,10 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-          
+
           WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}" >> $GITHUB_ENV
-          
+
           docker buildx inspect --bootstrap
 
       - name: Docker meta
@@ -270,6 +270,9 @@ jobs:
 
   merges:
     runs-on: ubuntu-latest
+    if: |
+      always() &&
+      (needs.push-alpine.result == 'success' || needs.push-debian.result == 'success')
     needs:
       - push-alpine
       - push-debian
@@ -284,7 +287,7 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}"
-          
+
           WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}" >> $GITHUB_ENV
 
