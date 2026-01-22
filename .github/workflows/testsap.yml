@@ -309,6 +309,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Download digests alpine
+        if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
         uses: actions/download-artifact@v7
         with:
           path: ${{ runner.temp }}/digests-alpine
@@ -316,6 +317,7 @@ jobs:
           merge-multiple: true
 
       - name: Docker meta alpine
+        if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
         id: meta-alpine
         uses: docker/metadata-action@v5
         with:
@@ -326,16 +328,19 @@ jobs:
             type=raw,value=alpine
 
       - name: Create manifest list and push alpine
+        if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
         working-directory: ${{ runner.temp }}/digests-alpine
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image alpine
+        if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta-alpine.outputs.version }}
 
       - name: Download digests debian
+        if: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
         uses: actions/download-artifact@v7
         with:
           path: ${{ runner.temp }}/digests-debian
@@ -343,6 +348,7 @@ jobs:
           merge-multiple: true
 
       - name: Docker meta debian
+        if: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
         id: meta-debian
         uses: docker/metadata-action@v5
         with:
@@ -353,12 +359,14 @@ jobs:
             type=raw,value=debian
 
       - name: Create manifest list and push debian
+        if: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
         working-directory: ${{ runner.temp }}/digests-debian
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image debian
+        if: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta-debian.outputs.version }}
 
