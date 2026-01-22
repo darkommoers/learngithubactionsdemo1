@@ -8,24 +8,24 @@ on:
     inputs:
       dockerfile:
         description: "Base image type"
-        required: false
+        required: true
         type: choice
         default: "Dockerfile"
         options:
           - "Dockerfile"
           - "Dockerfile.debian"
-      proxy:
+      web_server:
         description: "Web server type"
-        required: false
+        required: true
         type: choice
         default: "caddy"
         options:
           - "caddy"
           - "nginx"
           - "haproxy"
-      warp_mode:
+      exit_mode:
         description: "WARP network mode"
-        required: false
+        required: true
         type: choice
         default: "1"
         options:
@@ -49,7 +49,7 @@ jobs:
           # - { platform: linux/386, runner: ubuntu-latest }
           - { platform: linux/amd64, runner: ubuntu-latest }
           # - { platform: linux/arm64, runner: ubuntu-24.04-arm }
-          # - { platform: linux/arm64, runner: ubuntu-latest }
+          - { platform: linux/arm64, runner: ubuntu-latest }
 
     steps:
       - name: Checkout private repo test
@@ -69,6 +69,15 @@ jobs:
           ls -al mainal/sap/docker
           cp -fr mainal/sap/docker/* $PWD
           ls -al
+          
+          # 动态设置 Dockerfile 路径
+          DOCKERFILE_NAME="${{ inputs.dockerfile || 'Dockerfile' }}"
+          if [ -f "$DOCKERFILE_NAME" ]; then
+            echo "DOCKERFILE_PATH=$DOCKERFILE_NAME" >> $GITHUB_ENV
+          else
+            echo "Error: $DOCKERFILE_NAME not found!"
+            exit 1
+          fi
 
       - name: Prepare
         env:
@@ -79,10 +88,151 @@ jobs:
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
           docker buildx inspect --bootstrap
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
+          # tags: |
+          #   type=raw,value=alpine
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Modify Dockerfile
         run: |
-          DOCKERFILE="${{ inputs.dockerfile || 'Dockerfile' }}"
-          PROXY="${{ inputs.proxy || 'caddy' }}"
-          WARP_MODE="${{ inputs.warp_mode || '1' }}"
-          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${PROXY}\" \"${WARP_MODE}\"/g" "$DOCKERFILE"
-          cat "$DOCKERFILE"
+          WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
+          EXIT_MODE="${{ inputs.exit_mode || '1' }}"
+          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
+          cat "$DOCKERFILE_PATH"
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./${{ env.DOCKERFILE_PATH }}
+          platforms: ${{ matrix.platform }}
+          provenance: false
+          # sbom: false
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          install -d ${{ runner.temp }}/digests || mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          # touch "${{ runner.temp }}/digests/${digest#sha256:}"
+          touch "${RUNNER_TEMP}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v6
+        with:
+          name: digests-alpine-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merges:
+    runs-on: ubuntu-latest
+    needs:
+      - push-alpine
+      # - push-debian
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Prepare
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}"
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Download digests alpine
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ runner.temp }}/digests-alpine
+          pattern: digests-alpine-*
+          merge-multiple: true
+
+      - name: Docker meta alpine
+        id: meta-alpine
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=alpine
+
+      - name: Create manifest list and push alpine
+        working-directory: ${{ runner.temp }}/digests-alpine
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+
+      - name: Inspect image alpine
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta-alpine.outputs.version }}
+
+  # test:
+  #   needs:
+  #     - push-alpine
+  #     - push-debian
+  #     - merges
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+
+  #     - name: Prepare Setup Variables
+  #       env:
+  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+  #         CONTENT_PATH: "src/caddy/caddy.version"
+  #       run: |
+  #         # echo "CADDY_VERSION=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }} | jq -r .content | head -1 | base64 -d)" >> $GITHUB_ENV
+  #         echo "CADDY_VERSION=$(cat "${{ env.CONTENT_PATH }}" | head -n1)" >> $GITHUB_ENV
+
+  #     - name: Test push Docker images
+  #       run: |
+  #         docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:alpine caddy version
+  #         docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:debian caddy version
+  #         # docker run --rm --privileged --entrypoint "/usr/bin/caddy" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:alpine version
+  #         # docker run --rm --privileged --entrypoint "/usr/bin/caddy" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:debian version
