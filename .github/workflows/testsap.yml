@@ -69,8 +69,7 @@ jobs:
           ls -al mainal/sap/docker
           cp -fr mainal/sap/docker/* $PWD
           ls -al
-          
-          # 动态设置 Dockerfile 路径
+
           DOCKERFILE_NAME="${{ inputs.dockerfile || 'Dockerfile' }}"
           if [ -f "$DOCKERFILE_NAME" ]; then
             echo "DOCKERFILE_PATH=$DOCKERFILE_NAME" >> $GITHUB_ENV
