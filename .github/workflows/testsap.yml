@@ -5,6 +5,33 @@ on:
     paths:
       - "src/caddy/caddy.version"
   workflow_dispatch:
+    inputs:
+      dockerfile:
+        description: "Base image type"
+        required: false
+        type: choice
+        default: "Dockerfile"
+        options:
+          - "Dockerfile"
+          - "Dockerfile.debian"
+      proxy:
+        description: "Proxy server type"
+        required: false
+        type: choice
+        default: "caddy"
+        options:
+          - "caddy"
+          - "nginx"
+          - "haproxy"
+      warp_mode:
+        description: "WARP network mode"
+        required: false
+        type: choice
+        default: "1"
+        options:
+          - "0"
+          - "1"
+          - "2"
   repository_dispatch:
 
 env:
