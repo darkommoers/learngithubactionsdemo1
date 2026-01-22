@@ -369,29 +369,3 @@ jobs:
         if: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta-debian.outputs.version }}
-
-  # test:
-  #   needs:
-  #     - push-alpine
-  #     - push-debian
-  #     - merges
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v6
-
-  #     - name: Prepare Setup Variables
-  #       env:
-  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-  #         CONTENT_PATH: "src/caddy/caddy.version"
-  #       run: |
-  #         # echo "CADDY_VERSION=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -X GET https://api.github.com/repos/${{ github.repository }}/contents/${{ env.CONTENT_PATH }} | jq -r .content | head -1 | base64 -d)" >> $GITHUB_ENV
-  #         echo "CADDY_VERSION=$(cat "${{ env.CONTENT_PATH }}" | head -n1)" >> $GITHUB_ENV
-
-  #     - name: Test push Docker images
-  #       run: |
-  #         docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:alpine caddy version
-  #         docker run --rm --privileged --entrypoint "" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:debian caddy version
-  #         # docker run --rm --privileged --entrypoint "/usr/bin/caddy" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:alpine version
-  #         # docker run --rm --privileged --entrypoint "/usr/bin/caddy" ${{ secrets.DOCKERHUB_USERNAME }}/caddy:debian version
