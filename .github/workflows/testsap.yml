@@ -34,7 +34,7 @@ on:
           - "2"
   repository_dispatch:
 
-env:
+# env:
   # REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/sap
   # REGISTRY_IMAGE: ghcr.io/${{ github.actor }}/sap
   # REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/sap
