@@ -221,8 +221,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
-            type=raw,value=latest,enable=${{ matrix.variant == 'alpine' }}
             type=raw,value=${{ matrix.variant }}
+            type=raw,value=latest,enable=${{ matrix.variant == 'alpine' }}
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
