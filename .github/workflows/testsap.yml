@@ -58,11 +58,11 @@ jobs:
             runner: ubuntu-latest
           # Debian variants
           - variant: debian
-            dockerfile: Dockerfile.debian
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
             platform: linux/amd64
             runner: ubuntu-latest
           - variant: debian
-            dockerfile: Dockerfile.debian
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
             platform: linux/arm64
             runner: ubuntu-latest
 
