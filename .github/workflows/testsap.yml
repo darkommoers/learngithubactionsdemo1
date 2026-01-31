@@ -41,13 +41,34 @@ on:
 
 jobs:
   build:
+    if: ${{ matrix.condition }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        ${{ inputs.dockerfile == 'Dockerfile' && fromJson('[{"variant":"alpine","dockerfile":"Dockerfile","platform":"linux/amd64","runner":"ubuntu-latest"},{"variant":"alpine","dockerfile":"Dockerfile","platform":"linux/arm64","runner":"ubuntu-latest"}]' ) || 
-           inputs.dockerfile == 'Dockerfile.debian' && fromJson('[{"variant":"debian","dockerfile":"Dockerfile.debian","platform":"linux/amd64","runner":"ubuntu-latest"},{"variant":"debian","dockerfile":"Dockerfile.debian","platform":"linux/arm64","runner":"ubuntu-latest"}]' ) || 
-           fromJson('[]') }}
+        include:
+          # Alpine variants
+          - variant: alpine
+            dockerfile: Dockerfile
+            platform: linux/amd64
+            runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
+          - variant: alpine
+            dockerfile: Dockerfile
+            platform: linux/arm64
+            runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
+          # Debian variants
+          - variant: debian
+            dockerfile: Dockerfile.debian
+            platform: linux/amd64
+            runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
+          - variant: debian
+            dockerfile: Dockerfile.debian
+            platform: linux/arm64
+            runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
 
     steps:
       - name: Checkout private repo test
