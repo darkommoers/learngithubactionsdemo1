@@ -56,7 +56,7 @@ jobs:
           echo "variants=$V" >> $GITHUB_OUTPUT
 
   build:
-    runs-on: ${{ matrix.runner || "ubuntu-latest" }}
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
     needs: setup
     strategy:
       fail-fast: false
