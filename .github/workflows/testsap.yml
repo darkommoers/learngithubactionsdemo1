@@ -41,7 +41,7 @@ on:
 
 jobs:
   build:
-    if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == 'Dockerfile.debian' }}
+    if: ${{ matrix.condition }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -49,22 +49,26 @@ jobs:
         include:
           # Alpine variants
           - variant: alpine
-            dockerfile: ${{ inputs.dockerfile == 'Dockerfile' }}
+            dockerfile: Dockerfile
             platform: linux/amd64
             runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
           - variant: alpine
-            dockerfile: ${{ inputs.dockerfile == 'Dockerfile' }}
+            dockerfile: Dockerfile
             platform: linux/arm64
             runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
           # Debian variants
           - variant: debian
-            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
+            dockerfile: Dockerfile.debian
             platform: linux/amd64
             runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
           - variant: debian
-            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
+            dockerfile: Dockerfile.debian
             platform: linux/arm64
             runner: ubuntu-latest
+            condition: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
 
     steps:
       - name: Checkout private repo test
