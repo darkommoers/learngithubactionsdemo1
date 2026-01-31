@@ -1,4 +1,4 @@
-name: Ci Test (With Docker Meta - Full Version)
+name: Ci Test (Version 2 - Official Meta Style)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       dockerfile:
-        description: "选择系统"
+        description: "选择系统 (Base image type)"
         required: true
         type: choice
         default: "Dockerfile"
@@ -22,7 +22,7 @@ on:
         options: ["0", "1", "2"]
 
 jobs:
-  # setup 任务逻辑完全一致
+  # --- 第一阶段：setup (清单决定) ---
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -37,7 +37,7 @@ jobs:
           else V='["alpine", "debian"]'; fi
           echo "variants=$V" >> $GITHUB_OUTPUT
 
-  # build 任务逻辑完全一致
+  # --- 第二阶段：build (分架构构建) ---
   build:
     needs: setup
     runs-on: ${{ matrix.runner }}
@@ -52,41 +52,41 @@ jobs:
           - platform: "linux/arm64"
             runner: "ubuntu-latest"
     steps:
-      - name: 1. 下载代码
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           repository: darkommoers/mainal
           path: mainal
           token: ${{ secrets.MY_GITHUB_TOKEN }}
-      - name: 2. 准备 Dockerfile
+      - name: Prepare Dockerfile
         run: |
           cp -fr mainal/sap/docker/* .
           if [ "${{ matrix.variant }}" == "alpine" ]; then echo "DOCKERFILE_PATH=Dockerfile" >> $GITHUB_ENV;
           else echo "DOCKERFILE_PATH=Dockerfile.debian" >> $GITHUB_ENV; fi
-      - name: 3. 准备环境变量
+      - name: Prepare Env
         run: |
           PLAT="${{ matrix.platform }}"
           echo "PLATFORM_PAIR=${PLAT//\//-}" >> $GITHUB_ENV
           WS="${{ github.event.inputs.web_server || 'caddy' }}"
           EM="${{ github.event.inputs.exit_mode || '1' }}"
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM" >> $GITHUB_ENV
-      - name: 4. 登录 GHCR
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: 5. 安装环境 (Buildx/QEMU)
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      - name: 6. 设置 Buildx
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
-      - name: 7. 修改脚本参数
+      - name: Modify Dockerfile
         run: |
           WS="${{ github.event.inputs.web_server || 'caddy' }}"
           EM="${{ github.event.inputs.exit_mode || '1' }}"
           sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"$WS\" \"$EM\"/g" "${{ env.DOCKERFILE_PATH }}"
-      - name: 8. 构建并推送指纹
-        id: build_step
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -94,19 +94,19 @@ jobs:
           platforms: ${{ matrix.platform }}
           provenance: false
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-      - name: 9. 保存指纹
+      - name: Export digest
         run: |
           mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build_step.outputs.digest }}"
+          digest="${{ steps.build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
-      - name: 10. 上传指纹
+      - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
           retention-days: 1
 
-  # --- merges 任务：引入了 docker/metadata-action ---
+  # --- 第三阶段：merges (官方推荐的高级合并写法) ---
   merges:
     needs: [setup, build]
     runs-on: ubuntu-latest
@@ -114,56 +114,49 @@ jobs:
       matrix:
         variant: ${{ fromJSON(needs.setup.outputs.variants) }}
     steps:
-      - name: 1. 准备变量
+      - name: Prepare Registry Env
         run: |
           WS="${{ github.event.inputs.web_server || 'caddy' }}"
           EM="${{ github.event.inputs.exit_mode || '1' }}"
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM" >> $GITHUB_ENV
 
-      # --- 关键区别：使用插件生成标签规则 ---
-      - name: 2. 生成 Docker Meta 元数据
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-          tags: |
-            # 定义规则：始终有变体标签
-            type=raw,value=${{ matrix.variant }}
-            # 定义规则：如果是 alpine 则增加 latest 标签
-            type=raw,value=latest,enable=${{ matrix.variant == 'alpine' }}
-          labels: |
-            # 在镜像详情页显示更专业的信息
-            org.opencontainers.image.title=SAP Server (${{ matrix.variant }})
-            org.opencontainers.image.vendor=${{ github.repository_owner }}
-
-      - name: 3. 登录 GHCR 仓库
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 4. 下载指纹文件
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 关键步骤：生成元数据。这里产生的 $DOCKER_METADATA_OUTPUT_JSON 将在后面用到
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=${{ matrix.variant }}
+            type=raw,value=latest,enable=${{ matrix.variant == 'alpine' }}
+
+      - name: Download digests
         uses: actions/download-artifact@v4
         with:
-          path: ${{ runner.temp }}/all-digests
+          path: ${{ runner.temp }}/digests
           pattern: digests-${{ matrix.variant }}-*
           merge-multiple: true
 
-      - name: 5. 安装 Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 6. 使用 Meta 生成的标签进行合并推送
+      # --- 官方推荐的创建 Manifest 逻辑 ---
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
         run: |
-          IMG="${{ env.REGISTRY_IMAGE }}"
-          cd ${{ runner.temp }}/all-digests
+          # 1. jq 将 JSON 中的 tags 数组转为 -t tag1 -t tag2 格式
+          # 2. printf 将目录下所有指纹文件转为 镜像@sha256:指纹 格式
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
-          # 技巧：将 meta 插件输出的多行标签转为 -t 格式
-          # xargs 会把每行标签前面都加个 -t
-          TAG_ARGS=$(echo "${{ steps.meta.outputs.tags }}" | xargs -I {} echo "-t {}")
-
-          docker buildx imagetools create $TAG_ARGS $(printf "$IMG@sha256:%s " *)
-
-      - name: 7. 检查结果
+      - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ matrix.variant }}
+          # 使用 meta 插件输出的主版本标签进行检查
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
