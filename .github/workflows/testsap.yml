@@ -41,6 +41,9 @@ on:
 
 jobs:
   build:
+    if: |
+      (matrix.variant == 'alpine' && inputs.dockerfile == 'Dockerfile') ||
+      (matrix.variant == 'debian' && inputs.dockerfile == 'Dockerfile.debian')
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -64,13 +67,6 @@ jobs:
             dockerfile: Dockerfile.debian
             platform: linux/arm64
             runner: ubuntu-latest
-        exclude:
-          - variant: alpine
-            dockerfile: Dockerfile
-            if: ${{ inputs.dockerfile != 'Dockerfile' }}
-          - variant: debian
-            dockerfile: Dockerfile.debian
-            if: ${{ inputs.dockerfile != 'Dockerfile.debian' }}
 
     steps:
       - name: Checkout private repo test
