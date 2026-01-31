@@ -36,35 +36,38 @@ on:
   repository_dispatch:
 
 jobs:
-  # --- 新增：动态生成矩阵配置 ---
   setup:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      variants: ${{ steps.set-matrix.outputs.variants }} # 新增：去重后的变体
     steps:
       - id: set-matrix
         run: |
           DOCKERFILE_INPUT="${{ github.event.inputs.dockerfile }}"
-          # 如果是 push 触发，默认跑全部或指定
           if [ -z "$DOCKERFILE_INPUT" ]; then DOCKERFILE_INPUT="all"; fi
           
+          # 构建 build 用的完整矩阵
           JSON="{\"include\":["
+          # 构建 merge 用的去重列表
+          VAR_ARRAY="[]"
           
-          # Alpine 配置
           if [ "$DOCKERFILE_INPUT" == "Dockerfile" ] || [ "$DOCKERFILE_INPUT" == "all" ]; then
             JSON="$JSON{\"variant\":\"alpine\",\"file\":\"Dockerfile\",\"platform\":\"linux/amd64\"},"
             JSON="$JSON{\"variant\":\"alpine\",\"file\":\"Dockerfile\",\"platform\":\"linux/arm64\"},"
+            VAR_ARRAY=$(echo $VAR_ARRAY | jq -c '. + ["alpine"]')
           fi
           
-          # Debian 配置
           if [ "$DOCKERFILE_INPUT" == "Dockerfile.debian" ] || [ "$DOCKERFILE_INPUT" == "all" ]; then
             JSON="$JSON{\"variant\":\"debian\",\"file\":\"Dockerfile.debian\",\"platform\":\"linux/amd64\"},"
             JSON="$JSON{\"variant\":\"debian\",\"file\":\"Dockerfile.debian\",\"platform\":\"linux/arm64\"},"
+            VAR_ARRAY=$(echo $VAR_ARRAY | jq -c '. + ["debian"]')
           fi
           
-          # 去掉最后一个逗号并闭合
           JSON="${JSON%,}]}"
+          
           echo "matrix=$JSON" >> $GITHUB_OUTPUT
+          echo "variants=$VAR_ARRAY" >> $GITHUB_OUTPUT
 
   build:
     needs: setup
@@ -72,7 +75,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
-    
     steps:
       - name: Checkout private repo
         uses: actions/checkout@v4
@@ -84,20 +86,12 @@ jobs:
       - name: Prepare Dockerfile
         run: |
           cp -fr mainal/sap/docker/* .
-          # 从矩阵中直接获取文件名
-          DOCKERFILE_NAME="${{ matrix.file }}"
-          if [ -f "$DOCKERFILE_NAME" ]; then
-            echo "DOCKERFILE_PATH=$DOCKERFILE_NAME" >> $GITHUB_ENV
-          else
-            echo "Error: $DOCKERFILE_NAME not found!"
-            exit 1
-          fi
+          echo "DOCKERFILE_PATH=${{ matrix.file }}" >> $GITHUB_ENV
 
       - name: Prepare Env
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-          
           WEB_SERVER="${{ github.event.inputs.web_server || 'caddy' }}"
           EXIT_MODE="${{ github.event.inputs.exit_mode || '1' }}"
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
@@ -118,7 +112,7 @@ jobs:
         run: |
           WEB_SERVER="${{ github.event.inputs.web_server || 'caddy' }}"
           EXIT_MODE="${{ github.event.inputs.exit_mode || '1' }}"
-          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
+          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "${{ env.DOCKERFILE_PATH }}"
 
       - name: Build and push by digest
         id: build
@@ -150,13 +144,10 @@ jobs:
     if: success()
     strategy:
       matrix:
-        # 只跑 setup 中存在的变体类型
-        variant: ${{ fromJSON(needs.setup.outputs.matrix).include.*.variant }}
+        # 关键修改：使用去重后的变体列表
+        variant: ${{ fromJSON(needs.setup.outputs.variants) }}
       fail-fast: false
-    # 去重变体类型（例如 alpine 会有两个架构，这里只跑一次合并）
     steps:
-      # 为了防止重复执行，我们检查这个 step 是否是该变体的第一个执行者
-      # 技巧：在 GH Actions 中 merge 建议直接按 variant 区分
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -181,6 +172,7 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/sap-${{ github.event.inputs.web_server || 'caddy' }}-${{ github.event.inputs.exit_mode || '1' }}
           tags: |
+            # 如果是 alpine 且选择了 Dockerfile 或 all，打上 latest 标签
             type=raw,value=latest,enable=${{ matrix.variant == 'alpine' }}
             type=raw,value=${{ matrix.variant }}
 
