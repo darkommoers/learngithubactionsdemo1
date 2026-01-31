@@ -41,6 +41,7 @@ on:
 
 jobs:
   build:
+    if: ${{ inputs.dockerfile == matrix.input_dockerfile }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -48,28 +49,22 @@ jobs:
         include:
           # Alpine variants
           - variant: alpine
-            dockerfile: Dockerfile
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile' }}
             platform: linux/amd64
             runner: ubuntu-latest
-            input_dockerfile: Dockerfile
           - variant: alpine
-            dockerfile: Dockerfile
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile' }}
             platform: linux/arm64
             runner: ubuntu-latest
-            input_dockerfile: Dockerfile
           # Debian variants
           - variant: debian
-            dockerfile: Dockerfile.debian
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
             platform: linux/amd64
             runner: ubuntu-latest
-            input_dockerfile: Dockerfile.debian
           - variant: debian
-            dockerfile: Dockerfile.debian
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
             platform: linux/arm64
             runner: ubuntu-latest
-            input_dockerfile: Dockerfile.debian
-    # 只运行与用户输入匹配的任务
-    if: ${{ inputs.dockerfile == matrix.input_dockerfile }}
 
     steps:
       - name: Checkout private repo test
