@@ -40,17 +40,31 @@ on:
 # REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/sap
 
 jobs:
-  push-alpine:
-    if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == '' }}
+  build:
+    if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == 'Dockerfile.debian'|| inputs.dockerfile == '' }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # - { platform: linux/386, runner: ubuntu-latest }
-          - { platform: linux/amd64, runner: ubuntu-latest }
-          # - { platform: linux/arm64, runner: ubuntu-24.04-arm }
-          - { platform: linux/arm64, runner: ubuntu-latest }
+          # Alpine variants
+          - variant: alpine
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile' }}
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - variant: alpine
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile' }}
+            platform: linux/arm64
+            runner: ubuntu-latest
+          # Debian variants
+          - variant: debian
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - variant: debian
+            dockerfile: ${{ inputs.dockerfile == 'Dockerfile.debian' }}
+            platform: linux/arm64
+            runner: ubuntu-latest
 
     steps:
       - name: Checkout private repo test
@@ -68,10 +82,11 @@ jobs:
           ls -al
           ls -al mainal
           ls -al mainal/sap/docker
-          cp -fr mainal/sap/docker/* $PWD
+          # cp -fr mainal/sap/docker/* $PWD
+          cp -fr mainal/sap/docker/* .
           ls -al
 
-          DOCKERFILE_NAME="Dockerfile"
+          DOCKERFILE_NAME="${{ matrix.dockerfile }}"
           if [ -f "$DOCKERFILE_NAME" ]; then
             echo "DOCKERFILE_PATH=$DOCKERFILE_NAME" >> $GITHUB_ENV
           else
@@ -100,7 +115,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_IMAGE }}
           # tags: |
-          #   type=raw,value=alpine
+          #   type=raw,value=${{ matrix.variant }}
 
       # - name: Login to Docker Hub
       #   uses: docker/login-action@v3
@@ -150,122 +165,7 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v6
         with:
-          name: digests-alpine-${{ env.PLATFORM_PAIR }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  push-debian:
-    if: ${{ inputs.dockerfile == 'Dockerfile.debian' || inputs.dockerfile == '' }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # - { platform: linux/386, runner: ubuntu-latest }
-          - { platform: linux/amd64, runner: ubuntu-latest }
-          # - { platform: linux/arm64, runner: ubuntu-24.04-arm }
-          - { platform: linux/arm64, runner: ubuntu-latest }
-
-    steps:
-      - name: Checkout private repo test
-        uses: actions/checkout@v6
-        with:
-          repository: darkommoers/mainal
-          path: mainal
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-
-      # - name: Checkout
-      #   uses: actions/checkout@v6
-
-      - name: Get Dockerfile
-        run: |
-          ls -al
-          ls -al mainal
-          ls -al mainal/sap/docker
-          cp -fr mainal/sap/docker/* $PWD
-          ls -al
-
-          DOCKERFILE_NAME="Dockerfile.debian"
-          if [ -f "$DOCKERFILE_NAME" ]; then
-            echo "DOCKERFILE_PATH=$DOCKERFILE_NAME" >> $GITHUB_ENV
-          else
-            echo "Error: $DOCKERFILE_NAME not found!"
-            exit 1
-          fi
-
-      - name: Prepare
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        run: |
-          platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-
-          WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
-          EXIT_MODE="${{ inputs.exit_mode || '1' }}"
-          echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
-
-          docker buildx inspect --bootstrap
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY_IMAGE }}
-          # tags: |
-          #   type=raw,value=debian
-
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          # username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Modify Dockerfile
-        run: |
-          WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
-          EXIT_MODE="${{ inputs.exit_mode || '1' }}"
-          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
-          cat "$DOCKERFILE_PATH"
-
-      - name: Build and push by digest
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./${{ env.DOCKERFILE_PATH }}
-          platforms: ${{ matrix.platform }}
-          provenance: false
-          # sbom: false
-          labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-
-      - name: Export digest
-        run: |
-          install -d ${{ runner.temp }}/digests || mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          # touch "${{ runner.temp }}/digests/${digest#sha256:}"
-          touch "${RUNNER_TEMP}/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v6
-        with:
-          name: digests-debian-${{ env.PLATFORM_PAIR }}
+          name: digests-${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -273,11 +173,9 @@ jobs:
   merges:
     runs-on: ubuntu-latest
     if: |
-      always() &&
-      (needs.push-alpine.result == 'success' || needs.push-debian.result == 'success')
+      always() && (needs.build.result == 'success')
     needs:
-      - push-alpine
-      - push-debian
+      - build
     steps:
       - name: Checkout
         uses: actions/checkout@v6
