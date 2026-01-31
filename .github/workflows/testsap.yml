@@ -14,6 +14,7 @@ on:
         options:
           - "Dockerfile"
           - "Dockerfile.debian"
+          - "all"
       web_server:
         description: "Web server type"
         required: true
