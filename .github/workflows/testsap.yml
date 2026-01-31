@@ -1,4 +1,4 @@
-name: Ci Test (Dynamic Matrix Optimized)
+name: Ci Test (Understandable Version)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       dockerfile:
-        description: "Base image type"
+        description: "选择要构建的系统 (Base image type)"
         required: true
         type: choice
         default: "Dockerfile"
@@ -21,124 +21,171 @@ on:
         options: ["0", "1", "2"]
 
 jobs:
+  # --- 第一阶段：决定我们要跑哪些版本 ---
   setup:
     runs-on: ubuntu-latest
     outputs:
-      variants: ${{ steps.set.outputs.variants }}
+      # 这个输出会被后面的任务用到
+      variants: ${{ steps.decide.outputs.variants }}
     steps:
-      - id: set
+      - id: decide
         run: |
-          # 根据输入决定要跑哪些变体，只输出变体名数组
-          case "${{ github.event.inputs.dockerfile }}" in
-            "Dockerfile") V='["alpine"]' ;;
-            "Dockerfile.debian") V='["debian"]' ;;
-            *) V='["alpine", "debian"]' ;;
-          esac
+          # 1. 获取用户的输入
+          CHOICE="${{ github.event.inputs.dockerfile }}"
+          
+          # 2. 根据输入，给变量 V 赋值一个 JSON 数组字符串
+          # 如果选 Dockerfile，我们就跑 alpine
+          # 如果选 Dockerfile.debian，我们就跑 debian
+          # 如果选 all，两个都跑
+          if [ "$CHOICE" == "Dockerfile" ]; then
+            V='["alpine"]'
+          elif [ "$CHOICE" == "Dockerfile.debian" ]; then
+            V='["debian"]'
+          else
+            V='["alpine", "debian"]'
+          fi
+          
+          # 3. 把结果传出去。变量名叫做 variants
           echo "variants=$V" >> $GITHUB_OUTPUT
 
+  # --- 第二阶段：真正的构建任务 ---
   build:
-    needs: setup
+    needs: setup # 必须等第一步算完了才能开始
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # 这里的 variant 是动态的，platform 是静态的
-        # GitHub 会自动把它们交叉组合 (例如 alpine x amd64, alpine x arm64)
+        # 这里最关键！
+        # variant 会从 setup 传过来的数组里取值（例如 "alpine"）
+        # platform 固定有两个值
+        # GitHub 会自动把它们组合：比如 alpine+amd64, alpine+arm64
         variant: ${{ fromJSON(needs.setup.outputs.variants) }}
         platform: ["linux/amd64", "linux/arm64"]
     
     steps:
-      - name: Checkout
+      - name: 下载代码
         uses: actions/checkout@v4
         with:
           repository: darkommoers/mainal
           path: mainal
           token: ${{ secrets.MY_GITHUB_TOKEN }}
 
-      - name: Prepare
+      - name: 准备 Dockerfile 文件
         run: |
+          # 把 Dockerfile 从子目录拷出来
           cp -fr mainal/sap/docker/* .
-          # 根据变体名动态确定文件名
+          
+          # 判断当前这一行矩阵该用哪个文件
           if [ "${{ matrix.variant }}" == "alpine" ]; then
             echo "DOCKERFILE_PATH=Dockerfile" >> $GITHUB_ENV
           else
             echo "DOCKERFILE_PATH=Dockerfile.debian" >> $GITHUB_ENV
           fi
-          
-          # 处理平台斜杠
+
+      - name: 设置变量 (镜像名、平台名)
+        run: |
+          # 把平台名里的斜杠换成横杠（比如 linux/amd64 变成 linux-amd64），方便存文件
           PLAT="${{ matrix.platform }}"
           echo "PLATFORM_PAIR=${PLAT//\//-}" >> $GITHUB_ENV
           
-          # 镜像名称
+          # 拼接镜像的名字
           WS="${{ github.event.inputs.web_server || 'caddy' }}"
           EM="${{ github.event.inputs.exit_mode || '1' }}"
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM" >> $GITHUB_ENV
 
-      - name: Login to GHCR
+      - name: 登录仓库
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Buildx
+      - name: 安装 Docker 构建工具
         uses: docker/setup-buildx-action@v3
-      - name: Set up QEMU
+      - name: 安装多架构支持
         uses: docker/setup-qemu-action@v3
 
-      - name: Build and push by digest
-        id: build
+      - name: 修改 Dockerfile 内部参数
+        run: |
+          # 根据输入，修改脚本里的参数
+          WS="${{ github.event.inputs.web_server || 'caddy' }}"
+          EM="${{ github.event.inputs.exit_mode || '1' }}"
+          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"$WS\" \"$EM\"/g" "${{ env.DOCKERFILE_PATH }}"
+
+      - name: 开始构建并推送
+        id: build_step
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./${{ env.DOCKERFILE_PATH }}
           platforms: ${{ matrix.platform }}
+          # 关键：这里不直接打 tag，而是生成一个 digest（指纹）
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
-      - name: Export digest
+      - name: 把构建好的指纹保存成文件
         run: |
           mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+          DIGEST="${{ steps.build_step.outputs.digest }}"
+          # 创建一个以指纹命名的空文件
+          touch "${{ runner.temp }}/digests/${DIGEST#sha256:}"
 
-      - name: Upload digest
+      - name: 上传指纹文件 (供下一步合并用)
         uses: actions/upload-artifact@v4
         with:
+          # 文件名里包含系统名和架构名，防止重名
           name: digests-${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
           retention-days: 1
 
+  # --- 第三阶段：把同一个系统的 amd64 和 arm64 合并 ---
   merges:
-    needs: [setup, build]
+    needs: [setup, build] # 等构建任务全跑完了再合并
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 这里只根据变体跑，所以 alpine 跑一次，debian 跑一次，绝不重复
+        # 这里只根据变体跑。数组里有几个名字，就跑几次合并
+        # 因为 setup 传过来的数组里没有重复的名字，所以这里绝不会重复跑
         variant: ${{ fromJSON(needs.setup.outputs.variants) }}
     steps:
-      - name: Login to GHCR
+      - name: 登录仓库
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download digests
+      - name: 下载之前上传的所有指纹文件
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/all-digests
+          # 只下载属于当前这个系统的指纹（比如只下载 alpine 的 amd64 和 arm64）
           pattern: digests-${{ matrix.variant }}-*
           merge-multiple: true
 
-      - name: Create manifest and push
+      - name: 安装 Docker 构建工具
+        uses: docker/setup-buildx-action@v3
+
+      - name: 合并指纹并推送正式 Tag
         run: |
+          # 1. 拼出镜像的基础名字
           WS="${{ github.event.inputs.web_server || 'caddy' }}"
           EM="${{ github.event.inputs.exit_mode || '1' }}"
           IMG="ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM"
           
-          # 打标签逻辑
+          # 2. 准备标签：每个系统都有自己的标签 (比如 :alpine 或 :debian)
           TAGS="-t $IMG:${{ matrix.variant }}"
-          if [ "${{ matrix.variant }}" == "alpine" ]; then TAGS="$TAGS -t $IMG:latest"; fi
+          # 如果是 alpine，多打一个 :latest 标签
+          if [ "${{ matrix.variant }}" == "alpine" ]; then
+            TAGS="$TAGS -t $IMG:latest"
+          fi
           
+          # 3. 运行合并命令
           cd ${{ runner.temp }}/all-digests
           docker buildx imagetools create $TAGS $(printf "$IMG@sha256:%s " *)
+
+      - name: 检查合并后的结果
+        run: |
+          WS="${{ github.event.inputs.web_server || 'caddy' }}"
+          EM="${{ github.event.inputs.exit_mode || '1' }}"
+          IMG="ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM"
+          docker buildx imagetools inspect $IMG:${{ matrix.variant }}
