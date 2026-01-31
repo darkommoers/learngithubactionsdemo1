@@ -1,4 +1,4 @@
-name: Ci Test (Version 2 - Official Meta Style)
+name: Ci Test
 
 on:
   push:
@@ -7,22 +7,33 @@ on:
   workflow_dispatch:
     inputs:
       dockerfile:
-        description: "选择系统 (Base image type)"
+        description: "Base image type"
         required: true
         type: choice
         default: "Dockerfile"
-        options: ["Dockerfile", "Dockerfile.debian", "all"]
+        options:
+          - "Dockerfile"
+          - "Dockerfile.debian"
       web_server:
-        default: "caddy"
+        description: "Web server type"
+        required: true
         type: choice
+        default: "caddy"
         options: ["caddy", "nginx", "haproxy"]
       exit_mode:
-        default: "1"
+        description: "Outbound mode (0: Direct | 1: IPv6 only | 2: All traffic)"
+        required: true
         type: choice
+        default: "1"
         options: ["0", "1", "2"]
+  repository_dispatch:
+
+# env:
+# REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/sap
+# REGISTRY_IMAGE: ghcr.io/${{ github.actor }}/sap
+# REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/sap
 
 jobs:
-  # --- 第一阶段：setup (清单决定) ---
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -30,17 +41,22 @@ jobs:
     steps:
       - id: decide
         run: |
-          CHOICE="${{ github.event.inputs.dockerfile }}"
+          # CHOICE="${{ github.event.inputs.dockerfile }}"
+          CHOICE="${{ inputs.dockerfile }}"
           if [ -z "$CHOICE" ]; then CHOICE="all"; fi
-          if [ "$CHOICE" == "Dockerfile" ]; then V='["alpine"]';
-          elif [ "$CHOICE" == "Dockerfile.debian" ]; then V='["debian"]';
-          else V='["alpine", "debian"]'; fi
+
+          if [ "$CHOICE" == "Dockerfile" ]; then
+            V='["alpine"]';
+          elif [ "$CHOICE" == "Dockerfile.debian" ]; then
+            V='["debian"]';
+          else
+            V='["alpine", "debian"]';
+          fi
           echo "variants=$V" >> $GITHUB_OUTPUT
 
-  # --- 第二阶段：build (分架构构建) ---
   build:
-    needs: setup
     runs-on: ${{ matrix.runner }}
+    needs: setup
     strategy:
       fail-fast: false
       matrix:
@@ -51,40 +67,80 @@ jobs:
             runner: "ubuntu-latest"
           - platform: "linux/arm64"
             runner: "ubuntu-latest"
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout private repo test
+        uses: actions/checkout@v6
         with:
           repository: darkommoers/mainal
           path: mainal
           token: ${{ secrets.MY_GITHUB_TOKEN }}
+
+      # - name: Checkout
+      #   uses: actions/checkout@v6
+
       - name: Prepare Dockerfile
         run: |
+          ls -al
+          ls -al mainal
+          ls -al mainal/sap/docker
+          # cp -fr mainal/sap/docker/* $PWD
           cp -fr mainal/sap/docker/* .
-          if [ "${{ matrix.variant }}" == "alpine" ]; then echo "DOCKERFILE_PATH=Dockerfile" >> $GITHUB_ENV;
-          else echo "DOCKERFILE_PATH=Dockerfile.debian" >> $GITHUB_ENV; fi
-      - name: Prepare Env
+          ls -al
+
+          if [ "${{ matrix.variant }}" == "alpine" ]; then
+            FILE="Dockerfile";
+          else
+            FILE="Dockerfile.debian";
+          fi
+          echo "DOCKERFILE_PATH=$FILE" >> $GITHUB_ENV;
+
+      - name: Prepare required modify
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          PLAT="${{ matrix.platform }}"
-          echo "PLATFORM_PAIR=${PLAT//\//-}" >> $GITHUB_ENV
-          WS="${{ github.event.inputs.web_server || 'caddy' }}"
-          EM="${{ github.event.inputs.exit_mode || '1' }}"
-          echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM" >> $GITHUB_ENV
-      - name: Login to GHCR
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+          WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
+          EXIT_MODE="${{ inputs.exit_mode || '1' }}"
+
+          echo "REGISTRY_IMAGE=ghcr.io/${{ github.actor }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
+
+          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
+          cat "$DOCKERFILE_PATH"
+
+          docker buildx inspect --bootstrap
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}
+          # tags: |
+          #   type=raw,value=${{ matrix.variant }}
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
+          # username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      - name: Set up Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Modify Dockerfile
-        run: |
-          WS="${{ github.event.inputs.web_server || 'caddy' }}"
-          EM="${{ github.event.inputs.exit_mode || '1' }}"
-          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"$WS\" \"$EM\"/g" "${{ env.DOCKERFILE_PATH }}"
+
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v6
@@ -93,70 +149,83 @@ jobs:
           file: ./${{ env.DOCKERFILE_PATH }}
           platforms: ${{ matrix.platform }}
           provenance: false
+          # sbom: false
+          labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
       - name: Export digest
         run: |
-          mkdir -p ${{ runner.temp }}/digests
+          install -d ${{ runner.temp }}/digests || mkdir -p ${{ runner.temp }}/digests
           digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+          # touch "${{ runner.temp }}/digests/${digest#sha256:}"
+          touch "${RUNNER_TEMP}/digests/${digest#sha256:}"
+
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: digests-${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
           retention-days: 1
 
-  # --- 第三阶段：merges (官方推荐的高级合并写法) ---
-  merges:
-    needs: [setup, build]
+  merge:
     runs-on: ubuntu-latest
+    needs: [setup, build]
     strategy:
       matrix:
         variant: ${{ fromJSON(needs.setup.outputs.variants) }}
     steps:
-      - name: Prepare Registry Env
-        run: |
-          WS="${{ github.event.inputs.web_server || 'caddy' }}"
-          EM="${{ github.event.inputs.exit_mode || '1' }}"
-          echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM" >> $GITHUB_ENV
+      # - name: Checkout
+      #   uses: actions/checkout@v6
 
-      - name: Login to GHCR
+      - name: Prepare
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
+          EXIT_MODE="${{ inputs.exit_mode || '1' }}"
+          echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
+
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.variant }}-*
+          merge-multiple: true
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
+          # username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 关键步骤：生成元数据。这里产生的 $DOCKER_METADATA_OUTPUT_JSON 将在后面用到
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
-            type=raw,value=${{ matrix.variant }}
             type=raw,value=latest,enable=${{ matrix.variant == 'alpine' }}
+            type=raw,value=${{ matrix.variant }}
 
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-${{ matrix.variant }}-*
-          merge-multiple: true
-
-      # --- 官方推荐的创建 Manifest 逻辑 ---
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
         run: |
-          # 1. jq 将 JSON 中的 tags 数组转为 -t tag1 -t tag2 格式
-          # 2. printf 将目录下所有指纹文件转为 镜像@sha256:指纹 格式
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          # 使用 meta 插件输出的主版本标签进行检查
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
