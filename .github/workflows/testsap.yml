@@ -41,7 +41,7 @@ on:
 
 jobs:
   build:
-    if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == 'Dockerfile.debian' }
+    if: ${{ inputs.dockerfile == 'Dockerfile' || inputs.dockerfile == 'Dockerfile.debian' }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
