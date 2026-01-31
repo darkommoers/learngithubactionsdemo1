@@ -1,9 +1,8 @@
-name: Ci Test (Static Matrix Fixed)
+name: Ci Test (Dynamic Matrix Optimized)
 
 on:
   push:
-    paths:
-      - "src/caddy/caddy.version"
+    paths: ["src/caddy/caddy.version"]
   workflow_dispatch:
     inputs:
       dockerfile:
@@ -11,210 +10,135 @@ on:
         required: true
         type: choice
         default: "Dockerfile"
-        options:
-          - "Dockerfile"
-          - "Dockerfile.debian"
-          - "all"
+        options: ["Dockerfile", "Dockerfile.debian", "all"]
       web_server:
-        description: "Web server type"
-        required: true
-        type: choice
         default: "caddy"
-        options:
-          - "caddy"
-          - "nginx"
-          - "haproxy"
-      exit_mode:
-        description: "Outbound mode (0: Direct | 1: IPv6 only | 2: All traffic)"
-        required: true
         type: choice
+        options: ["caddy", "nginx", "haproxy"]
+      exit_mode:
         default: "1"
-        options:
-          - "0"
-          - "1"
-          - "2"
+        type: choice
+        options: ["0", "1", "2"]
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      variants: ${{ steps.set.outputs.variants }}
+    steps:
+      - id: set
+        run: |
+          # 根据输入决定要跑哪些变体，只输出变体名数组
+          case "${{ github.event.inputs.dockerfile }}" in
+            "Dockerfile") V='["alpine"]' ;;
+            "Dockerfile.debian") V='["debian"]' ;;
+            *) V='["alpine", "debian"]' ;;
+          esac
+          echo "variants=$V" >> $GITHUB_OUTPUT
+
   build:
+    needs: setup
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Alpine 变体
-          - variant: alpine
-            file: Dockerfile
-            platform: linux/amd64
-          - variant: alpine
-            file: Dockerfile
-            platform: linux/arm64
-          # Debian 变体
-          - variant: debian
-            file: Dockerfile.debian
-            platform: linux/amd64
-          - variant: debian
-            file: Dockerfile.debian
-            platform: linux/arm64
-
-    runs-on: ubuntu-latest
+        # 这里的 variant 是动态的，platform 是静态的
+        # GitHub 会自动把它们交叉组合 (例如 alpine x amd64, alpine x arm64)
+        variant: ${{ fromJSON(needs.setup.outputs.variants) }}
+        platform: ["linux/amd64", "linux/arm64"]
+    
     steps:
-      # --- 关键：定义一个判断步骤，用于控制后面步骤是否执行 ---
-      - name: Check if this matrix row should run
-        id: check
-        run: |
-          INPUT="${{ github.event.inputs.dockerfile }}"
-          VARIANT="${{ matrix.variant }}"
-          # 默认为 true (针对 push 触发)
-          SHOULD_RUN=true
-          
-          # 如果是手动触发，则进行过滤逻辑
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            SHOULD_RUN=false
-            if [ "$INPUT" == "all" ]; then SHOULD_RUN=true; fi
-            if [ "$INPUT" == "Dockerfile" ] && [ "$VARIANT" == "alpine" ]; then SHOULD_RUN=true; fi
-            if [ "$INPUT" == "Dockerfile.debian" ] && [ "$VARIANT" == "debian" ]; then SHOULD_RUN=true; fi
-          fi
-          
-          echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
-
-      - name: Checkout private repo
-        if: steps.check.outputs.should_run == 'true'
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           repository: darkommoers/mainal
           path: mainal
           token: ${{ secrets.MY_GITHUB_TOKEN }}
 
-      - name: Get Dockerfile
-        if: steps.check.outputs.should_run == 'true'
+      - name: Prepare
         run: |
           cp -fr mainal/sap/docker/* .
-          echo "DOCKERFILE_PATH=${{ matrix.file }}" >> $GITHUB_ENV
-
-      - name: Prepare Environment
-        if: steps.check.outputs.should_run == 'true'
-        run: |
-          platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-          WEB_SERVER="${{ github.event.inputs.web_server || 'caddy' }}"
-          EXIT_MODE="${{ github.event.inputs.exit_mode || '1' }}"
-          echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
+          # 根据变体名动态确定文件名
+          if [ "${{ matrix.variant }}" == "alpine" ]; then
+            echo "DOCKERFILE_PATH=Dockerfile" >> $GITHUB_ENV
+          else
+            echo "DOCKERFILE_PATH=Dockerfile.debian" >> $GITHUB_ENV
+          fi
+          
+          # 处理平台斜杠
+          PLAT="${{ matrix.platform }}"
+          echo "PLATFORM_PAIR=${PLAT//\//-}" >> $GITHUB_ENV
+          
+          # 镜像名称
+          WS="${{ github.event.inputs.web_server || 'caddy' }}"
+          EM="${{ github.event.inputs.exit_mode || '1' }}"
+          echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM" >> $GITHUB_ENV
 
       - name: Login to GHCR
-        if: steps.check.outputs.should_run == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up QEMU
-        if: steps.check.outputs.should_run == 'true'
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        if: steps.check.outputs.should_run == 'true'
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Modify Dockerfile
-        if: steps.check.outputs.should_run == 'true'
-        run: |
-          WEB_SERVER="${{ github.event.inputs.web_server || 'caddy' }}"
-          EXIT_MODE="${{ github.event.inputs.exit_mode || '1' }}"
-          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "${{ env.DOCKERFILE_PATH }}"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Build and push by digest
-        if: steps.check.outputs.should_run == 'true'
         id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./${{ env.DOCKERFILE_PATH }}
           platforms: ${{ matrix.platform }}
-          provenance: false
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
-        if: steps.check.outputs.should_run == 'true'
         run: |
           mkdir -p ${{ runner.temp }}/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        if: steps.check.outputs.should_run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ matrix.variant }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
           retention-days: 1
 
   merges:
-    needs: build
+    needs: [setup, build]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        variant: [alpine, debian]
-    runs-on: ubuntu-latest
+        # 这里只根据变体跑，所以 alpine 跑一次，debian 跑一次，绝不重复
+        variant: ${{ fromJSON(needs.setup.outputs.variants) }}
     steps:
-      # --- 关键：Merges 任务同样需要这个判断逻辑，防止重复或运行不需要的任务 ---
-      - name: Check if this merge should run
-        id: check
-        run: |
-          INPUT="${{ github.event.inputs.dockerfile }}"
-          VARIANT="${{ matrix.variant }}"
-          SHOULD_RUN=true
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            SHOULD_RUN=false
-            if [ "$INPUT" == "all" ]; then SHOULD_RUN=true; fi
-            if [ "$INPUT" == "Dockerfile" ] && [ "$VARIANT" == "alpine" ]; then SHOULD_RUN=true; fi
-            if [ "$INPUT" == "Dockerfile.debian" ] && [ "$VARIANT" == "debian" ]; then SHOULD_RUN=true; fi
-          fi
-          echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
-
-      - name: Prepare Env
-        if: steps.check.outputs.should_run == 'true'
-        run: |
-          WEB_SERVER="${{ github.event.inputs.web_server || 'caddy' }}"
-          EXIT_MODE="${{ github.event.inputs.exit_mode || '1' }}"
-          echo "REGISTRY_IMAGE=ghcr.io/${{ github.repository_owner }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
-
       - name: Login to GHCR
-        if: steps.check.outputs.should_run == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        if: steps.check.outputs.should_run == 'true'
-        uses: docker/setup-buildx-action@v3
-
       - name: Download digests
-        if: steps.check.outputs.should_run == 'true'
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/all-digests
           pattern: digests-${{ matrix.variant }}-*
           merge-multiple: true
 
-      - name: Docker meta
-        if: steps.check.outputs.should_run == 'true'
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-          tags: |
-            type=raw,value=latest,enable=${{ matrix.variant == 'alpine' }}
-            type=raw,value=${{ matrix.variant }}
-
-      - name: Create manifest list and push
-        if: steps.check.outputs.should_run == 'true'
-        working-directory: ${{ runner.temp }}/all-digests
+      - name: Create manifest and push
         run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf "${{ env.REGISTRY_IMAGE }}@sha256:%s " *)
-
-      - name: Inspect image
-        if: steps.check.outputs.should_run == 'true'
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ matrix.variant }}
+          WS="${{ github.event.inputs.web_server || 'caddy' }}"
+          EM="${{ github.event.inputs.exit_mode || '1' }}"
+          IMG="ghcr.io/${{ github.repository_owner }}/sap-$WS-$EM"
+          
+          # 打标签逻辑
+          TAGS="-t $IMG:${{ matrix.variant }}"
+          if [ "${{ matrix.variant }}" == "alpine" ]; then TAGS="$TAGS -t $IMG:latest"; fi
+          
+          cd ${{ runner.temp }}/all-digests
+          docker buildx imagetools create $TAGS $(printf "$IMG@sha256:%s " *)
