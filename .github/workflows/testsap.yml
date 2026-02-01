@@ -109,10 +109,9 @@ jobs:
 
           WEB_SERVER="${{ inputs.web_server || 'caddy' }}"
           EXIT_MODE="${{ inputs.exit_mode || '1' }}"
-
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.actor }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
 
-          sed -i "s/run.sh \"\$TARGETPLATFORM\" \".*\" \".*\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
+          sed -i "s/run.sh \".*\" \".*\" \".*\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
 
           cat "$DOCKERFILE_PATH"
 
