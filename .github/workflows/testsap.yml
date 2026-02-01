@@ -112,7 +112,8 @@ jobs:
 
           echo "REGISTRY_IMAGE=ghcr.io/${{ github.actor }}/sap-${WEB_SERVER}-${EXIT_MODE}" >> $GITHUB_ENV
 
-          sed -i "s/run.sh \"\$TARGETPLATFORM\" \"caddy\" \"1\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
+          sed -i "s/run.sh \"\$TARGETPLATFORM\" \".*\" \".*\"/run.sh \"\$TARGETPLATFORM\" \"${WEB_SERVER}\" \"${EXIT_MODE}\"/g" "$DOCKERFILE_PATH"
+
           cat "$DOCKERFILE_PATH"
 
           docker buildx inspect --bootstrap
